@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Puyallup Pub Crawl (21+) — Stamp Passport · Hometown Crawls</title>
+  <meta name="theme-color" content="#1f3a24" />
+  <meta name="description" content="Puyallup pub crawl for 21+: digital stamp passport at independent bars and breweries. Shop seats $59/mo. No app download — QR or counter code at the venue." />
+  <link rel="canonical" href="https://hometowncrawls.com/puyallupwa/pub/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Hometown Crawls" />
+  <meta property="og:title" content="Puyallup Pub Crawl (21+) — Stamp Passport" />
+  <meta property="og:description" content="Independent bars and breweries in Puyallup. Digital passport, $59/mo shop seats, no app download." />
+  <meta property="og:url" content="https://hometowncrawls.com/puyallupwa/pub/" />
+  <meta property="og:image" content="https://images.unsplash.com/photo-1436076863939-06870fe779c2?auto=format&fit=crop&w=1200&q=70" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Puyallup Pub Crawl · Hometown Crawls" />
+  <meta name="twitter:description" content="21+ pub crawl with digital stamps — no app download." />
+  <meta name="keywords" content="Puyallup pub crawl, digital stamp passport, shop seats, 21+, hometown crawl" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../assets/site.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    @media (max-width: 800px) {
+      .section .grid[style*="grid-template-columns:1.2fr"] { grid-template-columns: 1fr !important; }
+    }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TouristTrip",
+    "name": "Puyallup Pub Crawl",
+    "description": "A 21+ digital stamp passport across independent bars and breweries in Puyallup, Washington. Visit in person, stamp with QR or counter code. Shop seats $59/mo. No app download.",
+    "url": "https://hometowncrawls.com/puyallupwa/pub/",
+    "touristType": ["Pub visitors", "Brewery fans", "Adults 21+"],
+    "isAccessibleForFree": true,
+    "provider": {
+      "@type": "Organization",
+      "name": "Hometown Crawls",
+      "url": "https://hometowncrawls.com/"
+    },
+    "itinerary": {
+      "@type": "ItemList",
+      "name": "Puyallup pub stops",
+      "description": "Independent bars and breweries on the Puyallup Pub Crawl."
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "availability": "https://schema.org/InStock",
+      "url": "https://hometowncrawls.com/puyallupwa/pub/",
+      "description": "Free for crawlers; participating venues claim $59/mo shop seats."
+    }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+  <main>
+
+    <div class="wrap" style="padding-top:1rem">
+      <div class="age-gate" role="status">
+        <strong>21+ only.</strong> You must be of legal drinking age to join this pub crawl. Drink responsibly; stamps do not require a purchase of alcohol.
+      </div>
+    </div>
+
+    <div class="wrap">
+      <section class="hero" style="background:linear-gradient(135deg,rgba(27,77,40,.85),rgba(18,36,22,.7)),#223 url(https://images.unsplash.com/photo-1436076863939-06870fe779c2?auto=format&fit=crop&w=1600&q=70) center/cover;min-height:300px">
+        <div class="hero-inner">
+          <p class="eyebrow">Puyallup · Pub · 21+</p>
+          <h1>Puyallup Pub Crawl</h1>
+          <p>Independent bars and breweries. Join a passport, stamp as you go, finish for a prize.</p>
+          <div class="row">
+            <button class="btn btn-primary btn-lg" type="button" id="btn-join">Join this passport</button>
+            <a class="btn btn-ghost btn-lg" href="../../account.html" style="border-color:rgba(255,253,248,.35);color:#fff">Account &amp; stamp</a>
+          </div>
+          <p class="small mt-2" id="join-status" style="color:rgba(255,253,248,.8)"></p>
+        </div>
+      </section>
+    </div>
+
+    <section class="section">
+      <div class="wrap grid" style="grid-template-columns:1.2fr 1fr">
+        <div class="card">
+          <div class="row mb-2">
+            <span class="pill pill-ok" id="crawl-status">Loading…</span>
+            <span class="pill pill-wait">Pub · 21+</span>
+          </div>
+          <h2>Your passport</h2>
+          <p class="muted mt-1" id="crawl-blurb">Independent pubs and breweries across Puyallup.</p>
+          <div id="passport-area" class="mt-2"></div>
+          <div class="row mt-2">
+            <a class="btn btn-soft" href="../../prizes.html">Prizes</a>
+            <a class="btn btn-ghost" href="../../rules.html">Rules</a>
+          </div>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <div class="map-frame" style="border:0;border-radius:0;height:100%;min-height:320px">
+            <div id="pub-map" class="leaflet-map"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:0">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Stops</p>
+          <h2>Stamp at these spots</h2>
+        </div>
+        <div class="card" id="shop-list"><p class="muted">Loading shops…</p></div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:0">
+      <div class="wrap-narrow">
+        <div class="card mb-2">
+          <h3>Shop owners</h3>
+          <p class="muted small mt-1">Claim a seat on this pub trail for <strong>$59/mo</strong>. Organizer / platform split is 50/50.</p>
+          <a class="btn btn-primary mt-2" href="../../shops/join.html?crawl=puy-pub">Join as a shop · $59/mo</a>
+        </div>
+        <div class="card">
+          <h3>Quick stamp</h3>
+          <p class="muted small mt-1">Already at the counter? Enter the shop code here.</p>
+          <label class="field mt-2"><span>Shop</span>
+            <select class="input" id="quick-shop"></select>
+          </label>
+          <label class="field"><span>Code</span>
+            <input class="input" id="quick-code" placeholder="Counter code or QR secret" />
+          </label>
+          <button class="btn btn-primary" type="button" id="btn-quick-stamp">Claim stamp</button>
+          <div class="form-error mt-2" id="quick-err"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+  <footer class="site-footer" id="site-footer"></footer>
+  <script src="../../assets/config.js"></script>
+  <script src="../../assets/site.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../../assets/crawl.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const CRAWL = "puy-pub";
+      const statusEl = document.getElementById("crawl-status");
+      const blurbEl = document.getElementById("crawl-blurb");
+      const joinStatus = document.getElementById("join-status");
+      const errEl = document.getElementById("quick-err");
+
+      let shops = [];
+      try {
+        const crawl = await HCCrawl.loadCrawl(CRAWL);
+        if (crawl) {
+          blurbEl.textContent = crawl.blurb || blurbEl.textContent;
+          const now = Date.now();
+          const a = crawl.starts_at ? Date.parse(crawl.starts_at) : 0;
+          const b = crawl.ends_at ? Date.parse(crawl.ends_at) : Infinity;
+          const st = now < a ? "Upcoming" : now > b ? "Ended" : "Live";
+          statusEl.textContent = st;
+          statusEl.className = "pill " + (st === "Live" ? "pill-ok" : "pill-wait");
+        } else {
+          statusEl.textContent = "Upcoming";
+          statusEl.className = "pill pill-wait";
+        }
+        const res = await HCCrawl.loadShops(CRAWL);
+        shops = res.shops?.length ? res.shops : (HCCrawl.FALLBACK_PUB_SHOPS || []);
+        if (res.error) console.warn(res.error);
+      } catch (e) {
+        shops = HCCrawl.FALLBACK_PUB_SHOPS || [];
+        statusEl.textContent = "Upcoming";
+        statusEl.className = "pill pill-wait";
+      }
+
+      const stamps = await HCCrawl.myStamps(CRAWL);
+      HCCrawl.renderShopList(document.getElementById("shop-list"), shops, stamps);
+      HCCrawl.renderStamps(document.getElementById("passport-area"), shops, stamps);
+      HCCrawl.initMap(document.getElementById("pub-map"), shops, { lat: 47.191, lng: -122.293 });
+
+      const sel = document.getElementById("quick-shop");
+      sel.innerHTML = shops.length
+        ? shops.map(s => `<option value="${s.id}">${HCCrawl.escapeHtml(s.name)}</option>`).join("")
+        : `<option value="">Shops opening soon</option>`;
+
+      const session = await HCCrawl.getSession();
+      if (session) joinStatus.textContent = "Signed in — you can join and stamp (21+).";
+
+      document.getElementById("btn-join").onclick = async () => {
+        try {
+          await HCCrawl.joinCrawl(CRAWL);
+          HC.toast("Passport joined");
+          joinStatus.textContent = "You’re on the Puyallup Pub passport (21+).";
+          const stamps2 = await HCCrawl.myStamps(CRAWL);
+          HCCrawl.renderStamps(document.getElementById("passport-area"), shops, stamps2);
+        } catch (e) {
+          joinStatus.textContent = e.message || String(e);
+          if (/sign in|authenticated|Not authenticated/i.test(String(e.message || e))) {
+            joinStatus.textContent += " — open Account to use an email magic link.";
+          }
+        }
+      };
+
+      document.getElementById("btn-quick-stamp").onclick = async () => {
+        errEl.classList.remove("show");
+        try {
+          await HCCrawl.claimStamp({
+            crawl: CRAWL,
+            business: sel.value,
+            code: document.getElementById("quick-code").value.trim()
+          });
+          HC.toast("Stamp claimed");
+          document.getElementById("quick-code").value = "";
+          const stamps2 = await HCCrawl.myStamps(CRAWL);
+          HCCrawl.renderShopList(document.getElementById("shop-list"), shops, stamps2);
+          HCCrawl.renderStamps(document.getElementById("passport-area"), shops, stamps2);
+        } catch (e) {
+          errEl.textContent = e.message || String(e);
+          errEl.classList.add("show");
+        }
+      };
+    });
+  </script>
+</body>
+</html>

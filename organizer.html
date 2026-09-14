@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Organizer Applications (Local Stub) · Hometown Crawls</title>
+  <meta name="theme-color" content="#1f3a24" />
+  <meta name="description" content="Local-only organizer application list for Hometown Crawls. Apply on the organize page to launch a coffee or pub crawl in your town." />
+  <link rel="canonical" href="https://hometowncrawls.com/organizer.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Hometown Crawls" />
+  <meta property="og:title" content="Organizer Applications (Local Stub) · Hometown Crawls" />
+  <meta property="og:description" content="Local-only organizer application list for Hometown Crawls. Apply on the organize page to launch a coffee or pub crawl in your town." />
+  <meta property="og:url" content="https://hometowncrawls.com/organizer.html" />
+  <meta property="og:image" content="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=70" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Organizer Applications (Local Stub) · Hometown Crawls" />
+  <meta name="twitter:description" content="Local-only organizer application list for Hometown Crawls. Apply on the organize page to launch a coffee or pub crawl in your town." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+  <main>
+    <div class="wrap-narrow page-hero">
+      <p class="eyebrow">Organizer</p>
+      <h1>Local applications</h1>
+      <p>Passwordless stub — read-only list from this browser’s <code>localStorage</code> (<code>hc-organizer-apps-v1</code>). Nothing leaves this device yet.</p>
+    </div>
+    <div class="wrap-narrow">
+      <div class="card mb-2">
+        <div class="row" style="justify-content:space-between">
+          <span class="pill pill-wait">Local only</span>
+          <a class="btn btn-ghost" href="organize.html">Back to apply</a>
+        </div>
+        <p class="muted small mt-2" id="apps-summary">Loading…</p>
+      </div>
+      <div class="card" id="apps-list">
+        <p class="muted">No applications yet.</p>
+      </div>
+    </div>
+  </main>
+  <footer class="site-footer" id="site-footer"></footer>
+  <script src="assets/config.js"></script>
+  <script src="assets/site.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const KEY = "hc-organizer-apps-v1";
+      const listEl = document.getElementById("apps-list");
+      const summary = document.getElementById("apps-summary");
+      let apps = [];
+      try {
+        apps = JSON.parse(localStorage.getItem(KEY) || "[]");
+        if (!Array.isArray(apps)) apps = [];
+      } catch (e) {
+        apps = [];
+      }
+      summary.textContent = apps.length
+        ? apps.length + " application" + (apps.length === 1 ? "" : "s") + " on this device"
+        : "No applications saved on this device yet";
+
+      if (!apps.length) {
+        listEl.innerHTML = `<p class="muted">No applications yet. <a href="organize.html">Apply to organize</a>.</p>`;
+        return;
+      }
+
+      const esc = (s) => String(s || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+
+      listEl.innerHTML = apps.slice().reverse().map((a, i) => {
+        const when = a.created_at ? new Date(a.created_at).toLocaleString() : "—";
+        const seat = a.seat_price_hint ? "$" + a.seat_price_hint + " seats" : "50/50 seats";
+        return `
+          <div class="shop-row" style="${i === apps.length - 1 ? "" : ""}">
+            <div class="shop-avatar">${esc((a.name || "?").slice(0, 2).toUpperCase())}</div>
+            <div style="flex:1;min-width:0">
+              <strong>${esc(a.name)}</strong>
+              <div class="muted small">${esc(a.email)} · ${esc(a.city)}</div>
+              <div class="row mt-1">
+                <span class="pill pill-ok">${esc(a.crawl_type || "—")}</span>
+                <span class="pill pill-muted">${esc(a.status || "applied")}</span>
+                <span class="pill pill-wait">${esc(seat)}</span>
+              </div>
+              <p class="muted small mt-1">${esc(when)}${a.phone ? " · " + esc(a.phone) : ""}</p>
+              ${a.payout_notes ? `<p class="small mt-1">${esc(a.payout_notes)}</p>` : ""}
+            </div>
+          </div>`;
+      }).join("");
+    });
+  </script>
+</body>
+</html>

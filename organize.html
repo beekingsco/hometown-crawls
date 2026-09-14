@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Organize a Hometown Coffee or Pub Crawl — Free · Hometown Crawls</title>
+  <meta name="theme-color" content="#1f3a24" />
+  <meta name="description" content="Free to organize a hometown crawl. Invite shops to claim seats ($49 coffee / $59 pub), keep 50% of seat revenue, and run digital stamp passports with no app for crawlers." />
+  <link rel="canonical" href="https://hometowncrawls.com/organize.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Hometown Crawls" />
+  <meta property="og:title" content="Organize a Hometown Coffee or Pub Crawl — Free · Hometown Crawls" />
+  <meta property="og:description" content="Free to organize a hometown crawl. Invite shops to claim seats ($49 coffee / $59 pub), keep 50% of seat revenue, and run digital stamp passports with no app for crawlers." />
+  <meta property="og:url" content="https://hometowncrawls.com/organize.html" />
+  <meta property="og:image" content="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=70" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Organize a Hometown Coffee or Pub Crawl — Free · Hometown Crawls" />
+  <meta name="twitter:description" content="Free to organize a hometown crawl. Invite shops to claim seats ($49 coffee / $59 pub), keep 50% of seat revenue, and run digital stamp passports with no app for crawlers." />
+  <meta name="keywords" content="organize coffee crawl, chamber organizer, shop seats 50/50" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+  <main>
+
+    <div class="wrap-narrow page-hero">
+      <p class="eyebrow">Organize</p>
+      <h1>Free to organize. Earn half of every seat.</h1>
+      <p>Launch a coffee or pub crawl in your city. Hometown Crawls runs the platform; you earn <strong>50% of $49 seats</strong> (pub seats $59). No Stripe Connect in this form yet — we’ll email you about payouts.</p>
+    </div>
+
+    <div class="wrap-narrow">
+      <div class="section-head" style="margin-bottom:1rem">
+        <p class="eyebrow">How onboarding works</p>
+        <h2>Four calm steps</h2>
+      </div>
+      <div class="grid-4 mb-2" style="grid-template-columns:repeat(4,1fr)">
+        <div class="card">
+          <div class="step-num">1</div>
+          <h3>Apply</h3>
+          <p class="muted small">Tell us who you are and which city you want to launch.</p>
+        </div>
+        <div class="card">
+          <div class="step-num">2</div>
+          <h3>Create crawl</h3>
+          <p class="muted small">We spin up your coffee or pub trail page and passport.</p>
+        </div>
+        <div class="card">
+          <div class="step-num">3</div>
+          <h3>Invite shops</h3>
+          <p class="muted small">Share your seat link. Shops claim QR + counter codes.</p>
+        </div>
+        <div class="card">
+          <div class="step-num">4</div>
+          <h3>Earn 50%</h3>
+          <p class="muted small">You keep half of every $49 coffee seat (or $59 pub seat).</p>
+        </div>
+      </div>
+      <style>
+        @media (max-width: 900px) {
+          .grid-4.mb-2 { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (max-width: 520px) {
+          .grid-4.mb-2 { grid-template-columns: 1fr !important; }
+        }
+      </style>
+
+      <div class="card mb-2">
+        <div class="row" style="justify-content:space-between">
+          <div>
+            <div class="price-tag">$0 <small>to organize</small></div>
+            <p class="muted small mt-1">Payouts = 50% of shop seat fees for your crawl.</p>
+          </div>
+          <span class="pill pill-ok">Organizer</span>
+        </div>
+      </div>
+
+      <form class="card" id="organize-form">
+        <h3>Apply to organize</h3>
+        <p class="muted small mt-1 mb-2">Saved on this device for now. We’ll email you to confirm next steps.</p>
+        <label class="field"><span>Your name</span>
+          <input class="input" name="name" required placeholder="Alex Rivera" />
+        </label>
+        <label class="field"><span>Email</span>
+          <input class="input" type="email" name="email" required placeholder="you@example.com" />
+        </label>
+        <label class="field"><span>City</span>
+          <input class="input" name="city" required placeholder="Puyallup, WA" />
+        </label>
+        <label class="field"><span>Crawl type</span>
+          <select class="input" name="crawl_type" required>
+            <option value="coffee">Coffee · $49 seats</option>
+            <option value="pub">Pub (21+) · $59 seats</option>
+          </select>
+        </label>
+        <label class="field"><span>Phone</span>
+          <input class="input" type="tel" name="phone" placeholder="(253) 555-0100" />
+        </label>
+        <label class="field"><span>Payout notes</span>
+          <textarea class="input" name="payout_notes" placeholder="Preferred payout method, business name for checks, timing notes…"></textarea>
+        </label>
+        <p class="form-note mb-2">Payouts are <strong>50/50 of shop seats</strong>. Stripe Connect is not wired yet — Hometown Crawls will confirm payout details by email after you apply.</p>
+        <button class="btn btn-primary" type="submit">Submit application</button>
+        <div class="form-success mt-2" id="org-success">
+          Thanks — your application is saved on this device. <strong>We’ll email you</strong> with next steps.
+          <div class="row mt-2">
+            <a class="btn btn-soft" href="organizer.html">View local applications</a>
+          </div>
+        </div>
+        <div class="form-error mt-2" id="org-error"></div>
+      </form>
+    </div>
+
+  </main>
+  <footer class="site-footer" id="site-footer"></footer>
+  <script src="assets/config.js"></script>
+  <script src="assets/site.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("organize-form");
+      const ok = document.getElementById("org-success");
+      const err = document.getElementById("org-error");
+      const KEY = "hc-organizer-apps-v1";
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        ok.classList.remove("show");
+        err.classList.remove("show");
+        const fd = new FormData(form);
+        const row = {
+          name: String(fd.get("name") || "").trim(),
+          email: String(fd.get("email") || "").trim(),
+          city: String(fd.get("city") || "").trim(),
+          crawl_type: fd.get("crawl_type"),
+          phone: String(fd.get("phone") || "").trim(),
+          payout_notes: String(fd.get("payout_notes") || "").trim(),
+          created_at: new Date().toISOString(),
+          payout_model: "50/50 shop seats",
+          seat_price_hint: fd.get("crawl_type") === "pub" ? 59 : 49,
+          status: "applied"
+        };
+        try {
+          const prev = JSON.parse(localStorage.getItem(KEY) || "[]");
+          if (!Array.isArray(prev)) throw new Error("Corrupt local storage");
+          prev.push(row);
+          localStorage.setItem(KEY, JSON.stringify(prev));
+          form.reset();
+          ok.classList.add("show");
+          HC.toast("Application saved — we'll email you");
+        } catch (ex) {
+          err.textContent = "Could not save locally: " + ex.message;
+          err.classList.add("show");
+        }
+      });
+    });
+  </script>
+</body>
+</html>

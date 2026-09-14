@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Puyallup Coffee Crawl & Hometown Stamp Passports · Hometown Crawls</title>
+  <meta name="theme-color" content="#1f3a24" />
+  <meta name="description" content="Join the Puyallup coffee crawl with a free digital stamp passport — no app download. Support independent shops, claim seats as a business, or organize a trail in your town." />
+  <link rel="canonical" href="https://hometowncrawls.com/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Hometown Crawls" />
+  <meta property="og:title" content="Puyallup Coffee Crawl & Hometown Stamp Passports · Hometown Crawls" />
+  <meta property="og:description" content="Join the Puyallup coffee crawl with a free digital stamp passport — no app download. Support independent shops, claim seats as a business, or organize a trail in your town." />
+  <meta property="og:url" content="https://hometowncrawls.com/" />
+  <meta property="og:image" content="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=70" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Puyallup Coffee Crawl & Hometown Stamp Passports · Hometown Crawls" />
+  <meta name="twitter:description" content="Join the Puyallup coffee crawl with a free digital stamp passport — no app download. Support independent shops, claim seats as a business, or organize a trail in your town." />
+  <meta name="twitter:image" content="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=70" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/site.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    @media (max-width: 800px) {
+      .map-teaser-grid { grid-template-columns: 1fr !important; }
+    }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://hometowncrawls.com/#organization",
+        "name": "Hometown Crawls",
+        "url": "https://hometowncrawls.com/",
+        "email": "hello@hometowncrawls.com",
+        "description": "Digital stamp passports for hometown coffee and pub crawls — no app download. Shops claim seats; organizers earn half of seat revenue.",
+        "areaServed": { "@type": "City", "name": "Puyallup", "containedInPlace": { "@type": "State", "name": "Washington" } }
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://hometowncrawls.com/#website",
+        "url": "https://hometowncrawls.com/",
+        "name": "Hometown Crawls",
+        "description": "Collect stamps. Support locals. Coffee and pub trails with a digital passport — no app download.",
+        "publisher": { "@id": "https://hometowncrawls.com/#organization" },
+        "inLanguage": "en-US"
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+  <main>
+
+    <div class="wrap">
+      <section class="hero">
+        <div class="hero-inner">
+          <p class="eyebrow">Coffee · Pubs · Your town</p>
+          <h1>Collect stamps.<br />Support locals.</h1>
+          <p>Join a passport, visit independent shops, and stamp your way to prizes — no app download required.</p>
+          <div class="row">
+            <a class="btn btn-primary btn-lg" href="puyallupwa/coffee/index.html">Start trekking</a>
+            <a class="btn btn-ghost btn-lg" href="map.html" style="border-color:rgba(255,253,248,.35);color:#fff">View the map</a>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">How it works</p>
+          <h2>Four calm steps to a full passport</h2>
+          <p>Designed for real sidewalks and real shops — scan a QR or type the counter code.</p>
+        </div>
+        <div class="grid-4">
+          <div class="card">
+            <div class="step-num">1</div>
+            <h3>Find a crawl</h3>
+            <p class="muted small">Browse trails in your town — coffee, pubs, and more.</p>
+          </div>
+          <div class="card">
+            <div class="step-num">2</div>
+            <h3>Join a passport</h3>
+            <p class="muted small">One tap to join. Sign in with email or go anonymous.</p>
+          </div>
+          <div class="card">
+            <div class="step-num">3</div>
+            <h3>Stamp at shops</h3>
+            <p class="muted small">Scan the shop QR or enter the tent-card code at the counter.</p>
+          </div>
+          <div class="card">
+            <div class="step-num">4</div>
+            <h3>Finish for a prize</h3>
+            <p class="muted small">Complete the trail and claim your prize while supplies last.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:0">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Featured trails</p>
+          <h2>Start trekking</h2>
+          <p>Independent stops. One passport. Your pace.</p>
+        </div>
+        <div class="grid">
+          <a class="card trail-card" href="puyallupwa/coffee/index.html">
+            <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=70" alt="Coffee cups on a café table" />
+            <div class="trail-body">
+              <div class="row">
+                <span class="pill pill-wait">Coffee</span>
+                <span class="pill pill-ok">Live</span>
+              </div>
+              <h3>Puyallup Coffee Crawl</h3>
+              <p class="muted small">10 independent coffee stops across downtown Puyallup.</p>
+            </div>
+          </a>
+          <a class="card trail-card" href="puyallupwa/pub/index.html">
+            <img src="https://images.unsplash.com/photo-1436076863939-06870fe779c2?auto=format&fit=crop&w=1200&q=70" alt="Pub taps and beer glasses" />
+            <div class="trail-body">
+              <div class="row">
+                <span class="pill pill-wait">Pub · 21+</span>
+                <span class="pill pill-ok">Seats open</span>
+              </div>
+              <h3>Puyallup Pub Crawl</h3>
+              <p class="muted small">Bars and breweries — $59/mo shop seats.</p>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:0">
+      <div class="wrap">
+        <div class="card" style="padding:0;overflow:hidden">
+          <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:0" class="map-teaser-grid">
+            <div class="map-frame" style="border:0;border-radius:0;min-height:280px">
+              <div id="home-map" class="leaflet-map"></div>
+            </div>
+            <div style="padding:1.75rem 1.5rem">
+              <p class="eyebrow">Map</p>
+              <h2 style="margin:.4rem 0 .75rem">See every stop</h2>
+              <p class="muted">Pins for each participating shop on the Puyallup Coffee trail. Plan your route before you leave the house.</p>
+              <div class="row mt-2">
+                <a class="btn btn-primary" href="map.html">Open full map</a>
+                <a class="btn btn-ghost" href="puyallupwa/coffee/index.html">Trail details</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:0">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Guides</p>
+          <h2>How hometown crawls work</h2>
+          <p>Short reads for crawlers, shops, and chamber organizers.</p>
+        </div>
+        <div class="grid">
+          <a class="card" href="guides/how-a-hometown-coffee-crawl-works.html">
+            <p class="eyebrow">For crawlers</p>
+            <h3 style="margin:.4rem 0">How a hometown coffee crawl works</h3>
+            <p class="muted small">Passports, QR stamps, counter codes, and finishing for a prize — without downloading an app.</p>
+            <span class="btn btn-soft mt-2" style="pointer-events:none">Read the guide</span>
+          </a>
+          <a class="card" href="guides/for-chamber-organizers.html">
+            <p class="eyebrow">For organizers</p>
+            <h3 style="margin:.4rem 0">For chamber &amp; hometown organizers</h3>
+            <p class="muted small">Launch a trail, invite shops to claim seats, and keep half of seat revenue — free to organize.</p>
+            <span class="btn btn-soft mt-2" style="pointer-events:none">Read the guide</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:0">
+      <div class="wrap grid">
+        <a class="card" href="rules.html">
+          <p class="eyebrow">Rules</p>
+          <h3 style="margin:.4rem 0">Play fair, stamp honest</h3>
+          <p class="muted small">One stamp per shop, visit in person, and keep it kind for staff and neighbors.</p>
+          <span class="btn btn-soft mt-2" style="pointer-events:none">Read the rules</span>
+        </a>
+        <a class="card" href="prizes.html">
+          <p class="eyebrow">Prizes</p>
+          <h3 style="margin:.4rem 0">Finish the trail, claim a prize</h3>
+          <p class="muted small">Completer prizes for full passports — while supplies last each season.</p>
+          <span class="btn btn-soft mt-2" style="pointer-events:none">See prizes</span>
+        </a>
+        <a class="card" href="faqs.html">
+          <p class="eyebrow">FAQs</p>
+          <h3 style="margin:.4rem 0">Quick answers</h3>
+          <p class="muted small">Do I need an app? How do stamps work? What if the QR won’t scan?</p>
+          <span class="btn btn-soft mt-2" style="pointer-events:none">Browse FAQs</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:0">
+      <div class="wrap stack" style="gap:1rem">
+        <div class="cta-band cta-split">
+          <div>
+            <p class="eyebrow" style="color:rgba(255,253,248,.7)">For organizers</p>
+            <h2 style="margin:.35rem 0 .5rem">Free to organize. 50/50 on shop seats.</h2>
+            <p>Launch a coffee or pub crawl in your hometown. You keep half of every shop seat — Hometown Crawls handles the platform.</p>
+          </div>
+          <div class="row">
+            <a class="btn btn-primary" href="organize.html">Organize a crawl</a>
+          </div>
+        </div>
+        <div class="cta-band cta-split" style="background:var(--paper);color:var(--ink);border:1px solid var(--line)">
+          <div>
+            <p class="eyebrow">For shops</p>
+            <h2 style="margin:.35rem 0 .5rem;color:var(--ink)">Claim your seat on the trail</h2>
+            <p style="color:var(--muted)">Join the Puyallup Coffee Crawl for $49/mo. Get your QR, counter code, and a stream of local visitors.</p>
+          </div>
+          <div class="row">
+            <a class="btn btn-primary" href="shops/join.html">Join as a shop</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+  <footer class="site-footer" id="site-footer"></footer>
+  <script src="assets/config.js"></script>
+  <script src="assets/site.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/crawl.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const el = document.getElementById("home-map");
+      let shops = [];
+      try {
+        const res = await HCCrawl.loadShops("puy-coffee");
+        shops = res.shops && res.shops.length ? res.shops : HCCrawl.FALLBACK_SHOPS;
+      } catch (e) {
+        shops = HCCrawl.FALLBACK_SHOPS;
+      }
+      HCCrawl.initMap(el, shops, { lat: 47.191, lng: -122.293 });
+    });
+  </script>
+</body>
+</html>

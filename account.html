@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Your Passport Account &amp; Stamp · Hometown Crawls</title>
+  <meta name="theme-color" content="#1f3a24" />
+  <meta name="description" content="Sign in with an email magic link to manage your Hometown Crawls digital stamp passport, join trails, and claim stamps — no Google/Apple SSO, no app download." />
+  <link rel="canonical" href="https://hometowncrawls.com/account.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Hometown Crawls" />
+  <meta property="og:title" content="Your Passport Account &amp; Stamp · Hometown Crawls" />
+  <meta property="og:description" content="Sign in with an email magic link to manage your Hometown Crawls digital stamp passport, join trails, and claim stamps — no Google/Apple SSO, no app download." />
+  <meta property="og:url" content="https://hometowncrawls.com/account.html" />
+  <meta property="og:image" content="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=70" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Your Passport Account &amp; Stamp · Hometown Crawls" />
+  <meta name="twitter:description" content="Sign in with an email magic link to manage your Hometown Crawls digital stamp passport, join trails, and claim stamps — no Google/Apple SSO, no app download." />
+  <meta name="keywords" content="digital stamp passport account, coffee crawl stamp" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/site.css" />
+  
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+  <main>
+
+    <div class="wrap-narrow page-hero">
+      <p class="eyebrow">Account</p>
+      <h1>Your passport home</h1>
+      <p>Email magic link or continue anonymously. No Google / Apple SSO.</p>
+    </div>
+    <div class="wrap-narrow stack">
+      <div class="card auth-panel">
+        <div class="auth-status" id="auth-status">Checking session…</div>
+        <div id="auth-signed-out">
+          <label class="field"><span>Email</span>
+            <input class="input" type="email" id="auth-email" placeholder="you@example.com" autocomplete="email" />
+          </label>
+          <div class="row">
+            <button class="btn btn-primary" type="button" id="btn-magic">Send magic link</button>
+            <button class="btn btn-ghost" type="button" id="btn-anon">Continue anonymously</button>
+          </div>
+          <p class="form-note">We’ll email a one-time sign-in link. No password required.</p>
+        </div>
+        <div id="auth-signed-in" class="hidden">
+          <div class="row">
+            <button class="btn btn-ghost" type="button" id="btn-signout">Sign out</button>
+            <a class="btn btn-primary" href="puyallupwa/coffee/index.html">Open coffee crawl</a>
+          </div>
+        </div>
+        <div class="form-success mt-2" id="auth-msg"></div>
+        <div class="form-error mt-2" id="auth-err"></div>
+      </div>
+
+      <div class="card">
+        <h3>Claim a stamp</h3>
+        <p class="muted small mt-1">Have a counter code or QR secret? Enter it here.</p>
+        <label class="field mt-2"><span>Shop</span>
+          <select class="input" id="stamp-shop"></select>
+        </label>
+        <label class="field"><span>Code</span>
+          <input class="input" id="stamp-code" placeholder="Counter code or QR secret" autocomplete="off" />
+        </label>
+        <button class="btn btn-primary" type="button" id="btn-stamp">Claim stamp</button>
+        <div id="passport-stamps" class="mt-3"></div>
+      </div>
+
+      <div class="card">
+        <h3>Scan QR</h3>
+        <p class="muted small mt-1">Point your camera at the shop tent-card QR.</p>
+        <div id="reader" class="mt-2"></div>
+        <p class="form-note">Camera access stays on your device.</p>
+      </div>
+    </div>
+
+  </main>
+  <footer class="site-footer" id="site-footer"></footer>
+  <script src="assets/config.js"></script>
+  <script src="assets/site.js"></script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="assets/crawl.js"></script>
+  <script>
+    function show(el, on) { el.classList.toggle("show", !!on); el.style.display = on ? "block" : "none"; }
+    async function refreshAuth() {
+      const s = await HCCrawl.getSession();
+      const status = document.getElementById("auth-status");
+      const out = document.getElementById("auth-signed-out");
+      const inn = document.getElementById("auth-signed-in");
+      if (s) {
+        const email = s.user.email || (s.user.is_anonymous ? "Anonymous session" : s.user.id.slice(0, 8));
+        status.textContent = "Signed in · " + email;
+        out.classList.add("hidden");
+        inn.classList.remove("hidden");
+      } else {
+        status.textContent = "Not signed in";
+        out.classList.remove("hidden");
+        inn.classList.add("hidden");
+      }
+      return s;
+    }
+    async function loadPassportUI(shops) {
+      const sel = document.getElementById("stamp-shop");
+      sel.innerHTML = shops.map(s => `<option value="${s.id}">${HCCrawl.escapeHtml(s.name)}</option>`).join("");
+      const stamps = await HCCrawl.myStamps("puy-coffee");
+      HCCrawl.renderStamps(document.getElementById("passport-stamps"), shops, stamps);
+    }
+    document.addEventListener("DOMContentLoaded", async () => {
+      const msg = document.getElementById("auth-msg");
+      const err = document.getElementById("auth-err");
+      await refreshAuth();
+      let shops = [];
+      try {
+        const res = await HCCrawl.loadShops("puy-coffee");
+        shops = res.shops?.length ? res.shops : HCCrawl.FALLBACK_SHOPS;
+      } catch (e) { shops = HCCrawl.FALLBACK_SHOPS; }
+      await loadPassportUI(shops);
+
+      document.getElementById("btn-magic").onclick = async () => {
+        show(msg, false); show(err, false);
+        const email = document.getElementById("auth-email").value.trim();
+        if (!email) { err.textContent = "Enter your email."; show(err, true); return; }
+        try {
+          await HCCrawl.magicLink(email);
+          msg.textContent = "Check your email for the magic link.";
+          show(msg, true);
+        } catch (e) { err.textContent = e.message || String(e); show(err, true); }
+      };
+      document.getElementById("btn-anon").onclick = async () => {
+        show(msg, false); show(err, false);
+        try {
+          await HCCrawl.ensureAuth();
+          const s = await HCCrawl.getSession();
+          if (!s) throw new Error("Anonymous sign-in is not enabled on this project yet. Use email magic link.");
+          msg.textContent = "Anonymous session ready.";
+          show(msg, true);
+          await refreshAuth();
+          await loadPassportUI(shops);
+        } catch (e) { err.textContent = e.message || String(e); show(err, true); }
+      };
+      document.getElementById("btn-signout").onclick = async () => {
+        await HCCrawl.signOut();
+        await refreshAuth();
+        HC.toast("Signed out");
+      };
+      document.getElementById("btn-stamp").onclick = async () => {
+        show(msg, false); show(err, false);
+        try {
+          await HCCrawl.claimStamp({
+            crawl: "puy-coffee",
+            business: document.getElementById("stamp-shop").value,
+            code: document.getElementById("stamp-code").value.trim()
+          });
+          HC.toast("Stamp claimed");
+          document.getElementById("stamp-code").value = "";
+          await loadPassportUI(shops);
+        } catch (e) { err.textContent = e.message || String(e); show(err, true); }
+      };
+
+      // QR scanner
+      if (window.Html5Qrcode) {
+        try {
+          const reader = new Html5Qrcode("reader");
+          const cams = await Html5Qrcode.getCameras();
+          if (cams?.length) {
+            await reader.start(
+              { facingMode: "environment" },
+              { fps: 8, qrbox: 220 },
+              async (txt) => {
+                const m = String(txt).match(/stamp\/([^/]+)\/([^/]+)\/([^/?#]+)/i)
+                  || String(txt).match(/business=([^&]+).*code=([^&]+)/i);
+                try {
+                  if (m && m.length >= 4 && m[0].includes("stamp")) {
+                    await HCCrawl.claimStamp({ crawl: m[1], business: m[2], code: m[3] });
+                  } else if (m) {
+                    await HCCrawl.claimStamp({ crawl: "puy-coffee", business: m[1], code: m[2] });
+                  } else {
+                    // treat whole payload as code for selected shop
+                    await HCCrawl.claimStamp({
+                      crawl: "puy-coffee",
+                      business: document.getElementById("stamp-shop").value,
+                      code: String(txt).trim()
+                    });
+                  }
+                  HC.toast("Stamp claimed");
+                  await loadPassportUI(shops);
+                  try { await reader.stop(); } catch (_) {}
+                } catch (e) { HC.toast(e.message || "Stamp failed"); }
+              }
+            );
+          }
+        } catch (e) { console.warn("QR", e); }
+      }
+    });
+  </script>
+
+</body>
+</html>

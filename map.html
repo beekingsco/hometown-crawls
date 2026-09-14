@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Puyallup Coffee Crawl Map — Every Stop · Hometown Crawls</title>
+  <meta name="theme-color" content="#1f3a24" />
+  <meta name="description" content="Interactive map of the Puyallup coffee crawl: pins for each participating shop on the digital stamp passport trail. Plan your route — no app download." />
+  <link rel="canonical" href="https://hometowncrawls.com/map.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Hometown Crawls" />
+  <meta property="og:title" content="Puyallup Coffee Crawl Map — Every Stop · Hometown Crawls" />
+  <meta property="og:description" content="Interactive map of the Puyallup coffee crawl: pins for each participating shop on the digital stamp passport trail. Plan your route — no app download." />
+  <meta property="og:url" content="https://hometowncrawls.com/map.html" />
+  <meta property="og:image" content="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=70" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Puyallup Coffee Crawl Map — Every Stop · Hometown Crawls" />
+  <meta name="twitter:description" content="Interactive map of the Puyallup coffee crawl: pins for each participating shop on the digital stamp passport trail. Plan your route — no app download." />
+  <meta name="keywords" content="Puyallup coffee crawl map, stamp passport stops" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/site.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+  <main>
+
+    <div class="wrap page-hero">
+      <p class="eyebrow">Map</p>
+      <h1>Trail map</h1>
+      <p>Every active stop on the Puyallup Coffee Crawl. Tap a pin for the address.</p>
+    </div>
+    <div class="wrap">
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="map-frame" style="border:0;border-radius:0;height:480px">
+          <div id="trail-map" class="leaflet-map"></div>
+        </div>
+      </div>
+      <div class="card mt-2">
+        <h3>Stops</h3>
+        <div id="map-shop-list" class="mt-1"></div>
+      </div>
+    </div>
+
+  </main>
+  <footer class="site-footer" id="site-footer"></footer>
+  <script src="assets/config.js"></script>
+  <script src="assets/site.js"></script>
+  
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/crawl.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      let shops = [];
+      try {
+        const res = await HCCrawl.loadShops("puy-coffee");
+        shops = res.shops?.length ? res.shops : HCCrawl.FALLBACK_SHOPS;
+        if (res.error) console.warn(res.error);
+      } catch (e) { shops = HCCrawl.FALLBACK_SHOPS; }
+      HCCrawl.initMap(document.getElementById("trail-map"), shops, { lat: 47.191, lng: -122.293 });
+      HCCrawl.renderShopList(document.getElementById("map-shop-list"), shops, []);
+    });
+  </script>
+
+</body>
+</html>

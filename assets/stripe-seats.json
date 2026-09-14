@@ -1,0 +1,12 @@
+{
+  "puy-coffee": {
+    "amount_cents": 4900,
+    "interval": "month",
+    "price_id": "price_1UEwlrHOpgrTWzzT8gp7u58Z",
+    "product_id": "prod_VFRfu1Mxs9OQdA",
+    "payment_link_id": "plink_1UEwm6HOpgrTWzzT6FBzaX3L",
+    "url": "https://buy.stripe.com/aFa00jdIOgx71Ll2GVgQE0d",
+    "stripe_account": "acct_1Sz7I7HOpgrTWzzT",
+    "stripe_account_name": "BuzzPro.io - Marketing"
+  }
+}

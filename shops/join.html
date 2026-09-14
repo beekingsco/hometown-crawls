@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Claim a Shop Seat on a Hometown Crawl · Hometown Crawls</title>
+  <meta name="theme-color" content="#1f3a24" />
+  <meta name="description" content="Join the Puyallup coffee crawl or pub trail as a shop. Monthly seats ($49 coffee / $59 pub) include QR, counter code, and map listing on a digital stamp passport." />
+  <link rel="canonical" href="https://hometowncrawls.com/shops/join.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Hometown Crawls" />
+  <meta property="og:title" content="Claim a Shop Seat on a Hometown Crawl · Hometown Crawls" />
+  <meta property="og:description" content="Join the Puyallup coffee crawl or pub trail as a shop. Monthly seats ($49 coffee / $59 pub) include QR, counter code, and map listing on a digital stamp passport." />
+  <meta property="og:url" content="https://hometowncrawls.com/shops/join.html" />
+  <meta property="og:image" content="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=70" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Claim a Shop Seat on a Hometown Crawl · Hometown Crawls" />
+  <meta name="twitter:description" content="Join the Puyallup coffee crawl or pub trail as a shop. Monthly seats ($49 coffee / $59 pub) include QR, counter code, and map listing on a digital stamp passport." />
+  <meta name="keywords" content="shop seats, Puyallup coffee crawl for shops, join crawl" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/site.css" />
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+  <main>
+
+    <div class="wrap-narrow page-hero">
+      <p class="eyebrow">For shops</p>
+      <h1>Claim your seat</h1>
+      <p id="join-lead">Join the Puyallup Coffee Crawl. $49/mo seat — organizer split handled by Hometown Crawls.</p>
+    </div>
+    <div class="wrap-narrow stack">
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:flex-start">
+          <div>
+            <div class="price-tag" id="seat-price-tag">$49 <small>/ mo</small></div>
+            <p class="muted small mt-1" id="seat-blurb">Puyallup Coffee seat · QR + counter code included</p>
+          </div>
+          <span class="pill pill-ok" id="seat-pill">Shop seat</span>
+        </div>
+        <p class="mt-2 muted">Organizer / platform split is handled by Hometown Crawls (50/50). You get listed on the trail map, passport, and marketing.</p>
+        <a class="btn btn-primary btn-lg mt-2" href="https://buy.stripe.com/aFa00jdIOgx71Ll2GVgQE0d" id="stripe-seat-link" data-crawl="puy-coffee" data-price="49" target="_blank" rel="noopener">Pay $49/mo seat</a>
+        <p class="form-note">Opens live Stripe checkout for Puyallup Coffee Crawl ($49/mo). Funds currently to connected Stripe account BuzzPro.io — Marketing. <code>data-crawl</code> / <code>data-price</code> follow the <code>?crawl=</code> query.</p>
+      </div>
+
+      <form class="card" id="shop-join-form">
+        <h3>Shop details</h3>
+        <p class="muted small mt-1 mb-2">Tell us who you are. After payment, we’ll activate your seat and send print-ready QR materials.</p>
+        <label class="field"><span>Business name</span>
+          <input class="input" name="business_name" required placeholder="Anthem Coffee & Tea" />
+        </label>
+        <label class="field"><span>Address</span>
+          <input class="input" name="address" required placeholder="210 W Pioneer Ave, Puyallup, WA" />
+        </label>
+        <label class="field"><span>Contact name</span>
+          <input class="input" name="contact_name" required placeholder="Jordan Lee" />
+        </label>
+        <label class="field"><span>Email</span>
+          <input class="input" type="email" name="email" required placeholder="hello@shop.com" />
+        </label>
+        <label class="field"><span>Phone</span>
+          <input class="input" type="tel" name="phone" required placeholder="(253) 555-0100" />
+        </label>
+        <input type="hidden" name="crawl" id="crawl-field" value="puy-coffee" />
+        <button class="btn btn-primary" type="submit">Save shop interest</button>
+        <div class="form-success mt-2" id="shop-success">Saved on this device. Next: tap Pay above to complete the $49/mo seat (coffee) when ready.</div>
+        <div class="form-error mt-2" id="shop-error"></div>
+      </form>
+    </div>
+
+  </main>
+  <footer class="site-footer" id="site-footer"></footer>
+  <script src="../assets/config.js"></script>
+  <script src="../assets/site.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const CRAWLS = {
+        "puy-coffee": {
+          label: "Puyallup Coffee Crawl",
+          short: "Puyallup Coffee",
+          price: 49,
+          age: null
+        },
+        "puy-pub": {
+          label: "Puyallup Pub Crawl",
+          short: "Puyallup Pub (21+)",
+          price: 59,
+          age: "21+"
+        }
+      };
+
+      const params = new URLSearchParams(location.search);
+      const crawlId = CRAWLS[params.get("crawl")] ? params.get("crawl") : "puy-coffee";
+      const meta = CRAWLS[crawlId];
+
+      document.getElementById("join-lead").textContent =
+        "Join the " + meta.label + ". $" + meta.price + "/mo seat — organizer split handled by Hometown Crawls.";
+      document.getElementById("seat-price-tag").innerHTML = "$" + meta.price + " <small>/ mo</small>";
+      document.getElementById("seat-blurb").textContent =
+        meta.short + " seat · QR + counter code included";
+      document.getElementById("seat-pill").textContent = meta.age ? "Shop seat · " + meta.age : "Shop seat";
+      document.getElementById("crawl-field").value = crawlId;
+
+      const SEAT_LINKS = {
+        "puy-coffee": "https://buy.stripe.com/aFa00jdIOgx71Ll2GVgQE0d"
+        // "puy-pub": add when $59 Payment Link is created
+      };
+      const stripe = document.getElementById("stripe-seat-link");
+      const seatUrl = SEAT_LINKS[crawlId] || "#";
+      stripe.setAttribute("href", seatUrl);
+      stripe.setAttribute("data-crawl", crawlId);
+      stripe.setAttribute("data-price", String(meta.price));
+      stripe.textContent = seatUrl === "#"
+        ? ("Pay $" + meta.price + "/mo seat — link coming soon")
+        : ("Pay $" + meta.price + "/mo seat");
+
+      const form = document.getElementById("shop-join-form");
+      const ok = document.getElementById("shop-success");
+      const err = document.getElementById("shop-error");
+
+      stripe?.addEventListener("click", (e) => {
+        if (!stripe.getAttribute("href") || stripe.getAttribute("href") === "#") {
+          e.preventDefault();
+          HC.toast("Stripe Payment Link not set yet for this crawl");
+        }
+      });
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        ok.classList.remove("show");
+        err.classList.remove("show");
+        const fd = new FormData(form);
+        const row = {
+          business_name: fd.get("business_name"),
+          address: fd.get("address"),
+          contact_name: fd.get("contact_name"),
+          email: fd.get("email"),
+          phone: fd.get("phone"),
+          crawl: crawlId,
+          seat_price: meta.price,
+          created_at: new Date().toISOString()
+        };
+        try {
+          const key = "hc-shop-leads-v1";
+          const prev = JSON.parse(localStorage.getItem(key) || "[]");
+          prev.push(row);
+          localStorage.setItem(key, JSON.stringify(prev));
+          form.reset();
+          document.getElementById("crawl-field").value = crawlId;
+          ok.textContent = "Saved on this device. Next: complete the $" + meta.price + "/mo seat payment when the Stripe link is live.";
+          ok.classList.add("show");
+          HC.toast("Shop interest saved");
+        } catch (ex) {
+          err.textContent = ex.message;
+          err.classList.add("show");
+        }
+      });
+    });
+  </script>
+</body>
+</html>
