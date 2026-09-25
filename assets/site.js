@@ -4,6 +4,7 @@
   const depth = path.split("/").filter(Boolean).length;
   // Root pages sit at /, shops/join at /shops/, crawl at /puyallupwa/coffee/
   function assetPrefix() {
+    if (path === "/puyallup" || path.startsWith("/puyallup/")) return "/";
     if (path.includes("/puyallupwa/")) return "../../";
     if (path.includes("/shops/") || path.includes("/guides/")) return "../";
     return "";
