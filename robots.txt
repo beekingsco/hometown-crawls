@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /puyallup/coffee-crawl/organizer
+Disallow: /puyallup/coffee-crawl/shop
 
 Sitemap: https://hometowncrawls.com/sitemap.xml

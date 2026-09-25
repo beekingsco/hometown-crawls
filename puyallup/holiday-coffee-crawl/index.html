@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Puyallup Holiday Coffee Crawl · Nov 1 – Dec 31, 2026 · Hometown Crawls</title>
+  <meta name="theme-color" content="#1f3a24" />
+  <meta name="description" content="2 months. 20+ shops. Crawl your way through the coffee wonderland of Puyallup. Free digital passport, November 1 through December 31, 2026." />
+  <link rel="canonical" href="https://www.hometowncrawls.com/puyallup/holiday-coffee-crawl" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Hometown Crawls" />
+  <meta property="og:title" content="Puyallup Holiday Coffee Crawl · Nov 1 – Dec 31, 2026" />
+  <meta property="og:description" content="2 months. 20+ shops. Crawl your way through the coffee wonderland of Puyallup." />
+  <meta property="og:url" content="https://www.hometowncrawls.com/puyallup/holiday-coffee-crawl" />
+  <meta property="og:image" content="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=70" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Puyallup Holiday Coffee Crawl · Nov 1 – Dec 31, 2026" />
+  <meta name="twitter:description" content="2 months. 20+ shops. Crawl your way through the coffee wonderland of Puyallup." />
+  <meta name="twitter:image" content="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=70" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/site.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    .hc-hero {
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(1200px 400px at 85% -10%, rgba(47,90,56,.18), transparent 60%),
+        radial-gradient(800px 300px at -10% 110%, rgba(243,234,212,.9), transparent 60%),
+        var(--bg);
+      border-bottom: 1px solid var(--line);
+      padding: 2.5rem 0 2.25rem;
+    }
+    .hc-hero-grid { display: grid; gap: 1.75rem; align-items: center; }
+    .hc-hero h1 { font-size: clamp(2.2rem, 7vw, 3.6rem); margin: .55rem 0 .45rem; }
+    .hc-kicker { font-family: var(--font-display); font-size: clamp(1.35rem, 3vw, 1.8rem); color: var(--green); margin: 0 0 .45rem; }
+    .hc-hero .lead { font-size: 1.1rem; color: var(--ink-soft); max-width: 42ch; }
+    .hc-dates {
+      display: inline-flex; align-items: center; gap: .55rem;
+      background: var(--paper); border: 1px solid var(--line-strong);
+      border-radius: var(--radius-pill); padding: .45rem .95rem .45rem .5rem;
+      font-weight: 600; font-size: .92rem; color: var(--green);
+      box-shadow: var(--shadow-sm);
+    }
+    .hc-dates .dot {
+      width: 26px; height: 26px; border-radius: 50%; background: var(--green); color: #fff;
+      display: grid; place-items: center; font-size: .8rem;
+    }
+    .hc-crumbs { margin-bottom: .9rem; }
+    .hc-crumbs a { color: var(--green); font-weight: 600; }
+    .hc-photo {
+      border-radius: 22px; overflow: hidden; box-shadow: var(--shadow);
+      border: 1px solid var(--line); aspect-ratio: 4 / 3; background: var(--cream); position: relative;
+    }
+    .hc-photo img { width: 100%; height: 100%; object-fit: cover; }
+    .hc-stamp {
+      position: absolute; right: 14px; bottom: 14px; width: 104px; height: 104px; border-radius: 50%;
+      background: rgba(255,253,248,.95); border: 2px dashed var(--green); color: var(--green);
+      display: grid; place-items: center; text-align: center; transform: rotate(-10deg);
+      font-family: var(--font-display); font-weight: 700; font-size: .78rem; line-height: 1.15; padding: .5rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .hc-stamp b { display: block; font-size: 1.15rem; }
+    .hc-section { padding: 2.75rem 0; }
+    .shop-card { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+    .shop-card img.cover { width: 100%; height: 180px; object-fit: cover; background: var(--cream); }
+    .shop-card .body { padding: 1.05rem 1.15rem 1.2rem; display: flex; flex-direction: column; gap: .45rem; flex: 1; }
+    .shop-card h3 { font-size: 1.25rem; }
+    .shop-links a { color: var(--green); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+    .hc-steps { display: grid; gap: .9rem; }
+    .hc-step h3 { font-size: 1.05rem; margin: .55rem 0 .25rem; }
+    #claim-prompt { border-color: var(--green-mid); }
+    @media (min-width: 860px) {
+      .hc-hero { padding: 3.5rem 0 3.25rem; }
+      .hc-hero-grid { grid-template-columns: 1.1fr .9fr; gap: 3rem; }
+      .hc-section { padding: 4rem 0; }
+      .hc-steps { grid-template-columns: repeat(5, 1fr); }
+    }
+    @media (max-width: 859px) {
+      .hc-steps { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 560px) {
+      .hc-steps { grid-template-columns: 1fr; }
+    }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Event",
+        "name": "Puyallup Holiday Coffee Crawl",
+        "description": "2 months. 20+ shops. Crawl your way through the coffee wonderland of Puyallup with a free digital stamp passport.",
+        "startDate": "2026-11-01",
+        "endDate": "2026-12-31",
+        "eventStatus": "https://schema.org/EventScheduled",
+        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+        "url": "https://www.hometowncrawls.com/puyallup/holiday-coffee-crawl",
+        "image": "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=70",
+        "isAccessibleForFree": true,
+        "location": {
+          "@type": "Place",
+          "name": "Puyallup, WA",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Puyallup",
+            "addressRegion": "WA",
+            "postalCode": "98371",
+            "addressCountry": "US"
+          },
+          "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": 47.191,
+            "longitude": -122.293
+          }
+        },
+        "organizer": [
+          { "@type": "Organization", "name": "Anthem Coffee" },
+          { "@type": "Organization", "name": "Hometown Crawls", "url": "https://www.hometowncrawls.com/" }
+        ],
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/InStock",
+          "url": "https://www.hometowncrawls.com/puyallup/holiday-coffee-crawl"
+        }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Hometown Crawls",
+            "item": "https://www.hometowncrawls.com/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Puyallup Holiday Coffee Crawl",
+            "item": "https://www.hometowncrawls.com/puyallup/holiday-coffee-crawl"
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+  <main>
+    <section class="hc-hero">
+      <div class="wrap hc-hero-grid">
+        <div>
+          <nav class="hc-crumbs small muted" aria-label="Breadcrumb">
+            <a href="/">Home</a> · Puyallup Holiday Coffee Crawl
+          </nav>
+          <span class="hc-dates"><span class="dot">☕</span> Nov 1 – Dec 31, 2026</span>
+          <h1>Puyallup Holiday Coffee Crawl</h1>
+          <p class="hc-kicker">2 months. 20+ shops.</p>
+          <p class="lead">Crawl your way through the coffee wonderland of Puyallup.</p>
+          <div class="row mt-2">
+            <button class="btn btn-primary btn-lg" type="button" id="btn-join">Get your free passport</button>
+            <a class="btn btn-ghost btn-lg" href="#shops">See the shops</a>
+          </div>
+          <p class="small muted mt-2" id="join-status"></p>
+        </div>
+        <div class="hc-photo">
+          <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1100&q=70" alt="Latte on a café counter in Puyallup" />
+          <div class="hc-stamp"><div><b>Free</b>passport<br />Nov–Dec</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="hc-section">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">How to play</p>
+          <h2>Five steps, one passport</h2>
+          <p>No app download. Your phone's browser is the whole thing.</p>
+        </div>
+        <div class="hc-steps">
+          <article class="card hc-step"><div class="step-num">1</div><h3>Get the free digital passport</h3><p class="muted small">Join once. It stays on this phone.</p></article>
+          <article class="card hc-step"><div class="step-num">2</div><h3>Visit participating shops</h3><p class="muted small">Any time during their posted hours, Nov 1 through Dec 31.</p></article>
+          <article class="card hc-step"><div class="step-num">3</div><h3>Scan the QR or enter the code</h3><p class="muted small">Each counter has a QR and a short counter code.</p></article>
+          <article class="card hc-step"><div class="step-num">4</div><h3>Collect stamps</h3><p class="muted small">One stamp per shop, in person.</p></article>
+          <article class="card hc-step"><div class="step-num">5</div><h3>Prizes</h3><p class="muted small">Prizes are TBA. Finish the trail and check back here.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="hc-section" id="shops" style="padding-top:0">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">The trail</p>
+          <h2>Shops on the crawl</h2>
+          <p>Only shops that have joined and been confirmed appear here.</p>
+        </div>
+        <div class="map-frame" style="height:420px">
+          <div id="holiday-map" class="leaflet-map"></div>
+        </div>
+        <div id="shop-grid" class="grid mt-2"></div>
+        <div id="shops-empty" class="card mt-2 hidden">
+          <h3>Shops announced soon</h3>
+          <p class="muted mt-1">The map is centered on downtown Puyallup. Pins and shop cards will show up as coffee shops join.</p>
+        </div>
+        <p class="form-error mt-2" id="shops-err" role="alert"></p>
+      </div>
+    </section>
+
+    <section class="hc-section" id="passport" style="padding-top:0">
+      <div class="wrap grid" style="align-items:start">
+        <div class="card">
+          <p class="eyebrow">Your passport</p>
+          <h2>Stamps</h2>
+          <p class="muted small mt-1">Stamps fill in for shops that are live on this crawl.</p>
+          <div id="claim-prompt" class="card mt-2 hidden" style="background:var(--soft)">
+            <h3>Claim this stamp?</h3>
+            <p class="mt-1" id="claim-copy"></p>
+            <div class="row mt-2">
+              <button class="btn btn-primary" type="button" id="btn-claim">Claim stamp</button>
+              <button class="btn btn-ghost" type="button" id="btn-claim-dismiss">Not now</button>
+            </div>
+            <p class="form-error mt-2" id="claim-err" role="alert"></p>
+          </div>
+          <div id="stamp-grid" class="mt-2"></div>
+        </div>
+        <div class="card">
+          <h3>Enter a counter code</h3>
+          <p class="muted small mt-1">At the register, pick the shop and type the code on the tent card.</p>
+          <form id="code-form" class="mt-2">
+            <label class="field"><span>Shop</span>
+              <select class="input" id="code-shop"></select>
+            </label>
+            <label class="field"><span>Counter code</span>
+              <input class="input" id="code-value" autocomplete="off" maxlength="80" placeholder="Code from the counter" />
+            </label>
+            <button class="btn btn-primary" type="submit" id="btn-code">Claim stamp</button>
+          </form>
+          <form id="magic-form" class="hidden mt-2">
+            <p class="small">Sign in with the email you want on this passport. We'll send a one-time link back to this page.</p>
+            <label class="field mt-2"><span>Email</span>
+              <input class="input" type="email" id="magic-email" autocomplete="email" placeholder="you@example.com" required />
+            </label>
+            <button class="btn btn-soft" type="submit">Email me a sign-in link</button>
+          </form>
+          <p class="form-success mt-2" id="passport-ok" role="status"></p>
+          <p class="form-error mt-2" id="passport-err" role="alert"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="hc-section" style="padding-top:0">
+      <div class="wrap-narrow">
+        <h2>Dates</h2>
+        <p class="muted mt-1">November 1 through December 31, 2026. Visit during each shop's own hours. The passport is free for players.</p>
+        <h2 class="mt-3">Questions</h2>
+        <div class="faq mt-2">
+          <details>
+            <summary>Is it free for players?</summary>
+            <p>Yes. Getting a passport and collecting stamps costs nothing. Order what you like when you visit a shop.</p>
+          </details>
+          <details>
+            <summary>How do stamps work?</summary>
+            <p>Join the passport, go to a participating shop, and scan that shop's QR code or type the counter code. Each shop stamps once.</p>
+          </details>
+          <details>
+            <summary>When are shops announced?</summary>
+            <p>Shops show up on this page after they join and their listing is confirmed. Until then you'll see "Shops announced soon."</p>
+          </details>
+          <details>
+            <summary>What are the prizes?</summary>
+            <p>Prizes are TBA. This page will spell them out before the crawl asks you to finish the trail.</p>
+          </details>
+          <details>
+            <summary>I own a coffee shop</summary>
+            <p><a href="/puyallup/coffee-crawl" style="color:var(--green);font-weight:600;text-decoration:underline;text-underline-offset:3px">Own a coffee shop? Join the crawl</a>. Shop entry is $49.99, one time, for November 1 through December 31.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer" id="site-footer"></footer>
+  <script src="/assets/config.js"></script>
+  <script src="/assets/site.js?v=2"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/crawl.js"></script>
+  <script>
+  (function () {
+    var CRAWL = "puy-coffee";
+    var CLAIM_KEY = "hc-holiday-claim";
+    var DOWNTOWN = { lat: 47.191, lng: -122.293 };
+    // Stamp links use ?code=, which Supabase also uses for magic-link login.
+    // Stash the stamp and drop those params before the client is created.
+    (function stashClaimFromUrl() {
+      var params = new URLSearchParams(location.search);
+      var shop = params.get("shop");
+      var code = params.get("code");
+      if (!shop || !code) return;
+      try { sessionStorage.setItem(CLAIM_KEY, JSON.stringify({ shop: shop, code: code })); } catch (e) {}
+      params.delete("shop");
+      params.delete("code");
+      var qs = params.toString();
+      history.replaceState({}, "", location.pathname + (qs ? "?" + qs : "") + location.hash);
+    })();
+    var shops = [];
+    var esc = function (s) { return window.HCCrawl ? HCCrawl.escapeHtml(s) : String(s || ""); };
+
+    function $(id) { return document.getElementById(id); }
+    function showBox(el, on) { if (!el) return; el.classList.toggle("show", !!on); }
+
+    function httpUrl(value) {
+      var u = String(value || "").trim();
+      if (/^https?:\/\//i.test(u)) return u;
+      return "";
+    }
+
+    function instagramUrl(value) {
+      var h = String(value || "").trim().replace(/^@/, "");
+      h = h.replace(/^https?:\/\/(www\.)?instagram\.com\//i, "");
+      h = h.split(/[/?#]/)[0];
+      h = h.replace(/[^A-Za-z0-9._]/g, "");
+      return h ? "https://instagram.com/" + h : "";
+    }
+
+    function telHref(phone) {
+      var t = String(phone || "").trim();
+      if (!/^[0-9+().\-\s]{7,40}$/.test(t)) return "";
+      return "tel:" + t.replace(/[^\d+]/g, "");
+    }
+
+    function needsSignIn(err) {
+      var m = (err && err.message) || String(err || "");
+      return /sign in|authenticated/i.test(m);
+    }
+
+    function readClaim() {
+      try {
+        var raw = sessionStorage.getItem(CLAIM_KEY);
+        if (!raw) return null;
+        var parsed = JSON.parse(raw);
+        if (!parsed || !parsed.shop || !parsed.code) return null;
+        return parsed;
+      } catch (e) { return null; }
+    }
+    function clearClaim() {
+      try { sessionStorage.removeItem(CLAIM_KEY); } catch (e) {}
+    }
+    function cleanClaimParams() {
+      var url = new URL(location.href);
+      url.searchParams.delete("shop");
+      url.searchParams.delete("code");
+      var next = url.pathname + (url.search ? url.search : "") + url.hash;
+      history.replaceState({}, "", next);
+    }
+
+    function mapForMap(list) {
+      return list.filter(function (s) { return s.business_id; }).map(function (s) {
+        return { id: s.business_id, name: s.display_name, address: s.address, lat: s.lat, lng: s.lng };
+      });
+    }
+
+    function shopById(id) {
+      for (var i = 0; i < shops.length; i++) if (shops[i].business_id === id) return shops[i];
+      return null;
+    }
+
+    function renderCards() {
+      var grid = $("shop-grid");
+      var empty = $("shops-empty");
+      if (!shops.length) {
+        grid.innerHTML = "";
+        empty.classList.remove("hidden");
+        return;
+      }
+      empty.classList.add("hidden");
+      grid.innerHTML = shops.map(function (s) {
+        var photos = Array.isArray(s.photo_urls) ? s.photo_urls : [];
+        var photo = httpUrl(photos[0]);
+        var media = photo
+          ? '<img class="cover" src="' + esc(photo) + '" alt="' + esc(s.display_name || "Shop") + '" loading="lazy" />'
+          : '<div class="cover" style="display:grid;place-items:center;color:var(--green);font-family:var(--font-display);font-size:1.4rem">' + esc((window.HC && HC.initials(s.display_name)) || "☕") + "</div>";
+        var links = [];
+        var site = httpUrl(s.website);
+        if (site) links.push('<a href="' + esc(site) + '" target="_blank" rel="noopener noreferrer">Website</a>');
+        var ig = instagramUrl(s.instagram);
+        if (ig) links.push('<a href="' + esc(ig) + '" target="_blank" rel="noopener noreferrer">Instagram</a>');
+        var tel = telHref(s.phone);
+        if (tel) links.push('<a href="' + esc(tel) + '">' + esc(s.phone) + "</a>");
+        return '<article class="card shop-card">' + media +
+          '<div class="body"><h3>' + esc(s.display_name) + "</h3>" +
+          (s.address ? '<p class="muted small">' + esc(s.address) + "</p>" : "") +
+          (s.hours ? '<p class="small"><strong>Hours</strong> · ' + esc(s.hours) + "</p>" : "") +
+          (s.blurb ? "<p>" + esc(s.blurb) + "</p>" : "") +
+          (links.length ? '<p class="row shop-links">' + links.join("") + "</p>" : "") +
+          "</div></article>";
+      }).join("");
+    }
+
+    function renderStamps(stamps) {
+      var box = $("stamp-grid");
+      var playable = mapForMap(shops);
+      if (!playable.length) {
+        box.innerHTML = '<p class="muted">Your stamp grid will fill in once shops are announced.</p>';
+        return;
+      }
+      HCCrawl.renderStamps(box, playable, stamps || []);
+    }
+
+    function renderShopSelect() {
+      var sel = $("code-shop");
+      var playable = shops.filter(function (s) { return s.business_id; });
+      if (!playable.length) {
+        sel.innerHTML = '<option value="">Shops announced soon</option>';
+        sel.disabled = true;
+        $("btn-code").disabled = true;
+        return;
+      }
+      sel.disabled = false;
+      $("btn-code").disabled = false;
+      sel.innerHTML = playable.map(function (s) {
+        return '<option value="' + esc(s.business_id) + '">' + esc(s.display_name) + "</option>";
+      }).join("");
+    }
+
+    function showClaimPrompt() {
+      var pending = readClaim();
+      var box = $("claim-prompt");
+      if (!pending) { box.classList.add("hidden"); return; }
+      var shop = shopById(pending.shop);
+      var name = shop ? shop.display_name : "this shop";
+      $("claim-copy").textContent = "You're at " + name + ". Claim the stamp on your free passport?";
+      box.classList.remove("hidden");
+    }
+
+    async function loadPublicShops() {
+      var sb = HCCrawl.client();
+      if (!sb) throw new Error("Supabase not loaded");
+      var q = await sb.from("crawl_shops_public").select("*").eq("crawl_id", CRAWL);
+      if (!q.error && Array.isArray(q.data)) return q.data;
+      var rpc = await sb.rpc("get_public_crawl_shops", { p_crawl: CRAWL });
+      if (rpc.error) throw rpc.error;
+      return rpc.data || [];
+    }
+
+    async function refreshStamps() {
+      var session = await HCCrawl.getSession();
+      if (session) {
+        try { await HCCrawl.client().rpc("hc_link_account"); } catch (e) {}
+      }
+      var stamps = session ? await HCCrawl.myStamps(CRAWL) : [];
+      renderStamps(stamps);
+    }
+
+    function showMagic() {
+      $("magic-form").classList.remove("hidden");
+      $("join-status").textContent = "Enter your email and we'll send a sign-in link back to this page.";
+    }
+
+    document.addEventListener("DOMContentLoaded", async function () {
+      try {
+        shops = await loadPublicShops();
+      } catch (e) {
+        shops = [];
+        $("shops-err").textContent = "Shops couldn't be loaded. Refresh to try again.";
+        showBox($("shops-err"), true);
+      }
+
+      renderCards();
+      renderShopSelect();
+      var mapped = mapForMap(shops);
+      var pinned = mapped.filter(function (s) { return s.lat != null && s.lng != null; });
+      var center = pinned.length ? { lat: Number(pinned[0].lat), lng: Number(pinned[0].lng) } : DOWNTOWN;
+      if (!shops.length) center = DOWNTOWN;
+      if (window.L) HCCrawl.initMap($("holiday-map"), shops.length ? mapped : [], center);
+
+      showClaimPrompt();
+      await refreshStamps();
+
+      $("btn-join").onclick = async function () {
+        document.getElementById("passport").scrollIntoView({ behavior: "smooth", block: "start" });
+        showBox($("passport-err"), false);
+        try {
+          var existing = await HCCrawl.getSession();
+          if (existing) {
+            try { await HCCrawl.client().rpc("hc_link_account"); } catch (e) {}
+          }
+          await HCCrawl.joinCrawl(CRAWL);
+          $("join-status").textContent = "You're on the Puyallup Holiday Coffee Crawl passport.";
+          if (window.HC) HC.toast("Passport ready");
+          await refreshStamps();
+        } catch (e) {
+          if (needsSignIn(e)) showMagic();
+          else $("join-status").textContent = e.message || "Could not join the passport.";
+        }
+      };
+
+      $("btn-claim").onclick = async function () {
+        var pending = readClaim();
+        showBox($("claim-err"), false);
+        if (!pending) return;
+        try {
+          var existing = await HCCrawl.getSession();
+          if (existing) {
+            try { await HCCrawl.client().rpc("hc_link_account"); } catch (e) {}
+          }
+          await HCCrawl.claimStamp({ crawl: CRAWL, business: pending.shop, code: pending.code });
+          clearClaim();
+          cleanClaimParams();
+          $("claim-prompt").classList.add("hidden");
+          if (window.HC) HC.toast("Stamp claimed");
+          await refreshStamps();
+        } catch (e) {
+          if (needsSignIn(e)) {
+            showMagic();
+            $("claim-err").textContent = "Sign in below, then claim this stamp.";
+            showBox($("claim-err"), true);
+          } else {
+            $("claim-err").textContent = e.message || "Could not claim that stamp.";
+            showBox($("claim-err"), true);
+          }
+        }
+      };
+
+      $("btn-claim-dismiss").onclick = function () {
+        clearClaim();
+        cleanClaimParams();
+        $("claim-prompt").classList.add("hidden");
+      };
+
+      $("code-form").onsubmit = async function (ev) {
+        ev.preventDefault();
+        showBox($("passport-err"), false);
+        showBox($("passport-ok"), false);
+        var business = $("code-shop").value;
+        var code = $("code-value").value.trim();
+        if (!business || !code) {
+          $("passport-err").textContent = "Pick a shop and enter the counter code.";
+          showBox($("passport-err"), true);
+          return;
+        }
+        try {
+          var existing = await HCCrawl.getSession();
+          if (existing) {
+            try { await HCCrawl.client().rpc("hc_link_account"); } catch (e) {}
+          }
+          await HCCrawl.claimStamp({ crawl: CRAWL, business: business, code: code });
+          $("code-value").value = "";
+          $("passport-ok").textContent = "Stamp claimed.";
+          showBox($("passport-ok"), true);
+          if (window.HC) HC.toast("Stamp claimed");
+          await refreshStamps();
+        } catch (e) {
+          if (needsSignIn(e)) showMagic();
+          $("passport-err").textContent = e.message || "Could not claim that stamp.";
+          showBox($("passport-err"), true);
+        }
+      };
+
+      $("magic-form").onsubmit = async function (ev) {
+        ev.preventDefault();
+        showBox($("passport-err"), false);
+        showBox($("passport-ok"), false);
+        var email = $("magic-email").value.trim();
+        if (!email) return;
+        try {
+          var sb = HCCrawl.client();
+          var redirectTo = location.origin + location.pathname;
+          var res = await sb.auth.signInWithOtp({ email: email, options: { emailRedirectTo: redirectTo } });
+          if (res.error) throw res.error;
+          $("passport-ok").textContent = "Check your email for the sign-in link. It brings you back to this page.";
+          showBox($("passport-ok"), true);
+        } catch (e) {
+          $("passport-err").textContent = e.message || "Could not send the sign-in link.";
+          showBox($("passport-err"), true);
+        }
+      };
+    });
+  })();
+  </script>
+</body>
+</html>
