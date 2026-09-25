@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Manage your shop · Puyallup Holiday Coffee Crawl</title>
+  <meta name="theme-color" content="#1f3a24" />
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/site.css" />
+  <style>
+    .portal-hero { padding: 2.25rem 0 1rem; }
+    .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: .75rem; }
+    .photo-grid figure { margin: 0; background: var(--cream); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+    .photo-grid img { width: 100%; height: 120px; object-fit: cover; }
+    .photo-grid figcaption { padding: .45rem .55rem .6rem; }
+    .photo-grid button { font-size: .8rem; color: #7a2e22; font-weight: 600; }
+    #qr-art svg { width: 220px; height: 220px; }
+    .code-big { font-family: var(--font-display); font-size: 2rem; letter-spacing: .08em; color: var(--green); }
+    button.card { text-align: left; width: 100%; }
+    @media print {
+      body * { visibility: hidden; }
+      #qr-print, #qr-print * { visibility: visible; }
+      #qr-print { position: absolute; left: 0; top: 0; width: 100%; background: #fff; color: #111; padding: 1.5rem; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+  <main>
+    <div class="wrap portal-hero">
+      <p class="eyebrow">Shop portal</p>
+      <h1>Manage your listing</h1>
+      <p class="muted">Puyallup Holiday Coffee Crawl · Nov 1 – Dec 31, 2026 · organized by Bryan Reynolds, Anthem Coffee.</p>
+    </div>
+
+    <div class="wrap-narrow stack" style="padding-bottom:3rem">
+      <section class="card auth-panel" id="view-login">
+        <div class="auth-status" id="login-status">Sign in with the email you used to sign up your shop.</div>
+        <form id="login-form">
+          <label class="field"><span>Email</span>
+            <input class="input" type="email" id="login-email" autocomplete="email" placeholder="you@yourshop.com" required />
+          </label>
+          <button class="btn btn-primary" type="submit" id="btn-magic">Send magic link</button>
+          <p class="form-note">We'll email a one-time link that opens this page. No password.</p>
+        </form>
+        <p class="form-success mt-2" id="login-ok" role="status"></p>
+        <p class="form-error mt-2" id="login-err" role="alert"></p>
+      </section>
+
+      <section class="card hidden" id="view-note">
+        <div id="note-body"></div>
+        <button class="btn btn-ghost mt-2" type="button" id="btn-out-note">Sign out</button>
+      </section>
+
+      <section id="view-app" class="stack hidden">
+        <div class="row" style="justify-content:space-between">
+          <p class="small muted" id="who"></p>
+          <button class="btn btn-ghost" type="button" id="btn-out">Sign out</button>
+        </div>
+        <div id="listing-switch"></div>
+
+        <div class="card" id="pay-card"></div>
+
+        <div class="card hidden" id="qr-box">
+          <div id="qr-print">
+            <p class="eyebrow">Counter card</p>
+            <h2 id="qr-name" style="margin:.35rem 0 .75rem"></h2>
+            <div id="qr-art"></div>
+            <p class="mt-2">Counter code</p>
+            <p class="code-big" id="store-code"></p>
+            <p class="small muted">Guests scan the QR or type this code to stamp their passport.</p>
+          </div>
+          <button class="btn btn-soft mt-2 no-print" type="button" id="btn-print">Print QR code</button>
+        </div>
+
+        <form class="card" id="edit-form">
+          <h3>Your public listing</h3>
+          <p class="muted small mt-1">This is what crawlers see on the map once you're paid and visible.</p>
+          <label class="field mt-2"><span>Shop name</span>
+            <input class="input" id="f-name" required maxlength="200" />
+          </label>
+          <label class="field"><span>Address</span>
+            <input class="input" id="f-address" maxlength="300" placeholder="Street, Puyallup, WA" />
+          </label>
+          <p class="form-note" id="pin-note"></p>
+          <label class="field"><span>Hours</span>
+            <textarea class="input" id="f-hours" maxlength="500" placeholder="Mon-Fri 7am-4pm, Sat 8am-3pm"></textarea>
+          </label>
+          <label class="field"><span>Short blurb</span>
+            <textarea class="input" id="f-blurb" maxlength="600" placeholder="What should crawlers know before they walk in?"></textarea>
+          </label>
+          <label class="field"><span>Website</span>
+            <input class="input" id="f-website" maxlength="300" placeholder="https://yourshop.com" inputmode="url" />
+          </label>
+          <label class="field"><span>Instagram</span>
+            <input class="input" id="f-instagram" maxlength="100" placeholder="@yourshop" />
+          </label>
+          <label class="field"><span>Phone</span>
+            <input class="input" id="f-phone" maxlength="40" inputmode="tel" />
+          </label>
+          <button class="btn btn-primary" type="submit" id="btn-save">Save listing</button>
+          <p class="form-success mt-2" id="save-ok" role="status"></p>
+          <p class="form-error mt-2" id="save-err" role="alert"></p>
+        </form>
+
+        <div class="card">
+          <h3>Photos</h3>
+          <p class="muted small mt-1">Up to 8 images. JPEG, PNG, WebP, GIF, or AVIF. 5 MB each.</p>
+          <div class="photo-grid mt-2" id="photos"></div>
+          <label class="field mt-2"><span>Add a photo</span>
+            <input class="input" id="f-photo" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" />
+          </label>
+          <p class="form-error mt-2" id="photo-err" role="alert"></p>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer class="site-footer" id="site-footer"></footer>
+  <script src="/assets/config.js"></script>
+  <script src="/assets/site.js?v=2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+  <script src="/assets/crawl.js"></script>
+  <script>
+  (function () {
+    var IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"];
+    var MAX_BYTES = 5 * 1024 * 1024;
+    var sb = null;
+    var listings = [];
+    var current = null;
+    var loadedFor = null;
+    var esc = function (s) { return window.HCCrawl ? HCCrawl.escapeHtml(s) : String(s || ""); };
+
+    function $(id) { return document.getElementById(id); }
+    function showBox(el, on) { if (el) el.classList.toggle("show", !!on); }
+    function showView(name) {
+      $("view-login").classList.toggle("hidden", name !== "login");
+      $("view-note").classList.toggle("hidden", name !== "note");
+      $("view-app").classList.toggle("hidden", name !== "app");
+    }
+    function note(html) {
+      $("note-body").innerHTML = html;
+      showView("note");
+    }
+    function isDenied(error) {
+      var msg = (error && (error.message || error.details)) || "";
+      return (error && error.code) === "42501" || /not an organizer|not authorized|permission denied/i.test(msg);
+    }
+    function cleanHandle(raw) {
+      var h = String(raw || "").trim().replace(/^@/, "");
+      h = h.replace(/^https?:\/\/(www\.)?instagram\.com\//i, "");
+      h = h.split(/[/?#]/)[0];
+      return h.slice(0, 100);
+    }
+    function geocodeQuery(address) {
+      if (/\bpuyallup\b/i.test(address) || /\b(wa|washington)\b/i.test(address)) return address;
+      return address + ", Puyallup, WA";
+    }
+    async function geocode(address) {
+      var ctrl = new AbortController();
+      var timer = setTimeout(function () { ctrl.abort(); }, 8000);
+      try {
+        var url = "https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" + encodeURIComponent(geocodeQuery(address));
+        var res = await fetch(url, { headers: { Accept: "application/json" }, signal: ctrl.signal });
+        if (!res.ok) return null;
+        var data = await res.json();
+        if (!data || !data[0]) return null;
+        var lat = Number(data[0].lat);
+        var lng = Number(data[0].lon);
+        if (!isFinite(lat) || !isFinite(lng)) return null;
+        return { lat: lat, lng: lng };
+      } catch (e) {
+        return null;
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+    function payHref(link, signupId, email) {
+      try {
+        var u = new URL(link);
+        if (signupId) u.searchParams.set("client_reference_id", signupId);
+        if (email) u.searchParams.set("prefilled_email", email);
+        return u.toString();
+      } catch (e) {
+        return "";
+      }
+    }
+    function publicPhoto(path) {
+      var out = sb.storage.from("shop-images").getPublicUrl(path);
+      return (out && out.data && out.data.publicUrl) || "";
+    }
+
+    function renderSwitch() {
+      if (listings.length < 2) {
+        $("listing-switch").innerHTML = "";
+        return;
+      }
+      $("listing-switch").innerHTML = '<label class="field"><span>Location</span><select class="input" id="listing-pick">' +
+        listings.map(function (l) {
+          return '<option value="' + esc(l.listing_id) + '">' + esc(l.display_name || l.crawl_name || "Listing") + "</option>";
+        }).join("") + "</select></label>";
+      $("listing-pick").value = current.listing_id;
+      $("listing-pick").onchange = function () { selectListing($("listing-pick").value); };
+    }
+
+    function renderPay() {
+      var l = current;
+      var html = "";
+      if (l.is_paid) {
+        html += '<span class="pill pill-ok">Paid ✓</span>';
+        if (l.is_approved) html += '<p class="mt-2">You\'re live on the map.</p>';
+        else html += '<p class="mt-2">Paid. This listing is hidden from the public map until it\'s turned back on.</p>';
+      } else {
+        html += '<span class="pill pill-wait">Not paid yet</span>';
+        var href = l.payment_link ? payHref(l.payment_link, l.signup_id, l.owner_email) : "";
+        if (href) {
+          html += '<p class="mt-2"><a class="btn btn-primary" href="' + esc(href) + '">Pay $49.99</a></p>';
+        } else {
+          html += "<p class=\"mt-2\">Payment link coming soon — Bryan will follow up.</p>";
+        }
+      }
+      if (l.paid_at) html += '<p class="small muted mt-1">Paid ' + esc(new Date(l.paid_at).toLocaleString()) + "</p>";
+      $("pay-card").innerHTML = html;
+    }
+
+    function renderQr() {
+      var l = current;
+      if (!l.is_paid) {
+        $("qr-box").classList.add("hidden");
+        return;
+      }
+      $("qr-box").classList.remove("hidden");
+      $("qr-name").textContent = l.display_name || "Your shop";
+      $("store-code").textContent = l.store_code || "—";
+      var host = $("qr-art");
+      if (!l.business_id || !l.qr_secret || typeof qrcode !== "function") {
+        host.innerHTML = '<p class="muted">Your printable QR will appear here once your counter code is ready. Refresh in a moment, or email bryan@myanthemcoffee.com.</p>';
+        return;
+      }
+      var url = new URL("https://www.hometowncrawls.com/puyallup/holiday-coffee-crawl");
+      url.searchParams.set("shop", l.business_id);
+      url.searchParams.set("code", l.qr_secret);
+      var qr = qrcode(0, "M");
+      qr.addData(url.toString());
+      qr.make();
+      host.innerHTML = typeof qr.createSvgTag === "function" ? qr.createSvgTag(6, 2) : qr.createImgTag(6, 8);
+    }
+
+    function renderPhotos() {
+      var paths = current.photo_paths || [];
+      if (!paths.length) {
+        $("photos").innerHTML = '<p class="muted small">No photos yet.</p>';
+        return;
+      }
+      $("photos").innerHTML = paths.map(function (path, i) {
+        var src = publicPhoto(path);
+        return '<figure><img src="' + esc(src) + '" alt="" /><figcaption><button type="button" data-remove="' + i + '">Remove</button></figcaption></figure>';
+      }).join("");
+    }
+
+    function fillForm() {
+      var l = current;
+      $("f-name").value = l.display_name || "";
+      $("f-address").value = l.address || "";
+      $("f-hours").value = l.hours || "";
+      $("f-blurb").value = l.blurb || "";
+      $("f-website").value = l.website || "";
+      $("f-instagram").value = l.instagram || "";
+      $("f-phone").value = l.phone || "";
+      $("pin-note").textContent = (l.lat != null && l.lng != null) ? "This address is pinned on the map." : "Save an address to pin the shop on the map.";
+      showBox($("save-ok"), false);
+      showBox($("save-err"), false);
+      showBox($("photo-err"), false);
+    }
+
+    function selectListing(id) {
+      current = listings.filter(function (l) { return l.listing_id === id; })[0] || listings[0];
+      renderSwitch();
+      renderPay();
+      renderQr();
+      renderPhotos();
+      fillForm();
+    }
+
+    async function enter(session) {
+      if (!session || loadedFor === session.user.id) return;
+      loadedFor = session.user.id;
+      try {
+        var linkRes = await sb.rpc("hc_link_account");
+        if (linkRes.error) throw linkRes.error;
+        var link = linkRes.data || {};
+        var email = session.user.email || link.email || "";
+        if (!link.eligible && !(Number(link.listings) > 0)) {
+          note("<h2>Check the magic link</h2><p class=\"mt-1\">Use the magic link sent to the email you signed up with. If this persists, contact <a href=\"mailto:bryan@myanthemcoffee.com\">bryan@myanthemcoffee.com</a>.</p>");
+          return;
+        }
+        var listRes = await sb.rpc("shop_my_listings");
+        if (listRes.error) throw listRes.error;
+        listings = listRes.data || [];
+        if (!listings.length) {
+          note('<h2>No listing yet</h2><p class="mt-1">No shop listing is tied to this email yet. The listing appears automatically after the signup form is submitted with this same email.</p><p class="mt-2"><a class="btn btn-primary" href="/puyallup/coffee-crawl">Sign up your shop</a></p>');
+          return;
+        }
+        $("who").textContent = email ? ("Signed in as " + email) : "Signed in";
+        showView("app");
+        selectListing(listings[0].listing_id);
+      } catch (e) {
+        loadedFor = null;
+        if (isDenied(e)) {
+          note("<h2>You're not authorized</h2><p class=\"mt-1\">This sign-in can't manage a shop listing. Use the magic link sent to the email you signed up with. If this persists, contact <a href=\"mailto:bryan@myanthemcoffee.com\">bryan@myanthemcoffee.com</a>.</p>");
+        } else {
+          note("<h2>Couldn't load your listing</h2><p class=\"mt-1\">" + esc(e.message || "Try the magic link again.") + "</p>");
+        }
+      }
+    }
+
+    async function signOut() {
+      loadedFor = null;
+      current = null;
+      listings = [];
+      await HCCrawl.signOut();
+      showView("login");
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      sb = HCCrawl.client();
+      if (!sb) {
+        note("<p>This page couldn't reach the listing service. Refresh and try again.</p>");
+        return;
+      }
+      sb.auth.onAuthStateChange(function (event, session) {
+        if ((event === "INITIAL_SESSION" || event === "SIGNED_IN") && session) {
+          setTimeout(function () { enter(session); }, 0);
+        } else if ((event === "INITIAL_SESSION" || event === "SIGNED_OUT") && !session) {
+          showView("login");
+        }
+      });
+      sb.auth.getSession().then(function (res) {
+        if (res.data && res.data.session) enter(res.data.session);
+        else showView("login");
+      });
+
+      $("login-form").onsubmit = async function (ev) {
+        ev.preventDefault();
+        showBox($("login-ok"), false);
+        showBox($("login-err"), false);
+        var email = $("login-email").value.trim();
+        var btn = $("btn-magic");
+        btn.disabled = true;
+        try {
+          var res = await sb.auth.signInWithOtp({
+            email: email,
+            options: { emailRedirectTo: location.origin + location.pathname }
+          });
+          if (res.error) throw res.error;
+          $("login-ok").textContent = "Check your email for the magic link. It opens this page.";
+          showBox($("login-ok"), true);
+        } catch (e) {
+          $("login-err").textContent = e.message || "Could not send the magic link.";
+          showBox($("login-err"), true);
+        } finally {
+          btn.disabled = false;
+        }
+      };
+
+      $("btn-out").onclick = signOut;
+      $("btn-out-note").onclick = signOut;
+      $("btn-print").onclick = function () { window.print(); };
+
+      $("edit-form").onsubmit = async function (ev) {
+        ev.preventDefault();
+        if (!current) return;
+        showBox($("save-ok"), false);
+        showBox($("save-err"), false);
+        var displayName = $("f-name").value.trim();
+        var address = $("f-address").value.trim();
+        var hours = $("f-hours").value.trim();
+        var blurb = $("f-blurb").value.trim();
+        var website = $("f-website").value.trim();
+        var instagram = cleanHandle($("f-instagram").value);
+        var phone = $("f-phone").value.trim();
+        if (displayName.length < 1 || displayName.length > 200) return fail("Shop name needs 1–200 characters.");
+        if (address.length > 300) return fail("Address needs to be 300 characters or fewer.");
+        if (hours.length > 500) return fail("Hours need to be 500 characters or fewer.");
+        if (blurb.length > 600) return fail("Blurb needs to be 600 characters or fewer.");
+        if (website.length > 300) return fail("Website needs to be 300 characters or fewer.");
+        if (website && !/^https?:\/\//i.test(website)) return fail("Website must start with http:// or https://.");
+        if (instagram.length > 100) return fail("Instagram needs to be 100 characters or fewer.");
+        if (phone.length > 40) return fail("Phone needs to be 40 characters or fewer.");
+        if ((current.photo_paths || []).length > 8) return fail("You can keep up to 8 photos.");
+
+        var patch = {
+          display_name: displayName,
+          address: address || null,
+          hours: hours || null,
+          blurb: blurb || null,
+          website: website || null,
+          instagram: instagram || null,
+          phone: phone || null,
+          photo_paths: current.photo_paths || []
+        };
+        $("btn-save").disabled = true;
+        $("btn-save").textContent = address ? "Finding the address…" : "Saving…";
+        var geocoded = false;
+        try {
+          if (!address) {
+            patch.lat = null;
+            patch.lng = null;
+          } else {
+            var coords = await geocode(address);
+            geocoded = !!coords;
+            if (coords) {
+              patch.lat = coords.lat;
+              patch.lng = coords.lng;
+            }
+          }
+          $("btn-save").textContent = "Saving…";
+          var upd = await sb.from("shop_listings").update(patch).eq("id", current.listing_id).select("id");
+          if (upd.error) throw upd.error;
+          if (!upd.data || !upd.data.length) throw new Error("That listing isn't linked to this sign-in.");
+          Object.keys(patch).forEach(function (k) { current[k] = patch[k]; });
+          var msg = "Listing saved.";
+          if (address && !geocoded) msg = "Listing saved. We couldn't pin that address, so the map pin was left as it was.";
+          $("save-ok").textContent = msg;
+          showBox($("save-ok"), true);
+          if (window.HC) HC.toast("Listing saved");
+          fillForm();
+          renderSwitch();
+        } catch (e) {
+          fail(e.message || "Could not save the listing.");
+        } finally {
+          $("btn-save").disabled = false;
+          $("btn-save").textContent = "Save listing";
+        }
+      };
+
+      $("f-photo").onchange = async function () {
+        var file = $("f-photo").files && $("f-photo").files[0];
+        showBox($("photo-err"), false);
+        if (!file || !current) return;
+        if (IMAGE_TYPES.indexOf(file.type) === -1) return photoFail("Use a JPEG, PNG, WebP, GIF, or AVIF image.");
+        if (file.size > MAX_BYTES) return photoFail("Images need to be 5 MB or smaller.");
+        var paths = (current.photo_paths || []).slice();
+        if (paths.length >= 8) return photoFail("You can add up to 8 photos.");
+        var safe = String(file.name || "photo").toLowerCase().replace(/[^a-z0-9.]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "photo";
+        var path = current.listing_id + "/" + Date.now() + "-" + safe;
+        $("f-photo").disabled = true;
+        try {
+          var up = await sb.storage.from("shop-images").upload(path, file, { contentType: file.type, upsert: false });
+          if (up.error) throw up.error;
+          var next = paths.concat([path]);
+          var upd = await sb.from("shop_listings").update({ photo_paths: next }).eq("id", current.listing_id).select("id");
+          if (upd.error || !upd.data || !upd.data.length) {
+            await sb.storage.from("shop-images").remove([path]);
+            throw (upd.error || new Error("Could not save the photo on your listing."));
+          }
+          current.photo_paths = next;
+          renderPhotos();
+          if (window.HC) HC.toast("Photo added");
+        } catch (e) {
+          photoFail(e.message || "Could not upload that photo.");
+        } finally {
+          $("f-photo").value = "";
+          $("f-photo").disabled = false;
+        }
+      };
+
+      $("photos").onclick = async function (ev) {
+        var btn = ev.target.closest("[data-remove]");
+        if (!btn || !current) return;
+        var index = Number(btn.getAttribute("data-remove"));
+        var path = (current.photo_paths || [])[index];
+        if (!path) return;
+        if (!window.confirm("Remove this photo?")) return;
+        showBox($("photo-err"), false);
+        try {
+          await sb.storage.from("shop-images").remove([path]);
+          var next = (current.photo_paths || []).filter(function (_, i) { return i !== index; });
+          var upd = await sb.from("shop_listings").update({ photo_paths: next }).eq("id", current.listing_id).select("id");
+          if (upd.error) throw upd.error;
+          current.photo_paths = next;
+          renderPhotos();
+        } catch (e) {
+          photoFail(e.message || "Could not remove that photo.");
+        }
+      };
+
+      function fail(msg) {
+        $("save-err").textContent = msg;
+        showBox($("save-err"), true);
+      }
+      function photoFail(msg) {
+        $("photo-err").textContent = msg;
+        showBox($("photo-err"), true);
+      }
+    });
+  })();
+  </script>
+</body>
+</html>

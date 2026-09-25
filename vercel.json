@@ -21,6 +21,18 @@
     {
       "source": "/puyallup/coffee-crawl/thanks",
       "destination": "/puyallup/coffee-crawl/thanks/index.html"
+    },
+    {
+      "source": "/puyallup/holiday-coffee-crawl",
+      "destination": "/puyallup/holiday-coffee-crawl/index.html"
+    },
+    {
+      "source": "/puyallup/coffee-crawl/shop",
+      "destination": "/puyallup/coffee-crawl/shop/index.html"
+    },
+    {
+      "source": "/puyallup/coffee-crawl/organizer",
+      "destination": "/puyallup/coffee-crawl/organizer/index.html"
     }
   ],
   "headers": [

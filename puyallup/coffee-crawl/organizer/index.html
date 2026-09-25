@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Organizer · Puyallup Holiday Coffee Crawl</title>
+  <meta name="theme-color" content="#1f3a24" />
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/site.css" />
+  <style>
+    .portal-hero { padding: 2.25rem 0 1rem; }
+    button.card { text-align: left; width: 100%; }
+    button.card[aria-pressed="true"] { outline: 2px solid var(--green); }
+    .stat { font-family: var(--font-display); font-size: 2rem; color: var(--green); line-height: 1.1; margin-top: .35rem; }
+    .trend { width: 100%; height: auto; display: block; }
+    .table-wrap { overflow-x: auto; }
+    table.shops { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    table.shops th, table.shops td { text-align: left; padding: .55rem .5rem; border-bottom: 1px solid var(--line); vertical-align: top; white-space: nowrap; }
+    table.shops th { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+    .legend { display: flex; gap: 1rem; font-size: .85rem; color: var(--muted); }
+    .swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; margin-right: .35rem; vertical-align: -1px; }
+  </style>
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+  <main>
+    <div class="wrap portal-hero">
+      <p class="eyebrow">Organizer</p>
+      <h1>Crawl dashboard</h1>
+      <p class="muted">Shops, payments, and stamps for crawls you organize. Bryan Reynolds, Anthem Coffee, splits each shop fee with Hometown Crawls.</p>
+    </div>
+
+    <div class="wrap stack" style="padding-bottom:3rem">
+      <section class="card auth-panel" id="view-login">
+        <div class="auth-status">Sign in with your organizer email.</div>
+        <form id="login-form">
+          <label class="field"><span>Email</span>
+            <input class="input" type="email" id="login-email" autocomplete="email" placeholder="you@example.com" required />
+          </label>
+          <button class="btn btn-primary" type="submit" id="btn-magic">Send magic link</button>
+          <p class="form-note">We'll email a one-time link that opens this page. No password.</p>
+        </form>
+        <p class="form-success mt-2" id="login-ok" role="status"></p>
+        <p class="form-error mt-2" id="login-err" role="alert"></p>
+      </section>
+
+      <section class="card hidden" id="view-note">
+        <div id="note-body"></div>
+        <button class="btn btn-ghost mt-2" type="button" id="btn-out-note">Sign out</button>
+      </section>
+
+      <section id="view-dash" class="stack hidden">
+        <div class="row" style="justify-content:space-between">
+          <p class="small muted" id="who"></p>
+          <button class="btn btn-ghost" type="button" id="btn-out">Sign out</button>
+        </div>
+        <div class="grid" id="crawl-switch"></div>
+        <div id="crawl-body" class="stack hidden">
+          <div class="grid" id="stat-cards"></div>
+          <div class="grid" id="money-cards"></div>
+          <div class="card">
+            <div class="row" style="justify-content:space-between">
+              <h3>Daily trend</h3>
+              <div class="legend"><span><i class="swatch" style="background:#1f3a24"></i>Passports</span><span><i class="swatch" style="background:#b0893f"></i>Stamps</span></div>
+            </div>
+            <div id="trend" class="mt-2"></div>
+          </div>
+          <div class="card">
+            <h3>Stamps per shop</h3>
+            <div id="per-shop" class="mt-2"></div>
+          </div>
+          <div class="card">
+            <div class="row" style="justify-content:space-between">
+              <h3>Shops</h3>
+              <div class="row">
+                <button class="btn btn-ghost" type="button" id="btn-refresh">Refresh</button>
+                <button class="btn btn-soft" type="button" id="btn-csv">Download CSV</button>
+              </div>
+            </div>
+            <div class="table-wrap mt-2">
+              <table class="shops">
+                <thead>
+                  <tr>
+                    <th>Shop</th>
+                    <th>Contact</th>
+                    <th>Applied</th>
+                    <th>Payment</th>
+                    <th>Map</th>
+                    <th>Photos</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="shop-rows"></tbody>
+              </table>
+            </div>
+            <p class="muted small mt-2 hidden" id="shops-empty">No shops have applied yet.</p>
+            <p class="form-error mt-2" id="action-err" role="alert"></p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer class="site-footer" id="site-footer"></footer>
+  <script src="/assets/config.js"></script>
+  <script src="/assets/site.js?v=2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/crawl.js"></script>
+  <script>
+  (function () {
+    var sb = null;
+    var loadedFor = null;
+    var crawls = [];
+    var activeId = null;
+    var shops = [];
+    var stats = {};
+    var busy = false;
+    var esc = function (s) { return window.HCCrawl ? HCCrawl.escapeHtml(s) : String(s || ""); };
+
+    function $(id) { return document.getElementById(id); }
+    function showBox(el, on) { if (el) el.classList.toggle("show", !!on); }
+    function showView(name) {
+      $("view-login").classList.toggle("hidden", name !== "login");
+      $("view-note").classList.toggle("hidden", name !== "note");
+      $("view-dash").classList.toggle("hidden", name !== "dash");
+    }
+    function note(html) {
+      $("note-body").innerHTML = html;
+      showView("note");
+    }
+    function isDenied(error) {
+      var msg = (error && (error.message || error.details)) || "";
+      return (error && error.code) === "42501" || /not an organizer|not authorized|permission denied/i.test(msg);
+    }
+    function usd(cents) {
+      var n = Number(cents || 0) / 100;
+      return n.toLocaleString("en-US", { style: "currency", currency: "USD" });
+    }
+    function moneyNum(cents) {
+      return (Number(cents || 0) / 100).toFixed(2);
+    }
+    function pct(n) {
+      var x = Number(n);
+      if (!isFinite(x)) return "";
+      return String(Math.round(x * 10) / 10).replace(/\.0$/, "") + "%";
+    }
+    function ptDay(date) {
+      return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Los_Angeles", year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
+    }
+    function fmtRange(c) {
+      var opts = { timeZone: "America/Los_Angeles", month: "short", day: "numeric", year: "numeric" };
+      var a = c.starts_at ? new Intl.DateTimeFormat("en-US", opts).format(new Date(c.starts_at)) : "";
+      var b = c.ends_at ? new Intl.DateTimeFormat("en-US", opts).format(new Date(c.ends_at)) : "";
+      if (a && b) return a + " – " + b;
+      return a || b || "";
+    }
+    function setCrawlParam(id) {
+      var url = new URL(location.href);
+      url.searchParams.set("crawl", id);
+      history.replaceState({}, "", url.pathname + "?" + url.searchParams.toString() + url.hash);
+    }
+    function sum(list, key) {
+      return list.reduce(function (acc, row) { return acc + Number(row[key] || 0); }, 0);
+    }
+
+    function renderCrawls() {
+      $("crawl-switch").innerHTML = crawls.map(function (c) {
+        var pressed = c.crawl_id === activeId ? "true" : "false";
+        return '<button type="button" class="card" data-crawl="' + esc(c.crawl_id) + '" aria-pressed="' + pressed + '">' +
+          '<p class="eyebrow">' + esc(c.city || "Crawl") + "</p>" +
+          "<h3>" + esc(c.name) + "</h3>" +
+          '<p class="muted small">' + esc(fmtRange(c)) + "</p>" +
+          '<p class="small mt-1">' + Number(c.applied || 0) + " applied · " + Number(c.paid || 0) + " paid · " + Number(c.visible || 0) + " on the map</p>" +
+          "</button>";
+      }).join("");
+    }
+
+    function renderStats() {
+      var cards = [
+        ["Passports started", stats.passports_started],
+        ["Total stamps", stats.total_stamps],
+        ["People stamping", stats.unique_stampers],
+        ["Shops applied", stats.shops_applied],
+        ["Shops paid", stats.shops_paid],
+        ["Visible on the map", stats.shops_visible]
+      ];
+      $("stat-cards").innerHTML = cards.map(function (c) {
+        var value = c[1] == null || c[1] === "" ? "0" : String(c[1]);
+        return '<div class="card"><p class="eyebrow">' + esc(c[0]) + '</p><p class="stat">' + esc(value) + "</p></div>";
+      }).join("");
+      var share = pct(stats.organizer_share_pct);
+      var gross = sum(shops, "amount_cents");
+      var bryan = sum(shops, "organizer_share_cents");
+      var chris = sum(shops, "hc_share_cents");
+      $("money-cards").innerHTML =
+        '<div class="card"><p class="eyebrow">Gross</p><p class="stat">' + esc(usd(gross)) + "</p></div>" +
+        '<div class="card"><p class="eyebrow">Bryan\'s share' + (share ? " (" + esc(share) + ")" : "") + '</p><p class="stat">' + esc(usd(bryan)) + "</p></div>" +
+        '<div class="card"><p class="eyebrow">Hometown Crawls (Chris) share</p><p class="stat">' + esc(usd(chris)) + "</p></div>";
+    }
+
+    function renderTrend() {
+      var daily = Array.isArray(stats.daily) ? stats.daily : [];
+      if (!daily.length) {
+        $("trend").innerHTML = '<p class="muted">No passport or stamp activity yet.</p>';
+        return;
+      }
+      var w = 720, h = 250, padL = 36, padR = 12, padT = 16, padB = 52;
+      var innerW = w - padL - padR;
+      var innerH = h - padT - padB;
+      var max = 1;
+      daily.forEach(function (d) { max = Math.max(max, Number(d.passports) || 0, Number(d.stamps) || 0); });
+      var slot = innerW / daily.length;
+      var bw = Math.max(2, Math.min(16, slot * 0.28));
+      var step = Math.ceil(daily.length / 12);
+      var parts = ['<svg class="trend" viewBox="0 0 ' + w + " " + h + '" role="img" aria-label="Daily passports and stamps">'];
+      for (var g = 0; g <= 4; g++) {
+        var y = padT + innerH - (innerH * g / 4);
+        var val = Math.round(max * g / 4);
+        parts.push('<line x1="' + padL + '" y1="' + y + '" x2="' + (w - padR) + '" y2="' + y + '" stroke="#e4dccb" />');
+        parts.push('<text x="' + (padL - 6) + '" y="' + (y + 4) + '" text-anchor="end" font-size="11" fill="#6b6558" font-family="Outfit, sans-serif">' + val + "</text>");
+      }
+      daily.forEach(function (d, i) {
+        var x = padL + i * slot + slot / 2;
+        var ph = ((Number(d.passports) || 0) / max) * innerH;
+        var sh = ((Number(d.stamps) || 0) / max) * innerH;
+        var y0 = padT + innerH;
+        var day = esc(d.day || "");
+        parts.push('<rect x="' + (x - bw - 1) + '" y="' + (y0 - ph) + '" width="' + bw + '" height="' + Math.max(ph, 0) + '" fill="#1f3a24" rx="2"><title>' + day + " passports: " + (Number(d.passports) || 0) + "</title></rect>");
+        parts.push('<rect x="' + (x + 1) + '" y="' + (y0 - sh) + '" width="' + bw + '" height="' + Math.max(sh, 0) + '" fill="#b0893f" rx="2"><title>' + day + " stamps: " + (Number(d.stamps) || 0) + "</title></rect>");
+        if (i % step === 0) {
+          var label = esc(String(d.day || "").slice(5));
+          parts.push('<text x="' + x + '" y="' + (h - 18) + '" text-anchor="end" font-size="10" fill="#6b6558" font-family="Outfit, sans-serif" transform="rotate(-40 ' + x + " " + (h - 18) + ')">' + label + "</text>");
+        }
+      });
+      parts.push("</svg>");
+      $("trend").innerHTML = parts.join("");
+    }
+
+    function renderPerShop() {
+      var rows = Array.isArray(stats.stamps_per_shop) ? stats.stamps_per_shop : [];
+      if (!rows.length) {
+        $("per-shop").innerHTML = '<p class="muted">No stamps yet.</p>';
+        return;
+      }
+      $("per-shop").innerHTML = rows.map(function (s) {
+        return '<div class="shop-row"><div style="flex:1"><b>' + esc(s.name || s.business_id || "Shop") + '</b></div><span class="pill pill-muted">' + esc(String(Number(s.stamps) || 0)) + "</span></div>";
+      }).join("");
+    }
+
+    function renderShops() {
+      var body = $("shop-rows");
+      $("shops-empty").classList.toggle("hidden", shops.length > 0);
+      body.innerHTML = shops.map(function (s) {
+        var name = s.display_name || s.signup_business_name || "Shop";
+        var contact = [s.contact_name, s.email, s.phone].filter(Boolean).map(esc).join("<br />");
+        var pay = s.is_paid
+          ? '<span class="pill pill-ok">Paid ✓</span><div class="small muted">' + esc(usd(s.amount_cents)) + (s.paid_pt ? " · " + esc(s.paid_pt) : "") + "</div>"
+          : '<span class="pill pill-wait">Not paid yet</span>';
+        var map = s.is_visible
+          ? '<span class="pill pill-ok">On map</span>'
+          : '<span class="pill pill-muted">Hidden</span>';
+        var paidBtn = s.is_paid ? "Unmark" : "Mark paid";
+        var mapBtn = s.is_approved ? "Hide" : "Show on map";
+        return "<tr><td><b>" + esc(name) + "</b>" +
+          (s.address ? '<div class="small muted">' + esc(s.address) + "</div>" : "") +
+          (s.owner_linked ? '<div class="small muted">Owner linked</div>' : "") +
+          "</td><td>" + (contact || "—") + "</td><td>" + esc(s.applied_pt || "") + "</td><td>" + pay +           "</td><td>" + map +
+          "</td><td>" + esc(String(Number(s.photo_count) || 0)) + '</td><td><div class="row">' +
+          '<button class="btn btn-soft" type="button" data-act="paid" data-id="' + esc(s.listing_id) + '">' + paidBtn + "</button>" +
+          '<button class="btn btn-ghost" type="button" data-act="approve" data-id="' + esc(s.listing_id) + '">' + mapBtn + "</button>" +
+          "</div></td></tr>";
+      }).join("");
+    }
+
+    function renderAll() {
+      renderCrawls();
+      renderStats();
+      renderTrend();
+      renderPerShop();
+      renderShops();
+      $("crawl-body").classList.remove("hidden");
+    }
+
+    function csvCell(value) {
+      var s = value == null ? "" : String(value);
+      if (/^[=+\-@]/.test(s)) s = "'" + s;
+      if (/[",\n\r]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
+      return s;
+    }
+    function downloadCsv() {
+      var cols = [
+        ["listing_id", function (r) { return r.listing_id; }],
+        ["signup_id", function (r) { return r.signup_id; }],
+        ["display_name", function (r) { return r.display_name; }],
+        ["signup_business_name", function (r) { return r.signup_business_name; }],
+        ["contact_name", function (r) { return r.contact_name; }],
+        ["email", function (r) { return r.email; }],
+        ["phone", function (r) { return r.phone; }],
+        ["applied_at", function (r) { return r.applied_at; }],
+        ["applied_pt", function (r) { return r.applied_pt; }],
+        ["is_paid", function (r) { return r.is_paid; }],
+        ["paid_at", function (r) { return r.paid_at; }],
+        ["paid_pt", function (r) { return r.paid_pt; }],
+        ["payment_source", function (r) { return r.payment_source; }],
+        ["amount_dollars", function (r) { return moneyNum(r.amount_cents); }],
+        ["organizer_share_dollars", function (r) { return moneyNum(r.organizer_share_cents); }],
+        ["hc_share_dollars", function (r) { return moneyNum(r.hc_share_cents); }],
+        ["is_approved", function (r) { return r.is_approved; }],
+        ["is_visible", function (r) { return r.is_visible; }],
+        ["address", function (r) { return r.address; }],
+        ["website", function (r) { return r.website; }],
+        ["instagram", function (r) { return r.instagram; }],
+        ["business_id", function (r) { return r.business_id; }],
+        ["owner_linked", function (r) { return r.owner_linked; }],
+        ["photo_count", function (r) { return r.photo_count; }]
+      ];
+      var lines = [cols.map(function (c) { return csvCell(c[0]); }).join(",")];
+      shops.forEach(function (row) {
+        lines.push(cols.map(function (c) { return csvCell(c[1](row)); }).join(","));
+      });
+      var blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = activeId + "-shops-" + ptDay(new Date()) + ".csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    }
+
+    async function openCrawl(id) {
+      activeId = id;
+      setCrawlParam(id);
+      renderCrawls();
+      showBox($("action-err"), false);
+      var shopsRes = await sb.rpc("organizer_crawl_shops", { p_crawl: id });
+      var statsRes = await sb.rpc("organizer_crawl_stats", { p_crawl: id });
+      if (shopsRes.error || statsRes.error) {
+        var err = shopsRes.error || statsRes.error;
+        if (isDenied(err)) {
+          note("<h2>You're not authorized</h2><p class=\"mt-1\">This sign-in can't view that crawl.</p>");
+          return;
+        }
+        throw err;
+      }
+      shops = shopsRes.data || [];
+      stats = statsRes.data || {};
+      showView("dash");
+      renderAll();
+    }
+
+    function chooseInitial() {
+      var want = new URLSearchParams(location.search).get("crawl");
+      if (want && crawls.some(function (c) { return c.crawl_id === want; })) return want;
+      if (crawls.length === 1) return crawls[0].crawl_id;
+      return null;
+    }
+
+    async function enter(session) {
+      if (!session || loadedFor === session.user.id + ":ready") return;
+      if (loadedFor && loadedFor.indexOf(session.user.id) === 0) return;
+      loadedFor = session.user.id;
+      try {
+        var linkRes = await sb.rpc("hc_link_account");
+        if (linkRes.error) throw linkRes.error;
+        var link = linkRes.data || {};
+        if (!link.eligible && !link.is_organizer) {
+          note("<h2>Check the magic link</h2><p class=\"mt-1\">Use the magic link sent to the email you signed up with. If this persists, contact <a href=\"mailto:bryan@myanthemcoffee.com\">bryan@myanthemcoffee.com</a>.</p>");
+          return;
+        }
+        var mine = await sb.rpc("organizer_my_crawls");
+        if (mine.error) throw mine.error;
+        crawls = mine.data || [];
+        if (!crawls.length) {
+          note("<h2>This email isn't an organizer</h2><p class=\"muted mt-1\">Sign in with the email that was added as an organizer.</p>");
+          return;
+        }
+        loadedFor = session.user.id + ":ready";
+        $("who").textContent = session.user.email ? ("Signed in as " + session.user.email) : "Signed in";
+        showView("dash");
+        renderCrawls();
+        var pick = chooseInitial();
+        if (pick) await openCrawl(pick);
+        else $("crawl-body").classList.add("hidden");
+      } catch (e) {
+        loadedFor = null;
+        if (isDenied(e)) {
+          note("<h2>You're not authorized</h2><p class=\"mt-1\">This sign-in can't view organizer data for this crawl.</p>");
+        } else {
+          note("<h2>Couldn't open the dashboard</h2><p class=\"mt-1\">" + esc(e.message || "Try the magic link again.") + "</p>");
+        }
+      }
+    }
+
+    async function signOut() {
+      loadedFor = null;
+      crawls = [];
+      shops = [];
+      activeId = null;
+      await HCCrawl.signOut();
+      showView("login");
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      sb = HCCrawl.client();
+      if (!sb) {
+        note("<p>This page couldn't reach the dashboard service. Refresh and try again.</p>");
+        return;
+      }
+      sb.auth.onAuthStateChange(function (event, session) {
+        if ((event === "INITIAL_SESSION" || event === "SIGNED_IN") && session) {
+          setTimeout(function () { enter(session); }, 0);
+        } else if ((event === "INITIAL_SESSION" || event === "SIGNED_OUT") && !session) {
+          showView("login");
+        }
+      });
+      sb.auth.getSession().then(function (res) {
+        if (res.data && res.data.session) enter(res.data.session);
+        else showView("login");
+      });
+
+      $("login-form").onsubmit = async function (ev) {
+        ev.preventDefault();
+        showBox($("login-ok"), false);
+        showBox($("login-err"), false);
+        var btn = $("btn-magic");
+        btn.disabled = true;
+        try {
+          var res = await sb.auth.signInWithOtp({
+            email: $("login-email").value.trim(),
+            options: { emailRedirectTo: location.origin + location.pathname }
+          });
+          if (res.error) throw res.error;
+          $("login-ok").textContent = "Check your email for the magic link. It opens this page.";
+          showBox($("login-ok"), true);
+        } catch (e) {
+          $("login-err").textContent = e.message || "Could not send the magic link.";
+          showBox($("login-err"), true);
+        } finally {
+          btn.disabled = false;
+        }
+      };
+
+      $("btn-out").onclick = signOut;
+      $("btn-out-note").onclick = signOut;
+      $("btn-csv").onclick = downloadCsv;
+      $("btn-refresh").onclick = function () { if (activeId) openCrawl(activeId); };
+
+      $("crawl-switch").onclick = function (ev) {
+        var btn = ev.target.closest("[data-crawl]");
+        if (!btn) return;
+        openCrawl(btn.getAttribute("data-crawl")).catch(function (e) {
+          $("action-err").textContent = e.message || "Could not open that crawl.";
+          showBox($("action-err"), true);
+        });
+      };
+
+      $("shop-rows").onclick = async function (ev) {
+        var btn = ev.target.closest("[data-act]");
+        if (!btn || busy) return;
+        var id = btn.getAttribute("data-id");
+        var shop = shops.filter(function (s) { return s.listing_id === id; })[0];
+        if (!shop) return;
+        showBox($("action-err"), false);
+        var act = btn.getAttribute("data-act");
+        if (act === "paid" && shop.is_paid) {
+          var label = shop.display_name || "this shop";
+          if (!window.confirm("Unmark " + label + " as paid?")) return;
+        }
+        busy = true;
+        try {
+          var res = act === "paid"
+            ? await sb.rpc("organizer_set_paid", { p_listing: id, p_paid: !shop.is_paid, p_amount_cents: null })
+            : await sb.rpc("organizer_set_approved", { p_listing: id, p_approved: !shop.is_approved });
+          if (res.error) {
+            if (isDenied(res.error)) {
+              note("<h2>You're not authorized</h2><p class=\"mt-1\">This sign-in can't change shops on that crawl.</p>");
+              return;
+            }
+            throw res.error;
+          }
+          await openCrawl(activeId);
+          if (window.HC) HC.toast(act === "paid" ? "Payment updated" : "Map visibility updated");
+        } catch (e) {
+          $("action-err").textContent = e.message || "Could not update that shop.";
+          showBox($("action-err"), true);
+        } finally {
+          busy = false;
+        }
+      };
+    });
+  })();
+  </script>
+</body>
+</html>
