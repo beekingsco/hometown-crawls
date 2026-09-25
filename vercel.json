@@ -2,16 +2,48 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/shops/join", "destination": "/shops/join.html" },
-    { "source": "/puyallupwa/coffee", "destination": "/puyallupwa/coffee/index.html" },
-    { "source": "/puyallupwa/coffee/", "destination": "/puyallupwa/coffee/index.html" }
+    {
+      "source": "/shops/join",
+      "destination": "/shops/join.html"
+    },
+    {
+      "source": "/puyallupwa/coffee",
+      "destination": "/puyallupwa/coffee/index.html"
+    },
+    {
+      "source": "/puyallupwa/coffee/",
+      "destination": "/puyallupwa/coffee/index.html"
+    },
+    {
+      "source": "/puyallup/coffee-crawl",
+      "destination": "/puyallup/coffee-crawl/index.html"
+    },
+    {
+      "source": "/puyallup/coffee-crawl/thanks",
+      "destination": "/puyallup/coffee-crawl/thanks/index.html"
+    }
   ],
   "headers": [
     {
       "source": "/assets/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=86400" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
+        }
       ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/puyallup",
+      "destination": "/puyallup/coffee-crawl",
+      "permanent": false
+    },
+    {
+      "source": "/puyallup/",
+      "destination": "/puyallup/coffee-crawl",
+      "permanent": false
     }
   ]
 }

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Thanks! You're on the Puyallup Coffee Crawl · Hometown Crawls</title>
+  <meta name="theme-color" content="#1f3a24" />
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/site.css" />
+  <style>
+    .ty { padding: 3rem 0 2rem; text-align: center; }
+    .ty-badge { width: 92px; height: 92px; margin: 0 auto 1.25rem; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-size: 2.4rem; box-shadow: var(--shadow); }
+    .ty h1 { font-size: clamp(2rem, 7vw, 3rem); }
+    .ty .lead { color: var(--ink-soft); max-width: 44ch; margin: .8rem auto 0; font-size: 1.05rem; }
+    .ty-steps { text-align: left; margin-top: 2rem; display: grid; gap: .75rem; }
+    .ty-steps .card { display: flex; gap: .9rem; align-items: flex-start; }
+    .ty-steps .n { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; background: var(--soft); color: var(--green); font-weight: 700; display: grid; place-items: center; }
+    .ty a.u { color: var(--green); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+  </style>
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+  <main>
+    <div class="wrap-narrow ty">
+      <div class="ty-badge">☕</div>
+      <p class="eyebrow">Puyallup Coffee Crawl · November 1–30, 2026</p>
+      <h1 id="ty-title">You're on the trail!</h1>
+      <p class="lead" id="ty-lead">Thanks for joining. Your $49.99 location entry is confirmed, and Stripe has emailed your receipt.</p>
+
+      <div class="ty-steps">
+        <div class="card"><div class="n">1</div><div><strong>Watch your inbox</strong><p class="muted small">Before November 1 we'll send your QR sign, counter code, and a preview of your map listing.</p></div></div>
+        <div class="card"><div class="n">2</div><div><strong>Put up your QR sign</strong><p class="muted small">Place it near the register and share the counter code with your team.</p></div></div>
+        <div class="card"><div class="n">3</div><div><strong>Welcome the crawlers</strong><p class="muted small">The crawl runs all November. Expect new faces with passports in hand.</p></div></div>
+      </div>
+
+      <p class="muted small mt-3" style="margin-top:2rem">Questions? Email <a class="u" href="mailto:bryan@myanthemcoffee.com">bryan@myanthemcoffee.com</a> (organized by Bryan at Anthem Coffee).</p>
+      <p class="mt-2"><a class="btn btn-ghost" href="/puyallup/coffee-crawl">Back to the crawl page</a></p>
+    </div>
+  </main>
+  <footer class="site-footer" id="site-footer"></footer>
+  <script src="/assets/config.js"></script>
+  <script src="/assets/site.js?v=2"></script>
+  <script>
+    (function () {
+      var p = new URLSearchParams(location.search);
+      if (p.get("saved") && !p.get("session_id")) {
+        document.getElementById("ty-title").textContent = "Your spot is saved!";
+        document.getElementById("ty-lead").textContent = "Thanks! We've got your shop's details. We'll email your secure $49.99 payment link shortly to lock in your spot.";
+      }
+    })();
+  </script>
+</body>
+</html>
