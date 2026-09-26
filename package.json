@@ -1,0 +1,9 @@
+{
+  "name": "hometown-crawls",
+  "private": true,
+  "description": "Hometown Crawls static site and Stripe webhook",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
+    "stripe": "^22.6.2"
+  }
+}
