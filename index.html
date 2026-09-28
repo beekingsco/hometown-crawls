@@ -159,6 +159,10 @@
               <p class="eyebrow">Map</p>
               <h2 style="margin:.4rem 0 .75rem">See every stop</h2>
               <p class="muted">Pins for each participating shop on the Puyallup Coffee trail. Plan your route before you leave the house.</p>
+              <div id="home-shops-empty" class="hidden mt-2">
+                <h3>Shops announced soon</h3>
+                <p class="muted mt-1">The map is centered on downtown Puyallup. Pins will show up as coffee shops join.</p>
+              </div>
               <div class="row mt-2">
                 <a class="btn btn-primary" href="map.html">Open full map</a>
                 <a class="btn btn-ghost" href="puyallupwa/coffee/index.html">Trail details</a>
@@ -254,10 +258,14 @@
       let shops = [];
       try {
         const res = await HCCrawl.loadShops("puy-coffee");
-        shops = res.shops && res.shops.length ? res.shops : HCCrawl.FALLBACK_SHOPS;
+        shops = res.shops || [];
+        if (res.error) console.warn(res.error);
       } catch (e) {
-        shops = HCCrawl.FALLBACK_SHOPS;
+        shops = [];
+        console.warn(e);
       }
+      const empty = document.getElementById("home-shops-empty");
+      if (empty) empty.classList.toggle("hidden", shops.length > 0);
       HCCrawl.initMap(el, shops, { lat: 47.191, lng: -122.293 });
     });
   </script>

@@ -106,6 +106,10 @@
           <h2>Stamp at these shops</h2>
         </div>
         <div class="card" id="shop-list"><p class="muted">Loading shops…</p></div>
+        <div id="coffee-shops-empty" class="card mt-2 hidden">
+          <h3>Shops announced soon</h3>
+          <p class="muted mt-1">The map is centered on downtown Puyallup. Pins and shop cards will show up as coffee shops join.</p>
+        </div>
       </div>
     </section>
 
@@ -157,21 +161,36 @@
           statusEl.className = "pill pill-ok";
         }
         const res = await HCCrawl.loadShops("puy-coffee");
-        shops = res.shops?.length ? res.shops : HCCrawl.FALLBACK_SHOPS;
+        shops = res.shops || [];
         if (res.error) console.warn(res.error);
       } catch (e) {
-        shops = HCCrawl.FALLBACK_SHOPS;
+        shops = [];
+        console.warn(e);
         statusEl.textContent = "Live";
         statusEl.className = "pill pill-ok";
       }
 
       const stamps = await HCCrawl.myStamps("puy-coffee");
-      HCCrawl.renderShopList(document.getElementById("shop-list"), shops, stamps);
-      HCCrawl.renderStamps(document.getElementById("passport-area"), shops, stamps);
-      HCCrawl.initMap(document.getElementById("coffee-map"), shops, { lat: 47.191, lng: -122.293 });
-
+      const empty = document.getElementById("coffee-shops-empty");
       const sel = document.getElementById("quick-shop");
-      sel.innerHTML = shops.map(s => `<option value="${s.id}">${HCCrawl.escapeHtml(s.name)}</option>`).join("");
+      const stampBtn = document.getElementById("btn-quick-stamp");
+      if (!shops.length) {
+        document.getElementById("shop-list").classList.add("hidden");
+        empty.classList.remove("hidden");
+        document.getElementById("passport-area").innerHTML = `<p class="muted">Your stamp grid will fill in once shops are announced.</p>`;
+        sel.innerHTML = `<option value="">Shops announced soon</option>`;
+        sel.disabled = true;
+        if (stampBtn) stampBtn.disabled = true;
+      } else {
+        document.getElementById("shop-list").classList.remove("hidden");
+        empty.classList.add("hidden");
+        HCCrawl.renderShopList(document.getElementById("shop-list"), shops, stamps);
+        HCCrawl.renderStamps(document.getElementById("passport-area"), shops, stamps);
+        sel.disabled = false;
+        if (stampBtn) stampBtn.disabled = false;
+        sel.innerHTML = shops.map(s => `<option value="${s.id}">${HCCrawl.escapeHtml(s.name)}</option>`).join("");
+      }
+      HCCrawl.initMap(document.getElementById("coffee-map"), shops, { lat: 47.191, lng: -122.293 });
 
       const session = await HCCrawl.getSession();
       if (session) joinStatus.textContent = "Signed in — you can join and stamp.";
@@ -182,7 +201,7 @@
           HC.toast("Passport joined");
           joinStatus.textContent = "You’re on the Puyallup Coffee passport.";
           const stamps2 = await HCCrawl.myStamps("puy-coffee");
-          HCCrawl.renderStamps(document.getElementById("passport-area"), shops, stamps2);
+          if (shops.length) HCCrawl.renderStamps(document.getElementById("passport-area"), shops, stamps2);
         } catch (e) {
           joinStatus.textContent = e.message || String(e);
           if (/sign in|authenticated|Not authenticated/i.test(String(e.message || e))) {
