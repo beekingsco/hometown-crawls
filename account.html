@@ -105,6 +105,16 @@
     }
     async function loadPassportUI(shops) {
       const sel = document.getElementById("stamp-shop");
+      const stampBtn = document.getElementById("btn-stamp");
+      if (!shops.length) {
+        sel.innerHTML = `<option value="">Shops announced soon</option>`;
+        sel.disabled = true;
+        if (stampBtn) stampBtn.disabled = true;
+        document.getElementById("passport-stamps").innerHTML = `<p class="muted">Shops announced soon. Stamps will show up here after coffee shops join.</p>`;
+        return;
+      }
+      sel.disabled = false;
+      if (stampBtn) stampBtn.disabled = false;
       sel.innerHTML = shops.map(s => `<option value="${s.id}">${HCCrawl.escapeHtml(s.name)}</option>`).join("");
       const stamps = await HCCrawl.myStamps("puy-coffee");
       HCCrawl.renderStamps(document.getElementById("passport-stamps"), shops, stamps);
@@ -116,8 +126,12 @@
       let shops = [];
       try {
         const res = await HCCrawl.loadShops("puy-coffee");
-        shops = res.shops?.length ? res.shops : HCCrawl.FALLBACK_SHOPS;
-      } catch (e) { shops = HCCrawl.FALLBACK_SHOPS; }
+        shops = res.shops || [];
+        if (res.error) console.warn(res.error);
+      } catch (e) {
+        shops = [];
+        console.warn(e);
+      }
       await loadPassportUI(shops);
 
       document.getElementById("btn-magic").onclick = async () => {

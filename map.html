@@ -41,6 +41,10 @@
       <div class="card mt-2">
         <h3>Stops</h3>
         <div id="map-shop-list" class="mt-1"></div>
+        <div id="map-shops-empty" class="hidden">
+          <h3>Shops announced soon</h3>
+          <p class="muted mt-1">The map is centered on downtown Puyallup. Pins and shop cards will show up as coffee shops join.</p>
+        </div>
       </div>
     </div>
 
@@ -57,11 +61,22 @@
       let shops = [];
       try {
         const res = await HCCrawl.loadShops("puy-coffee");
-        shops = res.shops?.length ? res.shops : HCCrawl.FALLBACK_SHOPS;
+        shops = res.shops || [];
         if (res.error) console.warn(res.error);
-      } catch (e) { shops = HCCrawl.FALLBACK_SHOPS; }
+      } catch (e) {
+        shops = [];
+        console.warn(e);
+      }
       HCCrawl.initMap(document.getElementById("trail-map"), shops, { lat: 47.191, lng: -122.293 });
-      HCCrawl.renderShopList(document.getElementById("map-shop-list"), shops, []);
+      const empty = document.getElementById("map-shops-empty");
+      const list = document.getElementById("map-shop-list");
+      if (!shops.length) {
+        empty.classList.remove("hidden");
+        list.innerHTML = "";
+      } else {
+        empty.classList.add("hidden");
+        HCCrawl.renderShopList(list, shops, []);
+      }
     });
   </script>
 

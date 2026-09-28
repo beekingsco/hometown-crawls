@@ -64,9 +64,39 @@
     session = null;
   }
 
+  function mapPaidShop(row) {
+    const photos = Array.isArray(row.photo_urls) ? row.photo_urls.filter(Boolean) : [];
+    return {
+      id: row.business_id,
+      name: row.display_name || "Shop",
+      address: row.address || "",
+      lat: row.lat,
+      lng: row.lng,
+      type: "coffee",
+      logo_url: row.logo_url || "",
+      photo_urls: photos
+    };
+  }
+
+  // Paid + approved shops only. get_public_crawl_shops is the public map source
+  // for crawls whose stops live on shop_listings (the holiday coffee crawl).
+  async function loadPaidShops(crawlId) {
+    const c = client();
+    if (!c) return { shops: [], error: "no-client" };
+    const { data, error } = await c.rpc("get_public_crawl_shops", { p_crawl: crawlId });
+    if (error) return { shops: [], error: error.message };
+    const list = (data || [])
+      .filter((row) => row && row.business_id)
+      .map(mapPaidShop)
+      .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    return { shops: list, error: null };
+  }
+
   async function loadShops(crawlId) {
     const c = client();
     const id = crawlId || CRAWL;
+    // Coffee pins are paid listings, not inactive membership seeds.
+    if (id === "puy-coffee") return loadPaidShops(id);
     if (!c) return { shops: [], error: "no-client" };
 
     const { data: memberships, error: mErr } = await c
@@ -248,21 +278,7 @@
       .replace(/"/g, "&quot;");
   }
 
-  // Fallback demo shops if Supabase empty / offline (matches seed)
-  const FALLBACK_SHOPS = [
-    { id: "anthem", name: "Anthem Coffee & Tea", address: "210 W Pioneer Ave, Puyallup, WA", lat: 47.19155, lng: -122.29455, type: "coffee" },
-    { id: "holiday", name: "Holiday Cafe", address: "103 W Pioneer Ave, Puyallup, WA", lat: 47.19148, lng: -122.29355, type: "coffee" },
-    { id: "pink", name: "The Pink Chandelier", address: "121 W Meeker St, Puyallup, WA", lat: 47.1899, lng: -122.2941, type: "coffee" },
-    { id: "dulce", name: "Dulce Cafe", address: "333 S Meridian, Puyallup, WA", lat: 47.1887, lng: -122.2932, type: "coffee" },
-    { id: "rescue", name: "Rescue Me Coffee", address: "1303 E Main Ave, Puyallup, WA", lat: 47.1917, lng: -122.2788, type: "coffee" },
-    { id: "xo", name: "XO Expresso", address: "504 W Stewart Ave, Puyallup, WA", lat: 47.1934, lng: -122.2971, type: "coffee" },
-    { id: "beanhut", name: "Bean Hut Espresso", address: "110 9th Ave SW, Puyallup, WA", lat: 47.1854, lng: -122.2958, type: "coffee" },
-    { id: "goodvibes", name: "Good Vibes Espresso", address: "925 S Meridian, Puyallup, WA", lat: 47.1849, lng: -122.2934, type: "coffee" },
-    { id: "rainier", name: "Rainier Valley Coffee", address: "108 N Meridian, Puyallup, WA", lat: 47.1926, lng: -122.2933, type: "coffee" },
-    { id: "fika", name: "Fika", address: "3303 8th Ave SE, Puyallup, WA", lat: 47.1819, lng: -122.2812, type: "coffee" }
-  ];
-
-
+  // Pub trail still falls back only when active memberships cannot be loaded.
   const FALLBACK_PUB_SHOPS = [
     { id: "powerhouse", name: "Powerhouse Brewery", address: "454 E Main Ave, Puyallup, WA", lat: 47.1919, lng: -122.2885, type: "pub" },
     { id: "the-club", name: "The Club Bar & Grill", address: "117 W Pioneer Ave, Puyallup, WA", lat: 47.1914, lng: -122.2939, type: "pub" },
@@ -288,7 +304,6 @@
     renderShopList,
     renderStamps,
     initMap,
-    FALLBACK_SHOPS,
     FALLBACK_PUB_SHOPS,
     escapeHtml
   };
