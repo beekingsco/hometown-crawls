@@ -154,6 +154,24 @@
     });
   }
 
+  function plainStampError(error) {
+    const raw = String((error && error.message) || error || "");
+    const known = [
+      "Already stamped",
+      "Location required",
+      "You need to be at the shop",
+      "Invalid code",
+      "Code required",
+      "Business not on this crawl",
+      "Not authenticated",
+      "Unknown business"
+    ];
+    for (const line of known) {
+      if (raw.toLowerCase().includes(line.toLowerCase())) return line;
+    }
+    return raw.replace(/^ERROR:\s*/i, "").trim() || "Could not claim that stamp.";
+  }
+
   async function claimStamp({ crawl, business, code, lat, lng }) {
     const c = client();
     if (!c) throw new Error("Supabase not loaded");
@@ -161,7 +179,10 @@
     if (!s) s = await ensureAuth();
     if (!s) throw new Error("Please sign in with email to stamp.");
     let coords = { lat, lng };
-    if (coords.lat == null) coords = await getPosition();
+    if (coords.lat == null || coords.lng == null) coords = await getPosition();
+    if (coords.lat == null || coords.lng == null) {
+      throw new Error("Location required");
+    }
     const { data, error } = await c.rpc("claim_stamp", {
       p_crawl: crawl || CRAWL,
       p_business: business,
@@ -169,7 +190,7 @@
       p_lat: coords.lat,
       p_lng: coords.lng
     });
-    if (error) throw error;
+    if (error) throw new Error(plainStampError(error));
     return data;
   }
 
