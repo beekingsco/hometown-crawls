@@ -5,17 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Claim a Shop Seat on a Hometown Crawl · Hometown Crawls</title>
   <meta name="theme-color" content="#1f3a24" />
-  <meta name="description" content="Join the Puyallup coffee crawl or pub trail as a shop. Monthly seats ($49 coffee / $59 pub) include QR, counter code, and map listing on a digital stamp passport." />
+  <meta name="description" content="Join the Puyallup coffee crawl or pub trail as a shop. Coffee is $49.99 one-time per shop; pub seats are $59/mo. Each seat includes a QR, counter code, and map listing on a digital stamp passport." />
   <link rel="canonical" href="https://hometowncrawls.com/shops/join.html" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Hometown Crawls" />
   <meta property="og:title" content="Claim a Shop Seat on a Hometown Crawl · Hometown Crawls" />
-  <meta property="og:description" content="Join the Puyallup coffee crawl or pub trail as a shop. Monthly seats ($49 coffee / $59 pub) include QR, counter code, and map listing on a digital stamp passport." />
+  <meta property="og:description" content="Join the Puyallup coffee crawl or pub trail as a shop. Coffee is $49.99 one-time per shop; pub seats are $59/mo. Each seat includes a QR, counter code, and map listing on a digital stamp passport." />
   <meta property="og:url" content="https://hometowncrawls.com/shops/join.html" />
   <meta property="og:image" content="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=70" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Claim a Shop Seat on a Hometown Crawl · Hometown Crawls" />
-  <meta name="twitter:description" content="Join the Puyallup coffee crawl or pub trail as a shop. Monthly seats ($49 coffee / $59 pub) include QR, counter code, and map listing on a digital stamp passport." />
+  <meta name="twitter:description" content="Join the Puyallup coffee crawl or pub trail as a shop. Coffee is $49.99 one-time per shop; pub seats are $59/mo. Each seat includes a QR, counter code, and map listing on a digital stamp passport." />
   <meta name="keywords" content="shop seats, Puyallup coffee crawl for shops, join crawl" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -29,20 +29,20 @@
     <div class="wrap-narrow page-hero">
       <p class="eyebrow">For shops</p>
       <h1>Claim your seat</h1>
-      <p id="join-lead">Join the Puyallup Coffee Crawl. $49/mo seat — organizer split handled by Hometown Crawls.</p>
+      <p id="join-lead">Join the Puyallup Coffee Crawl. $49.99 one-time per shop — organizer split handled by Hometown Crawls.</p>
     </div>
     <div class="wrap-narrow stack">
       <div class="card">
         <div class="row" style="justify-content:space-between;align-items:flex-start">
           <div>
-            <div class="price-tag" id="seat-price-tag">$49 <small>/ mo</small></div>
+            <div class="price-tag" id="seat-price-tag">$49.99 <small>one-time per shop</small></div>
             <p class="muted small mt-1" id="seat-blurb">Puyallup Coffee seat · QR + counter code included</p>
           </div>
           <span class="pill pill-ok" id="seat-pill">Shop seat</span>
         </div>
         <p class="mt-2 muted">Organizer / platform split is handled by Hometown Crawls (50/50). You get listed on the trail map, passport, and marketing.</p>
-        <a class="btn btn-primary btn-lg mt-2" href="https://buy.stripe.com/aFa00jdIOgx71Ll2GVgQE0d" id="stripe-seat-link" data-crawl="puy-coffee" data-price="49" target="_blank" rel="noopener">Pay $49/mo seat</a>
-        <p class="form-note">Opens live Stripe checkout for Puyallup Coffee Crawl ($49/mo). Funds currently to connected Stripe account BuzzPro.io — Marketing. <code>data-crawl</code> / <code>data-price</code> follow the <code>?crawl=</code> query.</p>
+        <a class="btn btn-primary btn-lg mt-2" href="https://buy.stripe.com/aFa00jdIOgx71Ll2GVgQE0d" id="stripe-seat-link" data-crawl="puy-coffee" data-price="49.99" target="_blank" rel="noopener">Pay $49.99 one-time per shop</a>
+        <p class="form-note" id="seat-note">Opens live Stripe checkout for the Puyallup Coffee Crawl ($49.99 one-time per shop). Funds currently to connected Stripe account BuzzPro.io — Marketing. <code>data-crawl</code> / <code>data-price</code> follow the <code>?crawl=</code> query.</p>
       </div>
 
       <form class="card" id="shop-join-form">
@@ -65,7 +65,7 @@
         </label>
         <input type="hidden" name="crawl" id="crawl-field" value="puy-coffee" />
         <button class="btn btn-primary" type="submit">Save shop interest</button>
-        <div class="form-success mt-2" id="shop-success">Saved on this device. Next: tap Pay above to complete the $49/mo seat (coffee) when ready.</div>
+        <div class="form-success mt-2" id="shop-success">Saved on this device. Next: tap Pay above to complete the $49.99 one-time per shop payment when ready.</div>
         <div class="form-error mt-2" id="shop-error"></div>
       </form>
     </div>
@@ -80,13 +80,19 @@
         "puy-coffee": {
           label: "Puyallup Coffee Crawl",
           short: "Puyallup Coffee",
-          price: 49,
+          price: "49.99",
+          priceText: "$49.99 one-time per shop",
+          priceTag: "$49.99 <small>one-time per shop</small>",
+          payLabel: "Pay $49.99 one-time per shop",
           age: null
         },
         "puy-pub": {
           label: "Puyallup Pub Crawl",
           short: "Puyallup Pub (21+)",
-          price: 59,
+          price: "59",
+          priceText: "$59/mo",
+          priceTag: "$59 <small>/ mo</small>",
+          payLabel: "Pay $59/mo seat",
           age: "21+"
         }
       };
@@ -96,8 +102,8 @@
       const meta = CRAWLS[crawlId];
 
       document.getElementById("join-lead").textContent =
-        "Join the " + meta.label + ". $" + meta.price + "/mo seat — organizer split handled by Hometown Crawls.";
-      document.getElementById("seat-price-tag").innerHTML = "$" + meta.price + " <small>/ mo</small>";
+        "Join the " + meta.label + ". " + meta.priceText + " — organizer split handled by Hometown Crawls.";
+      document.getElementById("seat-price-tag").innerHTML = meta.priceTag;
       document.getElementById("seat-blurb").textContent =
         meta.short + " seat · QR + counter code included";
       document.getElementById("seat-pill").textContent = meta.age ? "Shop seat · " + meta.age : "Shop seat";
@@ -113,8 +119,12 @@
       stripe.setAttribute("data-crawl", crawlId);
       stripe.setAttribute("data-price", String(meta.price));
       stripe.textContent = seatUrl === "#"
-        ? ("Pay $" + meta.price + "/mo seat — link coming soon")
-        : ("Pay $" + meta.price + "/mo seat");
+        ? (meta.payLabel + " — link coming soon")
+        : meta.payLabel;
+      const note = document.getElementById("seat-note");
+      if (note) {
+        note.textContent = "Opens live Stripe checkout for the " + meta.label + " (" + meta.priceText + "). Funds currently to connected Stripe account BuzzPro.io — Marketing. data-crawl / data-price follow the ?crawl= query.";
+      }
 
       const form = document.getElementById("shop-join-form");
       const ok = document.getElementById("shop-success");
@@ -149,7 +159,7 @@
           localStorage.setItem(key, JSON.stringify(prev));
           form.reset();
           document.getElementById("crawl-field").value = crawlId;
-          ok.textContent = "Saved on this device. Next: complete the $" + meta.price + "/mo seat payment when the Stripe link is live.";
+          ok.textContent = "Saved on this device. Next: complete the " + meta.priceText + " payment when the Stripe link is live.";
           ok.classList.add("show");
           HC.toast("Shop interest saved");
         } catch (ex) {

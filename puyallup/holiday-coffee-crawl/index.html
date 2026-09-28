@@ -192,6 +192,23 @@
       </div>
     </section>
 
+    <section class="hc-section" id="rules" style="padding-top:0">
+      <div class="wrap-narrow">
+        <div class="card prose">
+          <p class="eyebrow">Rules</p>
+          <h2>A few plain rules</h2>
+          <ul>
+            <li>Visit in person.</li>
+            <li>One stamp per shop.</li>
+            <li>Scan the QR or type the counter code.</li>
+            <li>You must be at the shop.</li>
+            <li>Buy something if the shop asks.</li>
+            <li>Prizes are TBA. They will be announced later.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
     <section class="hc-section" id="shops" style="padding-top:0">
       <div class="wrap">
         <div class="section-head">
@@ -360,7 +377,16 @@
 
     function mapForMap(list) {
       return list.filter(function (s) { return s.business_id; }).map(function (s) {
-        return { id: s.business_id, name: s.display_name, address: s.address, lat: s.lat, lng: s.lng };
+        var photos = Array.isArray(s.photo_urls) ? s.photo_urls : [];
+        return {
+          id: s.business_id,
+          name: s.display_name,
+          address: s.address,
+          lat: s.lat,
+          lng: s.lng,
+          logo_url: s.logo_url || "",
+          photo_urls: photos
+        };
       });
     }
 
