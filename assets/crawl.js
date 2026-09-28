@@ -257,7 +257,9 @@
       .map((s) => {
         const got = stamped.has(s.id);
         const label = (s.name || "").split(" ")[0];
-        const inner = s.logo_url && got ? `<img src="${s.logo_url}" alt="">` : escapeHtml(label);
+        const photos = Array.isArray(s.photo_urls) ? s.photo_urls : [];
+        const stampSrc = s.logo_url || photos[0] || "";
+        const inner = stampSrc && got ? `<img src="${escapeHtml(stampSrc)}" alt="">` : escapeHtml(label);
         return `<div class="stamp ${got ? "got" : ""}" title="${escapeHtml(s.name)}">${inner}</div>`;
       })
       .join("")}</div>

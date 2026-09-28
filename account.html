@@ -185,13 +185,23 @@
               { facingMode: "environment" },
               { fps: 8, qrbox: 220 },
               async (txt) => {
-                const m = String(txt).match(/stamp\/([^/]+)\/([^/]+)\/([^/?#]+)/i)
-                  || String(txt).match(/business=([^&]+).*code=([^&]+)/i);
+                const raw = String(txt);
+                const path = raw.match(/stamp\/([^/]+)\/([^/]+)\/([^/?#]+)/i);
+                const shopParam = raw.match(/(?:shop|business)=([^&#]+)/i);
+                const codeParam = raw.match(/(?:^|[?&])code=([^&#]+)/i);
                 try {
-                  if (m && m.length >= 4 && m[0].includes("stamp")) {
-                    await HCCrawl.claimStamp({ crawl: m[1], business: m[2], code: m[3] });
-                  } else if (m) {
-                    await HCCrawl.claimStamp({ crawl: "puy-coffee", business: m[1], code: m[2] });
+                  if (path) {
+                    await HCCrawl.claimStamp({
+                      crawl: decodeURIComponent(path[1]),
+                      business: decodeURIComponent(path[2]),
+                      code: decodeURIComponent(path[3])
+                    });
+                  } else if (shopParam && codeParam) {
+                    await HCCrawl.claimStamp({
+                      crawl: "puy-coffee",
+                      business: decodeURIComponent(shopParam[1]),
+                      code: decodeURIComponent(codeParam[1])
+                    });
                   } else {
                     // treat whole payload as code for selected shop
                     await HCCrawl.claimStamp({
