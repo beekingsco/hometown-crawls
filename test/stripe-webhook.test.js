@@ -1,5 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const { Readable, PassThrough } = require("node:stream");
 const Stripe = require("stripe");
 
 const stripeLib = new Stripe("unit-test-not-a-real-key");
@@ -421,4 +422,113 @@ test("rejects a parsed JSON body so the signature cannot be checked against a re
     () => _test.readRawBody({ body: { id: "evt" }, headers: {} }),
     (err) => err.code === "RAW_BODY"
   );
+});
+
+// Mirrors @vercel/node addHelpers: the stream is consumed, req.body is a lazy
+// JSON parse, and the original bytes are restored only on data/end.
+function vercelNodeRequest(payload, signature) {
+  const req = Readable.from([Buffer.from(payload)]);
+  req.method = "POST";
+  req.url = "/api/stripe-webhook";
+  req.headers = {
+    "content-type": "application/json; charset=utf-8",
+    "stripe-signature": signature,
+  };
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on("data", (chunk) => chunks.push(chunk));
+    req.on("end", () => {
+      const raw = Buffer.concat(chunks);
+      const replicateBody = new PassThrough();
+      const on = replicateBody.on.bind(replicateBody);
+      const originalOn = req.on.bind(req);
+      req.read = replicateBody.read.bind(replicateBody);
+      req.on = req.addListener = (name, cb) =>
+        name === "data" || name === "end" ? on(name, cb) : originalOn(name, cb);
+      replicateBody.write(raw);
+      replicateBody.end();
+      Object.defineProperty(req, "body", {
+        configurable: true,
+        enumerable: true,
+        get() {
+          const value = JSON.parse(raw.toString("utf8"));
+          Object.defineProperty(req, "body", { configurable: true, enumerable: true, writable: true, value });
+          return value;
+        },
+      });
+      resolve(req);
+    });
+    req.on("error", reject);
+  });
+}
+
+function mockRes() {
+  return {
+    statusCode: 0,
+    body: null,
+    status(code) {
+      this.statusCode = code;
+      return this;
+    },
+    json(obj) {
+      this.body = obj;
+      return this;
+    },
+  };
+}
+
+test("signed Vercel request passes verification and a tampered body returns 400", async () => {
+  const secret = "whsec_test_secret";
+  const payload = [
+    "{",
+    '  "id": "evt_signed",',
+    '  "object": "event",',
+    '  "type": "checkout.session.completed",',
+    '  "data": {',
+    '    "object": {',
+    '      "id": "cs_shared",',
+    '      "client_reference_id": "not-a-uuid"',
+    "    }",
+    "  }",
+    "}",
+    "",
+  ].join("\n");
+  assert.notEqual(payload, JSON.stringify(JSON.parse(payload)));
+  const header = stripeLib.webhooks.generateTestHeaderString({ payload, secret });
+
+  const previous = {
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+    SUPABASE_URL: process.env.SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+  };
+  process.env.STRIPE_SECRET_KEY = "sk_test_unit_not_a_real_key";
+  process.env.STRIPE_WEBHOOK_SECRET = secret;
+  process.env.SUPABASE_URL = "https://unit-test.invalid";
+  process.env.SUPABASE_SERVICE_ROLE_KEY = "unit-test-service-role";
+  delete process.env.RESEND_API_KEY;
+
+  const logs = [];
+  const original = console.log;
+  console.log = (...args) => logs.push(args.join(" "));
+  try {
+    const signedRes = mockRes();
+    await webhook(await vercelNodeRequest(payload, header), signedRes);
+    assert.equal(signedRes.statusCode, 200);
+    assert.deepEqual(signedRes.body, { received: true });
+    assert.equal(logs[0], "[hc-webhook] ignoring foreign session cs_shared");
+
+    const tampered = payload.replace("cs_shared", "cs_tampered");
+    const tamperedRes = mockRes();
+    await webhook(await vercelNodeRequest(tampered, header), tamperedRes);
+    assert.equal(tamperedRes.statusCode, 400);
+    assert.deepEqual(tamperedRes.body, { error: "invalid signature" });
+  } finally {
+    console.log = original;
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
 });

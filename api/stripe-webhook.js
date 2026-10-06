@@ -1,7 +1,8 @@
 /**
  * Stripe webhook for Hometown Crawls shop payments.
- * Vercel Node serverless function (no framework). Body parsing is disabled so
- * the Stripe signature is verified against the raw request body.
+ * Vercel Node serverless function (no framework). The signature is verified
+ * against the raw request bytes. The Node runtime still parses JSON onto
+ * req.body; those bytes are read back from the request data/end listeners.
  *
  * Server env only: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, SUPABASE_URL,
  * SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, optional HC_PAYMENT_LINK_IDS.
@@ -23,6 +24,8 @@ const FROM_ADDRESS = "Hometown Crawls <hello@hometowncrawls.com>";
 
 const LISTING_COLUMNS = "id,is_paid,paid_at,stripe_session_id,amount_paid_cents,payment_source";
 
+// Kept for runtimes that honor it. The current Vercel Node runtime does not:
+// it always installs a JSON body helper. See readRawBody.
 const config = {
   api: {
     bodyParser: false,
@@ -194,8 +197,44 @@ function assertOk(result, label) {
   return result ? result.data : null;
 }
 
+function readEventStream(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      resolve(Buffer.concat(chunks));
+    };
+    req.on("data", (chunk) => {
+      chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
+    });
+    req.on("end", finish);
+    req.on("error", (err) => {
+      if (settled) return;
+      settled = true;
+      reject(err);
+    });
+    // Restored bytes emit on the next turn. If the stream already ended and
+    // nothing was restored, "end" will not fire again; don't wait out the
+    // function timeout.
+    setImmediate(finish);
+  });
+}
+
 async function readRawBody(req) {
   if (req && Buffer.isBuffer(req.rawBody)) return req.rawBody;
+
+  // Vercel's Node helper consumes the stream before the handler runs, then
+  // exposes parsed JSON through a lazy req.body getter. It copies the original
+  // bytes back only onto the data/end listeners. Reading req.body parses JSON,
+  // and for-await on that already-ended stream is empty, so neither is the
+  // payload Stripe signed.
+  if (req && typeof req.on === "function") {
+    const streamed = await readEventStream(req);
+    if (streamed.length) return streamed;
+  }
+
   if (req && Buffer.isBuffer(req.body)) return req.body;
   if (req && typeof req.body === "string") return Buffer.from(req.body);
   if (req && req.body && typeof req.body === "object") {
