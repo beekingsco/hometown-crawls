@@ -1,0 +1,23 @@
+{
+  "crawl_name": "Puyallup Holiday Coffee Crawl",
+  "sponsor_name": "Miracle Studios, Inc.",
+  "sponsor_address": "204 Still Glen Drive, Terrell, Texas 75160",
+  "eligible_states": "the United States",
+  "min_age": 18,
+  "start_date": "November 1, 2026",
+  "start_time": null,
+  "end_date": "December 31, 2026",
+  "end_time": null,
+  "time_zone": null,
+  "drawing_date": "Monday, January 4, 2027",
+  "completion_bonus": 3,
+  "num_winners": null,
+  "prize_description": null,
+  "total_arv": null,
+  "registration_notice": "",
+  "notify_days": 7,
+  "claim_days": 7,
+  "rules_contact": "chris@beekings.com",
+  "governing_state": "Texas",
+  "venue_county": "Kaufman"
+}

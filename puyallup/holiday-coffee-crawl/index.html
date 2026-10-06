@@ -72,6 +72,14 @@
     .hc-steps { display: grid; gap: .9rem; }
     .hc-step h3 { font-size: 1.05rem; margin: .55rem 0 .25rem; }
     #claim-prompt { border-color: var(--green-mid); }
+    .hc-step a.hc-rules-link,
+    .prose a.hc-rules-link,
+    .faq a.hc-rules-link {
+      color: var(--green);
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
     @media (min-width: 860px) {
       .hc-hero { padding: 3.5rem 0 3.25rem; }
       .hc-hero-grid { grid-template-columns: 1.1fr .9fr; gap: 3rem; }
@@ -188,7 +196,7 @@
           <article class="card hc-step"><div class="step-num">2</div><h3>Visit participating shops</h3><p class="muted small">Any time during their posted hours, Nov 1 through Dec 31.</p></article>
           <article class="card hc-step"><div class="step-num">3</div><h3>Scan the QR or enter the code</h3><p class="muted small">Each counter has a QR and a short counter code.</p></article>
           <article class="card hc-step"><div class="step-num">4</div><h3>Collect stamps</h3><p class="muted small">One stamp per shop, in person.</p></article>
-          <article class="card hc-step"><div class="step-num">5</div><h3>Prizes</h3><p class="muted small">Prizes are TBA. Finish the trail and check back here.</p></article>
+          <article class="card hc-step"><div class="step-num">5</div><h3>Prizes</h3><p class="muted small">Prizes are TBA. Finish the trail and check back here. <a class="hc-rules-link" href="/puyallup/holiday-coffee-crawl/rules">Official Rules</a></p></article>
         </div>
       </div>
     </section>
@@ -204,7 +212,7 @@
             <li>Scan the QR or type the counter code.</li>
             <li>You must be at the shop.</li>
             <li>Buy something if the shop asks.</li>
-            <li>Prizes are TBA. They will be announced later.</li>
+            <li>Prizes are TBA. They will be announced later. <a class="hc-rules-link" href="/puyallup/holiday-coffee-crawl/rules">Official Rules</a></li>
           </ul>
         </div>
       </div>
@@ -291,7 +299,7 @@
           </details>
           <details>
             <summary>What are the prizes?</summary>
-            <p>Prizes are TBA. This page will spell them out before the crawl asks you to finish the trail.</p>
+            <p>Prizes are TBA. This page will spell them out before the crawl asks you to finish the trail. <a class="hc-rules-link" href="/puyallup/holiday-coffee-crawl/rules">Official Rules</a></p>
           </details>
           <details>
             <summary>I own a coffee shop</summary>
@@ -303,7 +311,7 @@
   </main>
   <footer class="site-footer" id="site-footer"></footer>
   <script src="/assets/config.js"></script>
-  <script src="/assets/site.js?v=2"></script>
+  <script src="/assets/site.js?v=3"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/assets/crawl.js"></script>

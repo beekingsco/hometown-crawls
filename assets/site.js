@@ -15,10 +15,8 @@
     const clean = href.replace(/^\.\.\//, "").replace(/^\.\.\//, "");
     const target = clean === "index.html" || clean === "" ? "/" : "/" + clean.replace(/\.html$/, "").replace(/\/index$/, "");
     const here = path === "" || path === "/" ? "/" : path;
-    if (target === "/" && (here === "/" || here.endsWith("/index"))) return true;
-    if (target !== "/" && here.endsWith(target.replace(/^\//, ""))) return true;
-    if (target !== "/" && here.includes(target)) return true;
-    return false;
+    if (target === "/") return here === "/" || here === "/index.html" || here.endsWith("/index");
+    return here === target || here.startsWith(target + "/");
   }
 
   function link(href, label) {
@@ -85,6 +83,7 @@
             <a href="${base}map.html">Map</a>
             <a href="${base}prizes.html">Prizes</a>
             <a href="${base}rules.html">Rules</a>
+            ${link("puyallup/holiday-coffee-crawl/rules", "Official Rules")}
             <a href="${base}guides/how-a-hometown-coffee-crawl-works.html">Guides</a>
           </div>
           <div class="footer-col">

@@ -15,6 +15,10 @@
       "destination": "/puyallup/holiday-coffee-crawl/index.html"
     },
     {
+      "source": "/puyallup/holiday-coffee-crawl/rules",
+      "destination": "/puyallup/holiday-coffee-crawl/rules/index.html"
+    },
+    {
       "source": "/puyallup/coffee-crawl/shop",
       "destination": "/puyallup/coffee-crawl/shop/index.html"
     },
