@@ -35,7 +35,8 @@
     .pc-hero h1 em { font-style: normal; color: var(--green); }
     .pc-hero .lead { font-size: 1.1rem; color: var(--ink-soft); max-width: 46ch; }
     .pc-dates {
-      display: inline-flex; align-items: center; gap: .55rem;
+      display: inline-flex; align-items: flex-start; gap: .55rem; max-width: 100%;
+      white-space: normal;
       background: var(--paper); border: 1px solid var(--line-strong);
       border-radius: var(--radius-pill); padding: .45rem .95rem .45rem .5rem;
       font-weight: 600; font-size: .92rem; color: var(--green);
@@ -108,7 +109,7 @@
     .pc-sticky {
       position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: .7rem 1rem calc(.7rem + env(safe-area-inset-bottom));
       background: rgba(255,253,248,.96); border-top: 1px solid var(--line); backdrop-filter: blur(8px);
-      display: flex; gap: .75rem; align-items: center; justify-content: space-between;
+      display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between;
       transform: translateY(110%); transition: transform .25s ease;
     }
     .pc-sticky.show { transform: translateY(0); }
@@ -124,6 +125,9 @@
       .pc-sticky { display: none; }
       .pc-section { padding: 4rem 0; }
     }
+    @media (max-width: 859px) {
+      main { padding-bottom: 6rem; }
+    }
   </style>
 </head>
 <body>
@@ -137,7 +141,7 @@
           <p class="lead">Crawl your way through the coffee wonderland of Puyallup.</p>
           <div class="pc-cta-row">
             <a class="btn btn-primary btn-lg" href="#signup">Reserve your spot · $49.99</a>
-            <span class="note">One-time fee per location. No subscription.</span>
+            <span class="note">$49.99 for the 2026 holiday season, one-time.</span>
           </div>
         </div>
         <div class="pc-photo">
@@ -171,8 +175,8 @@
         <div class="pc-signup-grid">
           <aside class="pc-price" aria-label="Price">
             <p class="eyebrow">Location entry</p>
-            <div class="amount">$49.99 <small>one-time</small></div>
-            <p class="sub">Per location, for the Puyallup Holiday Coffee Crawl, Nov 1 – Dec 31, 2026. No subscription, no per-guest fees.</p>
+            <div class="amount">$49.99</div>
+            <p class="sub">$49.99 for the 2026 holiday season, one-time. Per location, November 1 through December 31, 2026. No subscription and no per-guest fees.</p>
             <ul>
               <li>Trail map listing</li>
               <li>Digital passport stop</li>
@@ -186,6 +190,15 @@
             <h3>Your shop</h3>
             <label class="field"><span>Business name</span>
               <input class="input" name="business_name" required maxlength="200" autocomplete="organization" placeholder="e.g. Main Street Espresso" />
+            </label>
+            <label class="field"><span>Street address</span>
+              <input class="input" name="address" required maxlength="300" autocomplete="street-address" placeholder="123 Main St, Puyallup, WA" />
+            </label>
+            <label class="field"><span>Website <span class="muted">(optional)</span></span>
+              <input class="input" name="website" maxlength="300" inputmode="url" autocomplete="url" placeholder="https://yourshop.com" />
+            </label>
+            <label class="field"><span>Hours <span class="muted">(optional)</span></span>
+              <input class="input" name="hours" maxlength="500" placeholder="Mon–Fri 7am–4pm" />
             </label>
             <label class="field"><span>Contact name</span>
               <input class="input" name="contact_name" required maxlength="200" autocomplete="name" placeholder="Your full name" />
@@ -207,30 +220,30 @@
     <section class="pc-section">
       <div class="wrap-narrow">
         <div class="pc-organizer">
-          <div class="avatar">A</div>
+          <div class="avatar">HC</div>
           <div>
-            <p class="eyebrow" style="margin-bottom:.15rem">Local organizer</p>
-            <p><strong>Organized by <span class="js-org-name">Bryan</span> at Anthem Coffee</strong>, powered by Hometown Crawls.</p>
-            <p class="small muted">Questions? Email <a class="js-org-email" href="mailto:bryan@myanthemcoffee.com">bryan@myanthemcoffee.com</a></p>
+            <p class="eyebrow" style="margin-bottom:.15rem">Hometown Crawls</p>
+            <p><strong>Questions about your shop signup?</strong></p>
+            <p class="small muted">Email <a href="mailto:hello@hometowncrawls.com">hello@hometowncrawls.com</a></p>
           </div>
         </div>
 
         <h2 class="mt-3" style="margin-top:2.5rem">Questions</h2>
         <div class="faq pc-faq mt-2">
           <details><summary>When is the crawl?</summary><p>The Puyallup Holiday Coffee Crawl starts November 1, 2026 and runs through December 31. Crawlers can visit stops any time during your normal business hours.</p></details>
-          <details><summary>What is the $49.99 for?</summary><p>It helps cover printed passports, marketing materials, and website costs for the crawl.</p></details>
-          <details><summary>Is the $49.99 a subscription?</summary><p>No. It's a one-time fee per location for this crawl. You won't be charged again.</p></details>
+          <details><summary>What is the $49.99 for?</summary><p>$49.99 for the 2026 holiday season, one-time. It covers your map pin, passport slot, counter card, and crawl marketing.</p></details>
+          <details><summary>Is the $49.99 a subscription?</summary><p>No. It is $49.99 for the 2026 holiday season, one-time. You will not be charged again for this season.</p></details>
           <details><summary>What do I need to do at my shop?</summary><p>Display the QR sign we send you near the register, and let your team know the counter code. Guests scan or type the code to collect their stamp. You don't need to change your POS or add any hardware.</p></details>
           <details><summary>Do guests have to buy something?</summary><p>That's up to you. Most shops ask for a purchase to collect the stamp, and that's the norm for this crawl.</p></details>
-          <details><summary>What happens after I pay?</summary><p>You'll get a Stripe receipt right away. Before the crawl starts, we'll email your QR sign, counter code, and a preview of your map listing.</p></details>
-          <details><summary>Who do I contact with questions?</summary><p>Email <a class="js-org-email" href="mailto:bryan@myanthemcoffee.com" style="color:var(--green);text-decoration:underline">bryan@myanthemcoffee.com</a>, or reply to your Stripe receipt.</p></details>
+          <details><summary>What happens after I pay?</summary><p>You'll get a Stripe receipt right away. Then open your shop portal to add your address, photo, hours, and offer, and print your counter card when it is ready.</p></details>
+          <details><summary>Who do I contact with questions?</summary><p>Email <a href="mailto:hello@hometowncrawls.com" style="color:var(--green);text-decoration:underline">hello@hometowncrawls.com</a>, or reply to your Stripe receipt.</p></details>
         </div>
       </div>
     </section>
   </main>
 
   <div class="pc-sticky" id="pc-sticky">
-    <div><strong>$49.99</strong><span>one-time per location</span></div>
+    <div><strong>$49.99</strong><span>2026 holiday season, one-time</span></div>
     <a class="btn btn-primary" href="#signup">Reserve spot</a>
   </div>
 
@@ -270,28 +283,28 @@
         id: uuid(),
         crawl: CRAWL.id,
         business_name: String(fd.get("business_name") || "").trim(),
+        address: String(fd.get("address") || "").trim(),
         contact_name: String(fd.get("contact_name") || "").trim(),
         email: String(fd.get("email") || "").trim().toLowerCase(),
         phone: String(fd.get("phone") || "").trim()
       };
-      if (!row.business_name || !row.contact_name || !row.email || !row.phone) return showError("Please fill in all four fields.");
+      var website = String(fd.get("website") || "").trim();
+      var hours = String(fd.get("hours") || "").trim();
+      if (website) row.website = website;
+      if (hours) row.hours = hours;
+      if (!row.business_name || !row.contact_name || !row.email || !row.phone || !row.address) {
+        return showError("Please fill in business name, street address, contact name, email, and phone.");
+      }
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(row.email)) return showError("Please enter a valid email address.");
+      if (row.address.length > 300) return showError("Street address needs to be 300 characters or fewer.");
+      if (website && !/^https?:\/\/\S+$/i.test(website)) return showError("Website must start with http:// or https://, or leave it blank.");
+      if (hours.length > 500) return showError("Hours need to be 500 characters or fewer.");
 
       btn.disabled = true;
       var label = btn.innerHTML;
       btn.textContent = "Saving…";
       try {
-        var res = await fetch(env.SUPABASE_URL + "/rest/v1/crawl_signups", {
-          method: "POST",
-          headers: {
-            "apikey": env.SUPABASE_ANON_KEY,
-            "Authorization": "Bearer " + env.SUPABASE_ANON_KEY,
-            "Content-Type": "application/json",
-            "Prefer": "return=minimal"
-          },
-          body: JSON.stringify(row)
-        });
-        if (!res.ok) throw new Error("save failed (" + res.status + ")");
+        await insertSignup(row);
         try { localStorage.setItem("hc-pc-signup", JSON.stringify({ id: row.id, business: row.business_name, email: row.email })); } catch (_) {}
         if (CRAWL.paymentLink) {
           btn.textContent = "Opening secure checkout…";
@@ -305,9 +318,36 @@
       } catch (ex) {
         btn.disabled = false;
         btn.innerHTML = label;
-        showError("Sorry, we couldn't save your signup. Please try again, or email bryan@myanthemcoffee.com.");
+        showError("Sorry, we couldn't save your signup. Please try again, or email hello@hometowncrawls.com.");
       }
     });
+
+    async function insertSignup(row) {
+      var body = Object.assign({}, row);
+      for (var attempt = 0; attempt < 6; attempt++) {
+        var res = await fetch(env.SUPABASE_URL + "/rest/v1/crawl_signups", {
+          method: "POST",
+          headers: {
+            "apikey": env.SUPABASE_ANON_KEY,
+            "Authorization": "Bearer " + env.SUPABASE_ANON_KEY,
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal"
+          },
+          body: JSON.stringify(body)
+        });
+        if (res.ok) return;
+        var text = "";
+        try { text = await res.text(); } catch (_) {}
+        var missing = text.match(/Could not find the '([a-z0-9_]+)' column/i)
+          || text.match(/column "([a-z0-9_]+)" of relation/i);
+        if (res.status === 400 && missing && Object.prototype.hasOwnProperty.call(body, missing[1])) {
+          delete body[missing[1]];
+          continue;
+        }
+        throw new Error("save failed (" + res.status + ")");
+      }
+      throw new Error("save failed");
+    }
 
     // Mobile sticky price bar: show after the hero, hide once the signup section is visible
     var sticky = document.getElementById("pc-sticky");

@@ -30,7 +30,7 @@
     <div class="wrap portal-hero">
       <p class="eyebrow">Organizer</p>
       <h1>Crawl dashboard</h1>
-      <p class="muted">Shops, payments, and stamps for crawls you organize. Bryan Reynolds, Anthem Coffee, splits each shop fee with Hometown Crawls.</p>
+      <p class="muted">Shops, payments, and stamps for crawls you organize.</p>
     </div>
 
     <div class="wrap stack" style="padding-bottom:3rem">
@@ -141,11 +141,6 @@
     function moneyNum(cents) {
       return (Number(cents || 0) / 100).toFixed(2);
     }
-    function pct(n) {
-      var x = Number(n);
-      if (!isFinite(x)) return "";
-      return String(Math.round(x * 10) / 10).replace(/\.0$/, "") + "%";
-    }
     function ptDay(date) {
       return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Los_Angeles", year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
     }
@@ -190,14 +185,9 @@
         var value = c[1] == null || c[1] === "" ? "0" : String(c[1]);
         return '<div class="card"><p class="eyebrow">' + esc(c[0]) + '</p><p class="stat">' + esc(value) + "</p></div>";
       }).join("");
-      var share = pct(stats.organizer_share_pct);
       var gross = sum(shops, "amount_cents");
-      var bryan = sum(shops, "organizer_share_cents");
-      var chris = sum(shops, "hc_share_cents");
       $("money-cards").innerHTML =
-        '<div class="card"><p class="eyebrow">Gross</p><p class="stat">' + esc(usd(gross)) + "</p></div>" +
-        '<div class="card"><p class="eyebrow">Bryan\'s share' + (share ? " (" + esc(share) + ")" : "") + '</p><p class="stat">' + esc(usd(bryan)) + "</p></div>" +
-        '<div class="card"><p class="eyebrow">Hometown Crawls (Chris) share</p><p class="stat">' + esc(usd(chris)) + "</p></div>";
+        '<div class="card"><p class="eyebrow">Shop fees paid</p><p class="stat">' + esc(usd(gross)) + "</p></div>";
     }
 
     function renderTrend() {
@@ -305,8 +295,6 @@
         ["paid_pt", function (r) { return r.paid_pt; }],
         ["payment_source", function (r) { return r.payment_source; }],
         ["amount_dollars", function (r) { return moneyNum(r.amount_cents); }],
-        ["organizer_share_dollars", function (r) { return moneyNum(r.organizer_share_cents); }],
-        ["hc_share_dollars", function (r) { return moneyNum(r.hc_share_cents); }],
         ["is_approved", function (r) { return r.is_approved; }],
         ["is_visible", function (r) { return r.is_visible; }],
         ["address", function (r) { return r.address; }],

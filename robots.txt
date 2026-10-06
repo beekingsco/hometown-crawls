@@ -2,5 +2,6 @@ User-agent: *
 Allow: /
 Disallow: /puyallup/coffee-crawl/organizer
 Disallow: /puyallup/coffee-crawl/shop
+Disallow: /puyallupwa/pub
 
-Sitemap: https://hometowncrawls.com/sitemap.xml
+Sitemap: https://www.hometowncrawls.com/sitemap.xml

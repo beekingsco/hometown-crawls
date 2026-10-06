@@ -28,15 +28,15 @@
       <div class="ty-badge">☕</div>
       <p class="eyebrow">Puyallup Holiday Coffee Crawl · Nov 1 – Dec 31, 2026</p>
       <h1 id="ty-title">You're on the trail!</h1>
-      <p class="lead" id="ty-lead">Thanks for joining. Your $49.99 location entry is confirmed, and Stripe has emailed your receipt.</p>
+      <p class="lead" id="ty-lead">Thanks for joining. Your shop fee is $49.99 for the 2026 holiday season, one-time, and Stripe has emailed your receipt.</p>
 
       <div class="ty-steps">
-        <div class="card"><div class="n">1</div><div><strong>Watch your inbox</strong><p class="muted small">Before November 1 we'll send your QR sign, counter code, and a preview of your map listing.</p></div></div>
-        <div class="card"><div class="n">2</div><div><strong>Put up your QR sign</strong><p class="muted small">Place it near the register and share the counter code with your team.</p></div></div>
-        <div class="card"><div class="n">3</div><div><strong>Welcome the crawlers</strong><p class="muted small">The crawl runs November 1 through December 31. Expect new faces with passports in hand.</p></div></div>
+        <div class="card"><div class="n">1</div><div><strong>Open your shop portal</strong><p class="muted small">Add your street address, a photo, your hours, and your offer.</p></div></div>
+        <div class="card"><div class="n">2</div><div><strong>Print your counter card</strong><p class="muted small">When it is ready, print the tent card and set it on the counter. It says “Get your passport stamped here.”</p></div></div>
+        <div class="card"><div class="n">3</div><div><strong>Welcome the crawlers</strong><p class="muted small">The crawl runs November 1 through December 31, 2026.</p></div></div>
       </div>
 
-      <p class="muted small mt-3" style="margin-top:2rem">Questions? Email <a class="u" href="mailto:bryan@myanthemcoffee.com">bryan@myanthemcoffee.com</a> (organized by Bryan at Anthem Coffee).</p>
+      <p class="muted small mt-3" style="margin-top:2rem">Questions? Email <a class="u" href="mailto:hello@hometowncrawls.com">hello@hometowncrawls.com</a>.</p>
       <p class="mt-2"><a class="btn btn-ghost" href="/puyallup/coffee-crawl">Back to the crawl page</a></p>
       <p class="small mt-2"><a class="u" href="/puyallup/coffee-crawl/shop">Manage your listing</a></p>
     </div>
@@ -49,7 +49,7 @@
       var p = new URLSearchParams(location.search);
       if (p.get("saved") && !p.get("session_id")) {
         document.getElementById("ty-title").textContent = "Your spot is saved!";
-        document.getElementById("ty-lead").textContent = "Thanks! We've got your shop's details. We'll email your secure $49.99 payment link shortly to lock in your spot.";
+        document.getElementById("ty-lead").textContent = "Your shop details are saved. Email hello@hometowncrawls.com and we can help you finish. The shop fee is $49.99 for the 2026 holiday season, one-time.";
       }
     })();
   </script>

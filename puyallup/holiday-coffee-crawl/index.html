@@ -116,10 +116,11 @@
             "longitude": -122.293
           }
         },
-        "organizer": [
-          { "@type": "Organization", "name": "Anthem Coffee" },
-          { "@type": "Organization", "name": "Hometown Crawls", "url": "https://www.hometowncrawls.com/" }
-        ],
+        "organizer": {
+          "@type": "Organization",
+          "name": "Hometown Crawls",
+          "url": "https://www.hometowncrawls.com/"
+        },
         "offers": {
           "@type": "Offer",
           "price": "0",
@@ -344,12 +345,6 @@
       return h ? "https://instagram.com/" + h : "";
     }
 
-    function telHref(phone) {
-      var t = String(phone || "").trim();
-      if (!/^[0-9+().\-\s]{7,40}$/.test(t)) return "";
-      return "tel:" + t.replace(/[^\d+]/g, "");
-    }
-
     function needsSignIn(err) {
       var m = (err && err.message) || String(err || "");
       return /sign in|authenticated/i.test(m);
@@ -415,8 +410,6 @@
         if (site) links.push('<a href="' + esc(site) + '" target="_blank" rel="noopener noreferrer">Website</a>');
         var ig = instagramUrl(s.instagram);
         if (ig) links.push('<a href="' + esc(ig) + '" target="_blank" rel="noopener noreferrer">Instagram</a>');
-        var tel = telHref(s.phone);
-        if (tel) links.push('<a href="' + esc(tel) + '">' + esc(s.phone) + "</a>");
         return '<article class="card shop-card">' + media +
           '<div class="body"><h3>' + esc(s.display_name) + "</h3>" +
           (s.address ? '<p class="muted small">' + esc(s.address) + "</p>" : "") +
