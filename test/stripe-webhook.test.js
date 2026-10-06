@@ -287,8 +287,51 @@ test("marks the signup and listing paid and emails once", async () => {
   assert.equal(db.state.listings[0].amount_paid_cents, 2500);
   assert.equal(emails.length, 1);
   assert.equal(emails[0].body.from, "Hometown Crawls <hello@hometowncrawls.com>");
+  assert.equal(emails[0].body.reply_to, "chris@beekings.com");
   assert.equal(emails[0].body.subject, "You're in: Puyallup Holiday Coffee Crawl");
-  assert.match(emails[0].body.html, /\$25\.00/);
+  assert.equal(
+    emails[0].body.text,
+    [
+      "You're in — Anthem Coffee.",
+      "",
+      "Thanks for joining Puyallup Holiday Coffee Crawl. We received your payment of $25.00.",
+      "The crawl runs Nov 1 – Dec 31, 2026.",
+      "",
+      "Next step: sign in to the shop portal and add a photo and your shop details:",
+      "https://www.hometowncrawls.com/puyallup/coffee-crawl/shop",
+      "",
+      "Your shop will appear on the map at https://www.hometowncrawls.com/puyallup/holiday-coffee-crawl.",
+    ].join("\n")
+  );
+  assert.equal(
+    emails[0].body.html,
+    `<!DOCTYPE html>
+<html lang="en">
+<body style="margin:0;padding:0;background:#f4efe6;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4efe6;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fffdf8;border:1px solid #e4dccb;border-radius:16px;">
+          <tr>
+            <td style="padding:32px 28px;font-family:Georgia,'Times New Roman',serif;color:#1a1a17;">
+              <p style="margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#1f3a24;font-weight:700;">Hometown Crawls</p>
+              <h1 style="margin:0 0 16px;font-size:32px;line-height:1.15;font-weight:700;color:#1a1a17;">You're in.</h1>
+              <p style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#2c2a24;">Thanks for joining <strong>Puyallup Holiday Coffee Crawl</strong> for Anthem Coffee. We received your payment of <strong>$25.00</strong>.</p>
+              <p style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#2c2a24;">The crawl runs <strong>Nov 1 – Dec 31, 2026</strong>. Crawlers can stop in during your normal business hours.</p>
+              <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#2c2a24;">Next step: sign in to the shop portal and add a photo and your shop details.</p>
+              <p style="margin:0 0 22px;">
+                <a href="https://www.hometowncrawls.com/puyallup/coffee-crawl/shop" style="display:inline-block;background:#1f3a24;color:#f4efe6;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-weight:700;padding:12px 18px;border-radius:999px;">Open the shop portal</a>
+              </p>
+              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#2c2a24;">Your shop will appear on the map at <a href="https://www.hometowncrawls.com/puyallup/holiday-coffee-crawl" style="color:#1f3a24;">www.hometowncrawls.com/puyallup/holiday-coffee-crawl</a>.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+  );
   assert.equal(emails[0].headers["Idempotency-Key"], "hometown-crawls-paid-cs_test_ours");
 
   const updateOrder = db.state.calls.filter((call) => call.op === "update").map((call) => call.table);

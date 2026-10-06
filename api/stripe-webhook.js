@@ -21,6 +21,7 @@ const UUID_RE =
 const SHOP_PORTAL_URL = "https://www.hometowncrawls.com/puyallup/coffee-crawl/shop";
 const MAP_URL = "https://www.hometowncrawls.com/puyallup/holiday-coffee-crawl";
 const FROM_ADDRESS = "Hometown Crawls <hello@hometowncrawls.com>";
+const REPLY_TO = "chris@beekings.com";
 
 const LISTING_COLUMNS = "id,is_paid,paid_at,stripe_session_id,amount_paid_cents,payment_source";
 
@@ -367,6 +368,7 @@ async function sendConfirmation(deps, { to, email, sessionId }) {
     body: JSON.stringify({
       from: FROM_ADDRESS,
       to: [to],
+      reply_to: REPLY_TO,
       subject: email.subject,
       html: email.html,
       text: email.text,
