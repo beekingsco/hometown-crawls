@@ -28,7 +28,7 @@ Open http://localhost:8080
 |------|----------|-----------|
 | `/puyallup/holiday-coffee-crawl` | `puy-coffee` | $49.99 for the 2026 holiday season, one-time |
 | `/puyallup/coffee-crawl` | shop signup | same fee; inserts `crawl_signups` |
-| `/puyallupwa/pub/` | `puy-pub` | coming soon; noindex |
+| `/puyallupwa/pub/` | `puy-pub` | hidden until 2027; redirects to the holiday coffee trail; noindex; not in the sitemap |
 
 ## Supabase
 
@@ -37,6 +37,6 @@ Public config in `assets/config.js`. RPCs: `join_crawl`, `claim_stamp`. Shops fr
 ## SEO / GEO
 
 - Unique title, description, canonical, and Open Graph on public pages
-- JSON-LD: Organization + WebSite (home), TouristTrip (coffee/pub), FAQPage (`faqs.html`), Article (guides)
+- JSON-LD: Organization + WebSite (home), TouristTrip (coffee), FAQPage (`faqs.html`), Article (guides)
 - `robots.txt` + `sitemap.xml` → `https://www.hometowncrawls.com/`
 - Evergreen guides under `guides/`

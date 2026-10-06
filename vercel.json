@@ -65,6 +65,21 @@
       "permanent": false
     },
     {
+      "source": "/puyallupwa/pub",
+      "destination": "/puyallup/holiday-coffee-crawl",
+      "permanent": false
+    },
+    {
+      "source": "/puyallupwa/pub/",
+      "destination": "/puyallup/holiday-coffee-crawl",
+      "permanent": false
+    },
+    {
+      "source": "/puyallupwa/pub/index.html",
+      "destination": "/puyallup/holiday-coffee-crawl",
+      "permanent": false
+    },
+    {
       "source": "/puyallup",
       "destination": "/puyallup/coffee-crawl",
       "permanent": false

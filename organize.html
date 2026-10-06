@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Organize a Hometown Coffee or Pub Crawl · Hometown Crawls</title>
+  <title>Organize a Hometown Coffee Crawl · Hometown Crawls</title>
   <meta name="theme-color" content="#1f3a24" />
   <meta name="description" content="Apply to organize a hometown crawl. Send your application to hello@hometowncrawls.com." />
   <link rel="canonical" href="https://www.hometowncrawls.com/organize" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Hometown Crawls" />
-  <meta property="og:title" content="Organize a Hometown Coffee or Pub Crawl · Hometown Crawls" />
+  <meta property="og:title" content="Organize a Hometown Coffee Crawl · Hometown Crawls" />
   <meta property="og:description" content="Apply to organize a hometown crawl. Send your application to hello@hometowncrawls.com." />
   <meta property="og:url" content="https://www.hometowncrawls.com/organize" />
   <meta property="og:image" content="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=70" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Organize a Hometown Coffee or Pub Crawl · Hometown Crawls" />
+  <meta name="twitter:title" content="Organize a Hometown Coffee Crawl · Hometown Crawls" />
   <meta name="twitter:description" content="Apply to organize a hometown crawl. Send your application to hello@hometowncrawls.com." />
   <meta name="keywords" content="organize coffee crawl, chamber organizer, hometown crawl" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -46,7 +46,7 @@
         <div class="card">
           <div class="step-num">2</div>
           <h3>Create crawl</h3>
-          <p class="muted small">We spin up your coffee or pub trail page and passport.</p>
+          <p class="muted small">We spin up your coffee trail page and passport.</p>
         </div>
         <div class="card">
           <div class="step-num">3</div>
@@ -83,12 +83,6 @@
         <label class="field"><span>Town</span>
           <input class="input" name="town" required placeholder="Puyallup, WA" />
         </label>
-        <label class="field"><span>Crawl type</span>
-          <select class="input" name="crawl_type" required>
-            <option value="coffee">Coffee</option>
-            <option value="pub">Pub (21+)</option>
-          </select>
-        </label>
         <label class="field"><span>Phone</span>
           <input class="input" type="tel" name="phone" placeholder="(253) 555-0100" />
         </label>
@@ -123,7 +117,7 @@
           organization: String(fd.get("organization") || "").trim(),
           email: String(fd.get("email") || "").trim(),
           town: String(fd.get("town") || "").trim(),
-          crawl_type: fd.get("crawl_type"),
+          crawl_type: "coffee",
           phone: String(fd.get("phone") || "").trim(),
           notes: String(fd.get("notes") || "").trim(),
           created_at: new Date().toISOString(),
