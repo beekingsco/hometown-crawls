@@ -84,6 +84,7 @@
             <a href="${base}prizes.html">Prizes</a>
             <a href="${base}rules.html">Rules</a>
             ${link("puyallup/holiday-coffee-crawl/rules", "Official Rules")}
+            ${link("privacy", "Privacy")}
             <a href="${base}guides/how-a-hometown-coffee-crawl-works.html">Guides</a>
           </div>
           <div class="footer-col">

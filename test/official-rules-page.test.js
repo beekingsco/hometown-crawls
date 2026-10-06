@@ -67,7 +67,8 @@ test("official rules page is indexable and has no raw placeholders", () => {
   assert.doesNotMatch(page, /noindex/i);
   assert.match(page, /content="index, follow"/);
   assert.match(page, /rel="canonical" href="https:\/\/www\.hometowncrawls\.com\/puyallup\/holiday-coffee-crawl\/rules"/);
-  assert.match(page, /Privacy policy link will go here when that page exists/);
+  assert.match(page, /<a href="\/privacy">Hometown Crawls Privacy Policy<\/a>/);
+  assert.doesNotMatch(page, /Privacy policy link will go here/);
   assert.doesNotMatch(page, /href="[^"]*privacy[-.]/i);
   assert.match(page, /All prizes are owned, sourced and provided by the Sponsor\./);
   assert.doesNotMatch(page, /does not supply prizes/i);
@@ -97,5 +98,6 @@ test("sitemap, rewrite, crawl-page link, and footer link point at the rules", ()
   assert.match(vercel, /"destination": "\/puyallup\/holiday-coffee-crawl\/rules\/index.html"/);
   assert.match(crawl, /href="\/puyallup\/holiday-coffee-crawl\/rules"/);
   assert.match(siteJs, /puyallup\/holiday-coffee-crawl\/rules/);
-  assert.match(crawl, /site\.js\?v=3/);
+  assert.match(crawl, /site\.js\?v=4/);
+  assert.match(siteJs, /link\("privacy", "Privacy"\)/);
 });
