@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Counter card · Puyallup Holiday Coffee Crawl</title>
+  <meta name="theme-color" content="#1f3a24" />
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/site.css" />
+  <style>
+    .card-page { padding: 2rem 0 3rem; }
+    .tent-sheet {
+      width: min(100%, 720px);
+      margin: 1rem auto 0;
+      background: #fffdf8;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .tent-face {
+      min-height: 240px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem 1.25rem;
+      padding: 1.25rem 1rem;
+      background: #f4efe6;
+      color: #1f3a24;
+    }
+    .tent-face.flip { transform: rotate(180deg); }
+    .fold-line {
+      border-top: 1px dashed #1f3a24;
+      height: 0;
+    }
+    .tent-copy { max-width: 16rem; text-align: center; }
+    .tent-copy .brand {
+      font-family: var(--font-body);
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .tent-copy h2 { font-size: clamp(1.45rem, 5vw, 2rem); margin: .35rem 0; color: #1f3a24; }
+    .tent-copy .stamp-line { font-weight: 700; font-size: 1.05rem; }
+    .tent-copy .code-label { margin-top: .7rem; font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; }
+    .tent-copy .code { font-family: var(--font-display); font-size: clamp(1.4rem, 6vw, 2rem); letter-spacing: .08em; word-break: break-word; }
+    .tent-qr svg, .tent-qr img { width: min(168px, 42vw); height: auto; display: block; background: #fff; }
+    @media print {
+      @page { size: letter landscape; margin: 0; }
+      body { background: #fff; }
+      .site-header, .site-footer, .skip-link, .no-print { display: none !important; }
+      main { padding: 0 !important; }
+      .card-page { padding: 0; }
+      .tent-sheet {
+        width: 11in;
+        height: 8.5in;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .tent-face {
+        height: 4.25in;
+        min-height: 0;
+        flex-wrap: nowrap;
+        padding: 0.35in 0.55in;
+      }
+      .tent-qr svg, .tent-qr img { width: 2.15in; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+  <main>
+    <div class="wrap card-page">
+      <div class="no-print">
+        <p class="eyebrow">Shop portal</p>
+        <h1>Counter card</h1>
+        <p class="muted" id="card-lead">Sign in to print the tent card for your counter.</p>
+        <p class="mt-2"><a href="/puyallup/coffee-crawl/shop">Back to your listing</a></p>
+      </div>
+
+      <section class="card auth-panel no-print hidden" id="view-login">
+        <form id="login-form">
+          <label class="field"><span>Email</span>
+            <input class="input" type="email" id="login-email" autocomplete="email" required placeholder="you@yourshop.com" />
+          </label>
+          <button class="btn btn-primary" type="submit">Send magic link</button>
+          <p class="form-note">We'll email a one-time link that opens this page. No password.</p>
+        </form>
+        <p class="form-success mt-2" id="login-ok" role="status"></p>
+        <p class="form-error mt-2" id="login-err" role="alert"></p>
+      </section>
+
+      <div class="no-print hidden" id="listing-switch"></div>
+      <p class="form-error mt-2 no-print" id="card-err" role="alert"></p>
+
+      <section id="prepared" class="card hidden">
+        <h2>Your counter card is being prepared</h2>
+        <p class="muted mt-1">It will show your shop name, QR code, and counter code after those are ready. Email <a href="mailto:hello@hometowncrawls.com">hello@hometowncrawls.com</a> if this stays blank.</p>
+      </section>
+
+      <section id="tent" class="hidden">
+        <div class="no-print row" style="margin-top:1rem">
+          <button class="btn btn-primary" type="button" id="btn-print">Print counter card</button>
+        </div>
+        <p class="muted small no-print mt-1">Prints on letter paper, landscape. Fold in half on the dashed line so it stands as a tent. The top half is upside down on purpose.</p>
+        <div class="tent-sheet" id="tent-sheet"></div>
+      </section>
+    </div>
+  </main>
+  <footer class="site-footer" id="site-footer"></footer>
+  <script src="/assets/config.js"></script>
+  <script src="/assets/site.js?v=2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+  <script src="/assets/crawl.js"></script>
+  <script>
+  (function () {
+    var sb = null;
+    var listings = [];
+    var current = null;
+    var esc = function (s) { return window.HCCrawl ? HCCrawl.escapeHtml(s) : String(s || ""); };
+    function $(id) { return document.getElementById(id); }
+    function showBox(el, on) { if (el) el.classList.toggle("show", !!on); }
+
+    function faceHtml(listing, qrHtml) {
+      var code = listing.store_code || "";
+      return '<div class="tent-qr">' + qrHtml + '</div>' +
+        '<div class="tent-copy">' +
+          '<p class="brand">Hometown Crawls</p>' +
+          '<h2>' + esc(listing.display_name || "Your shop") + '</h2>' +
+          '<p class="stamp-line">Get your passport stamped here</p>' +
+          '<p class="code-label">Counter code</p>' +
+          '<p class="code">' + esc(code || "—") + '</p>' +
+        '</div>';
+    }
+
+    function qrMarkup(listing) {
+      var url = new URL("https://www.hometowncrawls.com/puyallup/holiday-coffee-crawl");
+      url.searchParams.set("shop", listing.business_id);
+      url.searchParams.set("code", listing.qr_secret);
+      var qr = qrcode(0, "M");
+      qr.addData(url.toString());
+      qr.make();
+      return typeof qr.createSvgTag === "function" ? qr.createSvgTag(6, 0) : qr.createImgTag(6, 8);
+    }
+
+    function render() {
+      var ready = current && current.business_id && current.qr_secret && typeof qrcode === "function";
+      $("prepared").classList.toggle("hidden", !!ready);
+      $("tent").classList.toggle("hidden", !ready);
+      $("card-lead").textContent = ready
+        ? "Letter size. Fold on the dashed line to make a counter tent."
+        : "Your counter card is being prepared.";
+      if (!ready) return;
+      var markup = qrMarkup(current);
+      var inner = faceHtml(current, markup);
+      $("tent-sheet").innerHTML =
+        '<div class="tent-face flip">' + inner + '</div>' +
+        '<div class="fold-line"></div>' +
+        '<div class="tent-face">' + inner + '</div>';
+    }
+
+    function renderSwitch() {
+      var box = $("listing-switch");
+      if (listings.length < 2) { box.innerHTML = ""; box.classList.add("hidden"); return; }
+      box.classList.remove("hidden");
+      box.innerHTML = '<label class="field"><span>Location</span><select class="input" id="listing-pick">' +
+        listings.map(function (l) {
+          return '<option value="' + esc(l.listing_id) + '">' + esc(l.display_name || "Listing") + "</option>";
+        }).join("") + "</select></label>";
+      $("listing-pick").value = current.listing_id;
+      $("listing-pick").onchange = function () {
+        select($("listing-pick").value);
+      };
+    }
+
+    function select(id) {
+      current = listings.filter(function (l) { return l.listing_id === id; })[0] || listings[0];
+      renderSwitch();
+      render();
+    }
+
+    async function enter(session) {
+      $("view-login").classList.add("hidden");
+      try {
+        var linkRes = await sb.rpc("hc_link_account");
+        if (linkRes.error) throw linkRes.error;
+        var listRes = await sb.rpc("shop_my_listings");
+        if (listRes.error) throw listRes.error;
+        listings = listRes.data || [];
+        if (!listings.length) {
+          $("card-err").textContent = "No shop listing is tied to this email yet.";
+          showBox($("card-err"), true);
+          $("prepared").classList.remove("hidden");
+          return;
+        }
+        var wanted = new URLSearchParams(location.search).get("listing");
+        var match = listings.filter(function (l) { return l.listing_id === wanted; })[0];
+        select(match ? match.listing_id : listings[0].listing_id);
+      } catch (e) {
+        $("card-err").textContent = e.message || "Could not load your counter card.";
+        showBox($("card-err"), true);
+        $("prepared").classList.remove("hidden");
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      sb = HCCrawl.client();
+      $("btn-print").onclick = function () { window.print(); };
+      $("login-form").onsubmit = async function (ev) {
+        ev.preventDefault();
+        showBox($("login-ok"), false);
+        showBox($("login-err"), false);
+        try {
+          var res = await sb.auth.signInWithOtp({
+            email: $("login-email").value.trim(),
+            options: { emailRedirectTo: location.origin + location.pathname + location.search }
+          });
+          if (res.error) throw res.error;
+          $("login-ok").textContent = "Check your email for the magic link. It opens this page.";
+          showBox($("login-ok"), true);
+        } catch (e) {
+          $("login-err").textContent = e.message || "Could not send the magic link.";
+          showBox($("login-err"), true);
+        }
+      };
+      if (!sb) {
+        $("card-err").textContent = "This page couldn't reach the listing service. Refresh and try again.";
+        showBox($("card-err"), true);
+        return;
+      }
+      sb.auth.getSession().then(function (res) {
+        if (res.data && res.data.session) enter(res.data.session);
+        else $("view-login").classList.remove("hidden");
+      });
+    });
+  })();
+  </script>
+</body>
+</html>

@@ -13,7 +13,7 @@ Open http://localhost:8080
 
 ## Current blockers
 
-1. **Stripe Payment Link** — paste the live Payment Link into `#stripe-seat-link` `href` on `shops/join.html` (coffee $49 default; pub `$59` when `?crawl=puy-pub`). `data-crawl` / `data-price` are set from the query.
+1. **Stripe Payment Link** — the live shop signup is `/puyallup/coffee-crawl` (holiday season, $49.99 one-time). `/shops/join` redirects there. Do not point shops at the old monthly seat link.
 2. **Vercel deploy** — publish this folder to the **hometown-crawls** Vercel project (`npx vercel --prod` from site root, or connect in the dashboard). Do not deploy from agents unless asked.
 
 ## Organizer apps
@@ -26,8 +26,9 @@ Open http://localhost:8080
 
 | Path | Crawl id | Shop seat |
 |------|----------|-----------|
-| `/puyallupwa/coffee/` | `puy-coffee` | $49/mo |
-| `/puyallupwa/pub/` | `puy-pub` | $59/mo (21+) |
+| `/puyallup/holiday-coffee-crawl` | `puy-coffee` | $49.99 for the 2026 holiday season, one-time |
+| `/puyallup/coffee-crawl` | shop signup | same fee; inserts `crawl_signups` |
+| `/puyallupwa/pub/` | `puy-pub` | not open; noindex; no payment link |
 
 ## Supabase
 
@@ -37,5 +38,5 @@ Public config in `assets/config.js`. RPCs: `join_crawl`, `claim_stamp`. Shops fr
 
 - Unique title, description, canonical, and Open Graph on public pages
 - JSON-LD: Organization + WebSite (home), TouristTrip (coffee/pub), FAQPage (`faqs.html`), Article (guides)
-- `robots.txt` + `sitemap.xml` → `https://hometowncrawls.com/`
+- `robots.txt` + `sitemap.xml` → `https://www.hometowncrawls.com/`
 - Evergreen guides under `guides/`

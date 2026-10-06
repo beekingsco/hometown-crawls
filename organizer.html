@@ -5,13 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Organizer Applications (Local Stub) · Hometown Crawls</title>
   <meta name="theme-color" content="#1f3a24" />
-  <meta name="description" content="Local-only organizer application list for Hometown Crawls. Apply on the organize page to launch a coffee or pub crawl in your town." />
-  <link rel="canonical" href="https://hometowncrawls.com/organizer.html" />
+  <meta name="robots" content="noindex" />
+  <meta name="description" content="Local-only organizer application list stored in this browser. Nothing on this page is emailed." />
+  <link rel="canonical" href="https://www.hometowncrawls.com/organizer" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Hometown Crawls" />
   <meta property="og:title" content="Organizer Applications (Local Stub) · Hometown Crawls" />
   <meta property="og:description" content="Local-only organizer application list for Hometown Crawls. Apply on the organize page to launch a coffee or pub crawl in your town." />
-  <meta property="og:url" content="https://hometowncrawls.com/organizer.html" />
+  <meta property="og:url" content="https://www.hometowncrawls.com/organizer" />
   <meta property="og:image" content="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=70" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Organizer Applications (Local Stub) · Hometown Crawls" />
@@ -27,7 +28,7 @@
     <div class="wrap-narrow page-hero">
       <p class="eyebrow">Organizer</p>
       <h1>Local applications</h1>
-      <p>Passwordless stub — read-only list from this browser’s <code>localStorage</code> (<code>hc-organizer-apps-v1</code>). Nothing leaves this device yet.</p>
+      <p>This list is stored in this browser only (<code>hc-organizer-apps-v1</code>). Nothing on this page is emailed.</p>
     </div>
     <div class="wrap-narrow">
       <div class="card mb-2">
@@ -74,7 +75,7 @@
 
       listEl.innerHTML = apps.slice().reverse().map((a, i) => {
         const when = a.created_at ? new Date(a.created_at).toLocaleString() : "—";
-        const seat = a.seat_price_hint ? "$" + a.seat_price_hint + " seats" : "50/50 seats";
+        const seat = "Saved in this browser";
         return `
           <div class="shop-row" style="${i === apps.length - 1 ? "" : ""}">
             <div class="shop-avatar">${esc((a.name || "?").slice(0, 2).toUpperCase())}</div>

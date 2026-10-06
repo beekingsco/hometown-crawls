@@ -5,13 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Puyallup Pub Crawl (21+) — Stamp Passport · Hometown Crawls</title>
   <meta name="theme-color" content="#1f3a24" />
-  <meta name="description" content="Puyallup pub crawl for 21+: digital stamp passport at independent bars and breweries. Shop seats $59/mo. No app download — QR or counter code at the venue." />
-  <link rel="canonical" href="https://hometowncrawls.com/puyallupwa/pub/" />
+  <meta name="robots" content="noindex" />
+  <meta name="description" content="Puyallup pub crawl page for 21+. Shop seats are not open, and this page is not in the main navigation." />
+  <link rel="canonical" href="https://www.hometowncrawls.com/puyallupwa/pub/" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Hometown Crawls" />
   <meta property="og:title" content="Puyallup Pub Crawl (21+) — Stamp Passport" />
-  <meta property="og:description" content="Independent bars and breweries in Puyallup. Digital passport, $59/mo shop seats, no app download." />
-  <meta property="og:url" content="https://hometowncrawls.com/puyallupwa/pub/" />
+  <meta property="og:description" content="Puyallup pub crawl page. Shop seats are not open yet." />
+  <meta property="og:url" content="https://www.hometowncrawls.com/puyallupwa/pub/" />
   <meta property="og:image" content="https://images.unsplash.com/photo-1436076863939-06870fe779c2?auto=format&fit=crop&w=1200&q=70" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Puyallup Pub Crawl · Hometown Crawls" />
@@ -32,14 +33,14 @@
     "@context": "https://schema.org",
     "@type": "TouristTrip",
     "name": "Puyallup Pub Crawl",
-    "description": "A 21+ digital stamp passport across independent bars and breweries in Puyallup, Washington. Visit in person, stamp with QR or counter code. Shop seats $59/mo. No app download.",
-    "url": "https://hometowncrawls.com/puyallupwa/pub/",
+    "description": "A 21+ page for a Puyallup pub crawl. Shop seats are not open, and no payment link is published.",
+    "url": "https://www.hometowncrawls.com/puyallupwa/pub/",
     "touristType": ["Pub visitors", "Brewery fans", "Adults 21+"],
     "isAccessibleForFree": true,
     "provider": {
       "@type": "Organization",
       "name": "Hometown Crawls",
-      "url": "https://hometowncrawls.com/"
+      "url": "https://www.hometowncrawls.com/"
     },
     "itinerary": {
       "@type": "ItemList",
@@ -51,8 +52,8 @@
       "price": "0",
       "priceCurrency": "USD",
       "availability": "https://schema.org/InStock",
-      "url": "https://hometowncrawls.com/puyallupwa/pub/",
-      "description": "Free for crawlers; participating venues claim $59/mo shop seats."
+      "url": "https://www.hometowncrawls.com/puyallupwa/pub/",
+      "description": "Shop seats are not open. No payment link is published for this pub crawl."
     }
   }
   </script>
@@ -119,8 +120,7 @@
       <div class="wrap-narrow">
         <div class="card mb-2">
           <h3>Shop owners</h3>
-          <p class="muted small mt-1">Claim a seat on this pub trail for <strong>$59/mo</strong>. Organizer / platform split is 50/50.</p>
-          <a class="btn btn-primary mt-2" href="../../shops/join.html?crawl=puy-pub">Join as a shop · $59/mo</a>
+          <p class="muted small mt-1">Pub shop seats are not open yet. There is no payment link on this page.</p>
         </div>
         <div class="card">
           <h3>Quick stamp</h3>
@@ -168,23 +168,33 @@
           statusEl.className = "pill pill-wait";
         }
         const res = await HCCrawl.loadShops(CRAWL);
-        shops = res.shops?.length ? res.shops : (HCCrawl.FALLBACK_PUB_SHOPS || []);
+        shops = (res.shops || []).filter((s) => s && s.id);
         if (res.error) console.warn(res.error);
       } catch (e) {
-        shops = HCCrawl.FALLBACK_PUB_SHOPS || [];
+        shops = [];
         statusEl.textContent = "Upcoming";
         statusEl.className = "pill pill-wait";
       }
 
       const stamps = await HCCrawl.myStamps(CRAWL);
-      HCCrawl.renderShopList(document.getElementById("shop-list"), shops, stamps);
-      HCCrawl.renderStamps(document.getElementById("passport-area"), shops, stamps);
+      if (!shops.length) {
+        document.getElementById("shop-list").innerHTML = `<p class="muted">No paid pub stops are listed.</p>`;
+        document.getElementById("passport-area").innerHTML = `<p class="muted">The stamp grid stays empty until real stops are on this crawl.</p>`;
+      } else {
+        HCCrawl.renderShopList(document.getElementById("shop-list"), shops, stamps);
+        HCCrawl.renderStamps(document.getElementById("passport-area"), shops, stamps);
+      }
       HCCrawl.initMap(document.getElementById("pub-map"), shops, { lat: 47.191, lng: -122.293 });
 
       const sel = document.getElementById("quick-shop");
-      sel.innerHTML = shops.length
-        ? shops.map(s => `<option value="${s.id}">${HCCrawl.escapeHtml(s.name)}</option>`).join("")
-        : `<option value="">Shops opening soon</option>`;
+      const quickBtn = document.getElementById("btn-quick-stamp");
+      if (!shops.length) {
+        sel.innerHTML = `<option value="">No stops yet</option>`;
+        sel.disabled = true;
+        if (quickBtn) quickBtn.disabled = true;
+      } else {
+        sel.innerHTML = shops.map(s => `<option value="${s.id}">${HCCrawl.escapeHtml(s.name)}</option>`).join("");
+      }
 
       const session = await HCCrawl.getSession();
       if (session) joinStatus.textContent = "Signed in — you can join and stamp (21+).";
@@ -195,7 +205,7 @@
           HC.toast("Passport joined");
           joinStatus.textContent = "You’re on the Puyallup Pub passport (21+).";
           const stamps2 = await HCCrawl.myStamps(CRAWL);
-          HCCrawl.renderStamps(document.getElementById("passport-area"), shops, stamps2);
+          if (shops.length) HCCrawl.renderStamps(document.getElementById("passport-area"), shops, stamps2);
         } catch (e) {
           joinStatus.textContent = e.message || String(e);
           if (/sign in|authenticated|Not authenticated/i.test(String(e.message || e))) {

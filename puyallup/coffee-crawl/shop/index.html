@@ -17,8 +17,13 @@
     .photo-grid img { width: 100%; height: 120px; object-fit: cover; }
     .photo-grid figcaption { padding: .45rem .55rem .6rem; }
     .photo-grid button { font-size: .8rem; color: #7a2e22; font-weight: 600; }
-    #qr-art svg { width: 220px; height: 220px; }
-    .code-big { font-family: var(--font-display); font-size: 2rem; letter-spacing: .08em; color: var(--green); }
+    #qr-art svg { width: min(220px, 70vw); height: auto; }
+    .code-big { font-family: var(--font-display); font-size: 2rem; letter-spacing: .08em; color: var(--green); word-break: break-word; }
+    .checklist { list-style: none; display: grid; gap: .65rem; margin-top: .9rem; }
+    .checklist li { display: flex; gap: .65rem; align-items: flex-start; }
+    .checklist .mark { width: 1.35rem; height: 1.35rem; border-radius: 50%; border: 2px solid var(--line-strong); display: grid; place-items: center; flex-shrink: 0; color: var(--green); font-size: .8rem; }
+    .checklist li.done .mark { background: var(--soft); border-color: var(--green); }
+    .checklist a { color: var(--green); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
     button.card { text-align: left; width: 100%; }
     @media print {
       body * { visibility: hidden; }
@@ -34,7 +39,7 @@
     <div class="wrap portal-hero">
       <p class="eyebrow">Shop portal</p>
       <h1>Manage your listing</h1>
-      <p class="muted">Puyallup Holiday Coffee Crawl · Nov 1 – Dec 31, 2026 · organized by Bryan Reynolds, Anthem Coffee.</p>
+      <p class="muted">Puyallup Holiday Coffee Crawl · Nov 1 – Dec 31, 2026. Shop fee: $49.99 for the 2026 holiday season, one-time.</p>
     </div>
 
     <div class="wrap-narrow stack" style="padding-bottom:3rem">
@@ -63,6 +68,12 @@
         </div>
         <div id="listing-switch"></div>
 
+        <section class="card" id="onboarding" aria-labelledby="onboarding-title">
+          <h3 id="onboarding-title">Welcome checklist</h3>
+          <p class="muted small mt-1">Finish these so crawlers can find you and stamp at the counter.</p>
+          <ul class="checklist" id="checklist"></ul>
+        </section>
+
         <div class="card" id="pay-card"></div>
 
         <div class="card hidden" id="qr-box">
@@ -74,7 +85,7 @@
             <p class="code-big" id="store-code"></p>
             <p class="small muted">Guests scan the QR or type this code to stamp their passport.</p>
           </div>
-          <button class="btn btn-soft mt-2 no-print" type="button" id="btn-print">Print QR code</button>
+          <a class="btn btn-soft mt-2 no-print" id="btn-print" href="/puyallup/coffee-crawl/shop/card">Print your counter card</a>
         </div>
 
         <form class="card" id="edit-form">
@@ -90,9 +101,10 @@
           <label class="field"><span>Hours</span>
             <textarea class="input" id="f-hours" maxlength="500" placeholder="Mon-Fri 7am-4pm, Sat 8am-3pm"></textarea>
           </label>
-          <label class="field"><span>Short blurb</span>
-            <textarea class="input" id="f-blurb" maxlength="600" placeholder="What should crawlers know before they walk in?"></textarea>
+          <label class="field"><span>Offer</span>
+            <textarea class="input" id="f-blurb" maxlength="600" placeholder="A short offer or note crawlers see on your card."></textarea>
           </label>
+          <p class="form-note">This is the short offer crawlers see on your public card.</p>
           <label class="field"><span>Website</span>
             <input class="input" id="f-website" maxlength="300" placeholder="https://yourshop.com" inputmode="url" />
           </label>
@@ -218,9 +230,10 @@
         html += '<span class="pill pill-wait">Not paid yet</span>';
         var href = l.payment_link ? payHref(l.payment_link, l.signup_id, l.owner_email) : "";
         if (href) {
+          html += '<p class="mt-2">$49.99 for the 2026 holiday season, one-time.</p>';
           html += '<p class="mt-2"><a class="btn btn-primary" href="' + esc(href) + '">Pay $49.99</a></p>';
         } else {
-          html += "<p class=\"mt-2\">Payment link coming soon — Bryan will follow up.</p>";
+          html += '<p class="mt-2">Payment link coming soon. Email <a href="mailto:hello@hometowncrawls.com">hello@hometowncrawls.com</a> if you need help.</p>';
         }
       }
       if (l.paid_at) html += '<p class="small muted mt-1">Paid ' + esc(new Date(l.paid_at).toLocaleString()) + "</p>";
@@ -237,8 +250,11 @@
       $("qr-name").textContent = l.display_name || "Your shop";
       $("store-code").textContent = l.store_code || "—";
       var host = $("qr-art");
+      var cardHref = "/puyallup/coffee-crawl/shop/card?listing=" + encodeURIComponent(l.listing_id || "");
+      var printLink = $("btn-print");
+      if (printLink) printLink.setAttribute("href", cardHref);
       if (!l.business_id || !l.qr_secret || typeof qrcode !== "function") {
-        host.innerHTML = '<p class="muted">Your printable QR will appear here once your counter code is ready. Refresh in a moment, or email bryan@myanthemcoffee.com.</p>';
+        host.innerHTML = '<p class="muted">Your counter card is being prepared.</p>';
         return;
       }
       var url = new URL("https://www.hometowncrawls.com/puyallup/holiday-coffee-crawl");
@@ -284,6 +300,30 @@
       renderQr();
       renderPhotos();
       fillForm();
+      renderChecklist();
+    }
+
+    function checkItem(done, label, href) {
+      return '<li class="' + (done ? "done" : "") + '"><span class="mark" aria-hidden="true">' + (done ? "✓" : "") + '</span><span>' +
+        (href ? '<a href="' + esc(href) + '">' + esc(label) + "</a>" : esc(label)) + "</span></li>";
+    }
+    function renderChecklist() {
+      var list = $("checklist");
+      if (!list || !current) return;
+      var l = current;
+      var addressDone = !!(l.address && String(l.address).trim());
+      var photoDone = Array.isArray(l.photo_paths) && l.photo_paths.length > 0;
+      var hoursDone = !!(l.hours && String(l.hours).trim());
+      var offerDone = !!(l.blurb && String(l.blurb).trim());
+      var cardReady = !!(l.business_id && l.qr_secret);
+      var cardHref = "/puyallup/coffee-crawl/shop/card?listing=" + encodeURIComponent(l.listing_id || "");
+      list.innerHTML = [
+        checkItem(addressDone, addressDone ? "Street address saved" : "Add your street address", "#f-address"),
+        checkItem(photoDone, photoDone ? "Photo added" : "Add a photo", "#photos"),
+        checkItem(hoursDone, hoursDone ? "Hours saved" : "Add your hours", "#f-hours"),
+        checkItem(offerDone, offerDone ? "Offer saved" : "Add your offer", "#f-blurb"),
+        checkItem(cardReady, cardReady ? "Print your counter card" : "Your counter card is being prepared", cardHref)
+      ].join("");
     }
 
     async function enter(session) {
@@ -295,7 +335,7 @@
         var link = linkRes.data || {};
         var email = session.user.email || link.email || "";
         if (!link.eligible && !(Number(link.listings) > 0)) {
-          note("<h2>Check the magic link</h2><p class=\"mt-1\">Use the magic link sent to the email you signed up with. If this persists, contact <a href=\"mailto:bryan@myanthemcoffee.com\">bryan@myanthemcoffee.com</a>.</p>");
+          note("<h2>Check the magic link</h2><p class=\"mt-1\">Use the magic link sent to the email you signed up with. If this persists, contact <a href=\"mailto:hello@hometowncrawls.com\">hello@hometowncrawls.com</a>.</p>");
           return;
         }
         var listRes = await sb.rpc("shop_my_listings");
@@ -311,7 +351,7 @@
       } catch (e) {
         loadedFor = null;
         if (isDenied(e)) {
-          note("<h2>You're not authorized</h2><p class=\"mt-1\">This sign-in can't manage a shop listing. Use the magic link sent to the email you signed up with. If this persists, contact <a href=\"mailto:bryan@myanthemcoffee.com\">bryan@myanthemcoffee.com</a>.</p>");
+          note("<h2>You're not authorized</h2><p class=\"mt-1\">This sign-in can't manage a shop listing. Use the magic link sent to the email you signed up with. If this persists, contact <a href=\"mailto:hello@hometowncrawls.com\">hello@hometowncrawls.com</a>.</p>");
         } else {
           note("<h2>Couldn't load your listing</h2><p class=\"mt-1\">" + esc(e.message || "Try the magic link again.") + "</p>");
         }
@@ -369,7 +409,6 @@
 
       $("btn-out").onclick = signOut;
       $("btn-out-note").onclick = signOut;
-      $("btn-print").onclick = function () { window.print(); };
 
       $("edit-form").onsubmit = async function (ev) {
         ev.preventDefault();
@@ -386,7 +425,7 @@
         if (displayName.length < 1 || displayName.length > 200) return fail("Shop name needs 1–200 characters.");
         if (address.length > 300) return fail("Address needs to be 300 characters or fewer.");
         if (hours.length > 500) return fail("Hours need to be 500 characters or fewer.");
-        if (blurb.length > 600) return fail("Blurb needs to be 600 characters or fewer.");
+        if (blurb.length > 600) return fail("Offer needs to be 600 characters or fewer.");
         if (website.length > 300) return fail("Website needs to be 300 characters or fewer.");
         if (website && !/^https?:\/\//i.test(website)) return fail("Website must start with http:// or https://.");
         if (instagram.length > 100) return fail("Instagram needs to be 100 characters or fewer.");
@@ -430,6 +469,7 @@
           if (window.HC) HC.toast("Listing saved");
           fillForm();
           renderSwitch();
+          renderChecklist();
         } catch (e) {
           fail(e.message || "Could not save the listing.");
         } finally {
@@ -460,6 +500,7 @@
           }
           current.photo_paths = next;
           renderPhotos();
+          renderChecklist();
           if (window.HC) HC.toast("Photo added");
         } catch (e) {
           photoFail(e.message || "Could not upload that photo.");
@@ -484,6 +525,7 @@
           if (upd.error) throw upd.error;
           current.photo_paths = next;
           renderPhotos();
+          renderChecklist();
         } catch (e) {
           photoFail(e.message || "Could not remove that photo.");
         }

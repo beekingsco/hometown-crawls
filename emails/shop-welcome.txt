@@ -1,0 +1,21 @@
+Subject: Your shop is signed up for the Puyallup Holiday Coffee Crawl
+
+Hello,
+
+Thanks for signing up {{business_name}} for the Puyallup Holiday Coffee Crawl.
+
+The shop fee is $49.99 for the 2026 holiday season, one-time. The crawl runs November 1 through December 31, 2026.
+
+What to do next:
+1. Finish checkout if you have not already. Stripe sends the receipt.
+2. Open your shop portal and add your street address, a photo, your hours, and a short offer crawlers will see: https://www.hometowncrawls.com/puyallup/coffee-crawl/shop
+3. When your counter card is ready, print it from the portal and set it on the counter. The card shows your shop name, a QR code, your counter code, and the line "Get your passport stamped here."
+
+Crawlers use a free digital passport in the phone browser. They scan the QR or type the counter code at your shop. No app download.
+
+Questions? Email hello@hometowncrawls.com.
+
+Hometown Crawls
+https://www.hometowncrawls.com
+
+This file is a draft template. It is not wired to the payment webhook and is not sent automatically.

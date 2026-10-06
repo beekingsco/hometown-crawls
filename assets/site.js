@@ -37,16 +37,16 @@
           <span class="brand-mark" id="brand-mark">☕</span>
           HOMETOWN CRAWLS
         </a>
-        <button class="nav-toggle" type="button" aria-label="Menu" id="nav-toggle"><span></span></button>
+        <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav-links" id="nav-toggle"><span></span></button>
         <nav class="nav-links" id="nav-links">
-          ${link("puyallupwa/coffee/index.html", "Find a crawl")}
+          ${link("puyallup/holiday-coffee-crawl", "Find a crawl")}
           ${link("map.html", "Map")}
           ${link("prizes.html", "Prizes")}
           ${link("rules.html", "Rules")}
           ${link("faqs.html", "FAQs")}
           ${link("account.html", "Account")}
           ${link("organize.html", "Organize")}
-          ${link("shops/join.html", "Shops")}
+          ${link("puyallup/coffee-crawl", "Shops")}
         </nav>
       </div>`;
 
@@ -63,7 +63,10 @@
 
     const toggle = el.querySelector("#nav-toggle");
     const links = el.querySelector("#nav-links");
-    toggle?.addEventListener("click", () => links.classList.toggle("open"));
+    toggle?.addEventListener("click", () => {
+      const open = links.classList.toggle("open");
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    });
   }
 
   function injectFooter() {
@@ -78,8 +81,7 @@
           </div>
           <div class="footer-col">
             <h4>Explore</h4>
-            <a href="${base}puyallupwa/coffee/index.html">Puyallup Coffee</a>
-            <a href="${base}puyallupwa/pub/index.html">Puyallup Pub</a>
+            <a href="${base}puyallup/holiday-coffee-crawl">Holiday coffee trail</a>
             <a href="${base}map.html">Map</a>
             <a href="${base}prizes.html">Prizes</a>
             <a href="${base}rules.html">Rules</a>
@@ -88,7 +90,7 @@
           <div class="footer-col">
             <h4>Partners</h4>
             <a href="${base}organize.html">Organize a crawl</a>
-            <a href="${base}shops/join.html">Join as a shop</a>
+            <a href="${base}puyallup/coffee-crawl">Join as a shop</a>
             <a href="${base}faqs.html">FAQs</a>
             <a href="${base}account.html">Account</a>
           </div>
@@ -120,6 +122,21 @@
   };
 
   document.addEventListener("DOMContentLoaded", () => {
+    const main = document.querySelector("main");
+    if (main && !main.id) main.id = "main";
+    if (!document.querySelector(".skip-link")) {
+      const skip = document.createElement("a");
+      skip.className = "skip-link";
+      skip.href = "#main";
+      skip.textContent = "Skip to content";
+      document.body.insertBefore(skip, document.body.firstChild);
+    }
+    if (!document.querySelector("link[rel='icon']")) {
+      const icon = document.createElement("link");
+      icon.rel = "icon";
+      icon.href = "/favicon.ico";
+      document.head.appendChild(icon);
+    }
     injectHeader();
     injectFooter();
   });

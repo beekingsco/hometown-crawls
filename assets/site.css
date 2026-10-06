@@ -29,6 +29,22 @@
 
 html { scroll-behavior: smooth; }
 
+.skip-link {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.75rem;
+  z-index: 80;
+  padding: 0.55rem 0.85rem;
+  background: var(--green);
+  color: #fffdf8;
+  border-radius: 8px;
+  font-weight: 600;
+  transform: translateY(-160%);
+}
+.skip-link:focus {
+  transform: none;
+}
+
 body {
   background: var(--bg);
   color: var(--ink);
@@ -173,6 +189,11 @@ h3 { font-size: 1.25rem; }
 .nav-toggle span::before { top: -5px; }
 .nav-toggle span::after { top: 5px; }
 
+@media (max-width: 420px) {
+  .brand { font-size: 0.78rem; letter-spacing: 0.04em; gap: 0.4rem; }
+  .brand-mark { width: 30px; height: 30px; }
+}
+
 @media (max-width: 860px) {
   .nav-toggle { display: inline-flex; }
   .nav-links {
@@ -207,6 +228,9 @@ main { flex: 1; padding-bottom: 3rem; }
   transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
   border: 1px solid transparent;
   white-space: nowrap;
+}
+@media (max-width: 420px) {
+  .btn { white-space: normal; text-align: center; }
 }
 .btn:hover { transform: translateY(-1px); }
 .btn:active { transform: translateY(0); }

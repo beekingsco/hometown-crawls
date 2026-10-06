@@ -3,18 +3,6 @@
   "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/shops/join",
-      "destination": "/shops/join.html"
-    },
-    {
-      "source": "/puyallupwa/coffee",
-      "destination": "/puyallupwa/coffee/index.html"
-    },
-    {
-      "source": "/puyallupwa/coffee/",
-      "destination": "/puyallupwa/coffee/index.html"
-    },
-    {
       "source": "/puyallup/coffee-crawl",
       "destination": "/puyallup/coffee-crawl/index.html"
     },
@@ -29,6 +17,10 @@
     {
       "source": "/puyallup/coffee-crawl/shop",
       "destination": "/puyallup/coffee-crawl/shop/index.html"
+    },
+    {
+      "source": "/puyallup/coffee-crawl/shop/card",
+      "destination": "/puyallup/coffee-crawl/shop/card/index.html"
     },
     {
       "source": "/puyallup/coffee-crawl/organizer",
@@ -47,6 +39,31 @@
     }
   ],
   "redirects": [
+    {
+      "source": "/shops/join",
+      "destination": "/puyallup/coffee-crawl",
+      "permanent": false
+    },
+    {
+      "source": "/shops/join.html",
+      "destination": "/puyallup/coffee-crawl",
+      "permanent": false
+    },
+    {
+      "source": "/puyallupwa/coffee",
+      "destination": "/puyallup/holiday-coffee-crawl",
+      "permanent": false
+    },
+    {
+      "source": "/puyallupwa/coffee/",
+      "destination": "/puyallup/holiday-coffee-crawl",
+      "permanent": false
+    },
+    {
+      "source": "/puyallupwa/coffee/index.html",
+      "destination": "/puyallup/holiday-coffee-crawl",
+      "permanent": false
+    },
     {
       "source": "/puyallup",
       "destination": "/puyallup/coffee-crawl",

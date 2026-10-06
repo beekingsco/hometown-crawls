@@ -6,12 +6,12 @@
   <title>Your Passport Account &amp; Stamp · Hometown Crawls</title>
   <meta name="theme-color" content="#1f3a24" />
   <meta name="description" content="Sign in with an email magic link to manage your Hometown Crawls digital stamp passport, join trails, and claim stamps — no Google/Apple SSO, no app download." />
-  <link rel="canonical" href="https://hometowncrawls.com/account.html" />
+  <link rel="canonical" href="https://www.hometowncrawls.com/account" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Hometown Crawls" />
   <meta property="og:title" content="Your Passport Account &amp; Stamp · Hometown Crawls" />
   <meta property="og:description" content="Sign in with an email magic link to manage your Hometown Crawls digital stamp passport, join trails, and claim stamps — no Google/Apple SSO, no app download." />
-  <meta property="og:url" content="https://hometowncrawls.com/account.html" />
+  <meta property="og:url" content="https://www.hometowncrawls.com/account" />
   <meta property="og:image" content="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=70" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Your Passport Account &amp; Stamp · Hometown Crawls" />
@@ -48,7 +48,7 @@
         <div id="auth-signed-in" class="hidden">
           <div class="row">
             <button class="btn btn-ghost" type="button" id="btn-signout">Sign out</button>
-            <a class="btn btn-primary" href="puyallupwa/coffee/index.html">Open coffee crawl</a>
+            <a class="btn btn-primary" href="/puyallup/holiday-coffee-crawl">Open the holiday coffee trail</a>
           </div>
         </div>
         <div class="form-success mt-2" id="auth-msg"></div>
@@ -71,8 +71,12 @@
       <div class="card">
         <h3>Scan QR</h3>
         <p class="muted small mt-1">Point your camera at the shop tent-card QR.</p>
+        <div class="row mt-2">
+          <button class="btn btn-primary" type="button" id="btn-camera">Start camera</button>
+          <button class="btn btn-ghost hidden" type="button" id="btn-camera-stop">Stop camera</button>
+        </div>
         <div id="reader" class="mt-2"></div>
-        <p class="form-note">Camera access stays on your device.</p>
+        <p class="form-note">The camera stays off until you choose Start camera. Video stays on your device.</p>
       </div>
     </div>
 
@@ -175,16 +179,27 @@
         } catch (e) { err.textContent = e.message || String(e); show(err, true); }
       };
 
-      // QR scanner
-      if (window.Html5Qrcode) {
+      // QR scanner starts only after an explicit click.
+      const startCam = document.getElementById("btn-camera");
+      const stopCam = document.getElementById("btn-camera-stop");
+      let reader = null;
+      let cameraOn = false;
+      async function stopCamera() {
+        if (reader && cameraOn) {
+          try { await reader.stop(); } catch (_) {}
+        }
+        cameraOn = false;
+        stopCam?.classList.add("hidden");
+        startCam?.classList.remove("hidden");
+      }
+      startCam?.addEventListener("click", async () => {
+        if (!window.Html5Qrcode || cameraOn) return;
         try {
-          const reader = new Html5Qrcode("reader");
-          const cams = await Html5Qrcode.getCameras();
-          if (cams?.length) {
-            await reader.start(
-              { facingMode: "environment" },
-              { fps: 8, qrbox: 220 },
-              async (txt) => {
+          reader = reader || new Html5Qrcode("reader");
+          await reader.start(
+            { facingMode: "environment" },
+            { fps: 8, qrbox: 220 },
+            async (txt) => {
                 const raw = String(txt);
                 const path = raw.match(/stamp\/([^/]+)\/([^/]+)\/([^/?#]+)/i);
                 const shopParam = raw.match(/(?:shop|business)=([^&#]+)/i);
@@ -212,13 +227,19 @@
                   }
                   HC.toast("Stamp claimed");
                   await loadPassportUI(shops);
-                  try { await reader.stop(); } catch (_) {}
+                  await stopCamera();
                 } catch (e) { HC.toast(e.message || "Stamp failed"); }
               }
             );
-          }
-        } catch (e) { console.warn("QR", e); }
-      }
+          cameraOn = true;
+          startCam.classList.add("hidden");
+          stopCam?.classList.remove("hidden");
+        } catch (e) {
+          console.warn("QR", e);
+          HC.toast("Camera did not start. You can type the counter code instead.");
+        }
+      });
+      stopCam?.addEventListener("click", stopCamera);
     });
   </script>
 

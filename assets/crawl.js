@@ -301,14 +301,6 @@
       .replace(/"/g, "&quot;");
   }
 
-  // Pub trail still falls back only when active memberships cannot be loaded.
-  const FALLBACK_PUB_SHOPS = [
-    { id: "powerhouse", name: "Powerhouse Brewery", address: "454 E Main Ave, Puyallup, WA", lat: 47.1919, lng: -122.2885, type: "pub" },
-    { id: "the-club", name: "The Club Bar & Grill", address: "117 W Pioneer Ave, Puyallup, WA", lat: 47.1914, lng: -122.2939, type: "pub" },
-    { id: "pioneer", name: "Pioneer Ale House", address: "108 W Pioneer Ave, Puyallup, WA", lat: 47.1915, lng: -122.2937, type: "pub" },
-    { id: "meridian-tap", name: "Meridian Taproom", address: "320 S Meridian, Puyallup, WA", lat: 47.1891, lng: -122.2932, type: "pub" }
-  ];
-
   window.HCCrawl = {
     CRAWL,
     client,
@@ -327,7 +319,6 @@
     renderShopList,
     renderStamps,
     initMap,
-    FALLBACK_PUB_SHOPS,
     escapeHtml
   };
 })();

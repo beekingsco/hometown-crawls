@@ -6,12 +6,12 @@
   <title>Puyallup Coffee Crawl — Digital Stamp Passport · Hometown Crawls</title>
   <meta name="theme-color" content="#1f3a24" />
   <meta name="description" content="Join the Puyallup coffee crawl: free digital stamp passport at independent cafés. Scan QR or enter a counter code — no app download. Finish for a seasonal completer prize." />
-  <link rel="canonical" href="https://hometowncrawls.com/puyallupwa/coffee/" />
+  <link rel="canonical" href="https://www.hometowncrawls.com/puyallupwa/coffee/" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Hometown Crawls" />
   <meta property="og:title" content="Puyallup Coffee Crawl — Digital Stamp Passport" />
   <meta property="og:description" content="Independent coffee stops in downtown Puyallup. Free passport, QR stamps, no app download." />
-  <meta property="og:url" content="https://hometowncrawls.com/puyallupwa/coffee/" />
+  <meta property="og:url" content="https://www.hometowncrawls.com/puyallupwa/coffee/" />
   <meta property="og:image" content="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=70" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Puyallup Coffee Crawl · Hometown Crawls" />
@@ -33,26 +33,25 @@
     "@type": "TouristTrip",
     "name": "Puyallup Coffee Crawl",
     "description": "A free digital stamp passport across independent coffee shops in downtown Puyallup, Washington. Visit in person, stamp with QR or counter code, finish for a seasonal completer prize. No app download.",
-    "url": "https://hometowncrawls.com/puyallupwa/coffee/",
+    "url": "https://www.hometowncrawls.com/puyallupwa/coffee/",
     "touristType": ["Coffee enthusiasts", "Local shoppers", "Weekend walkers"],
     "isAccessibleForFree": true,
     "provider": {
       "@type": "Organization",
       "name": "Hometown Crawls",
-      "url": "https://hometowncrawls.com/"
+      "url": "https://www.hometowncrawls.com/"
     },
     "itinerary": {
       "@type": "ItemList",
       "name": "Puyallup coffee stops",
-      "numberOfItems": 10,
-      "description": "Approximately ten independent coffee stops across downtown Puyallup."
+      "description": "The live trail is the Puyallup Holiday Coffee Crawl, November 1 through December 31, 2026."
     },
     "offers": {
       "@type": "Offer",
       "price": "0",
       "priceCurrency": "USD",
       "availability": "https://schema.org/InStock",
-      "url": "https://hometowncrawls.com/puyallupwa/coffee/"
+      "url": "https://www.hometowncrawls.com/puyallupwa/coffee/"
     }
   }
   </script>
@@ -66,9 +65,9 @@
         <div class="hero-inner">
           <p class="eyebrow">Puyallup · Coffee</p>
           <h1>Puyallup Coffee Crawl</h1>
-          <p>Ten independent coffee stops. Join a passport, stamp as you go, finish for a prize.</p>
+          <p>The live trail is the Puyallup Holiday Coffee Crawl, November 1 through December 31, 2026.</p>
           <div class="row">
-            <button class="btn btn-primary btn-lg" type="button" id="btn-join">Join this passport</button>
+            <a class="btn btn-primary btn-lg" href="/puyallup/holiday-coffee-crawl">Open the holiday coffee trail</a>
             <a class="btn btn-ghost btn-lg" href="../../account.html" style="border-color:rgba(255,253,248,.35);color:#fff">Account &amp; stamp</a>
           </div>
           <p class="small mt-2" id="join-status" style="color:rgba(255,253,248,.8)"></p>
@@ -195,7 +194,8 @@
       const session = await HCCrawl.getSession();
       if (session) joinStatus.textContent = "Signed in — you can join and stamp.";
 
-      document.getElementById("btn-join").onclick = async () => {
+      const joinBtn = document.getElementById("btn-join");
+      if (joinBtn) joinBtn.onclick = async () => {
         try {
           await HCCrawl.joinCrawl("puy-coffee");
           HC.toast("Passport joined");
