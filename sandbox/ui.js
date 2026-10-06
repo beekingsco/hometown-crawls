@@ -60,7 +60,7 @@
     if (head === "shop") return { name: "shop", tab: ["checklist", "tent", "stats", "redeem"].includes(parts[1]) ? parts[1] : "checklist" };
     if (head === "organizer") {
       const tab = parts[1] || "dashboard";
-      return { name: "organizer", tab: ["dashboard", "launch", "payout", "roi"].includes(tab) ? tab : "dashboard" };
+      return { name: "organizer", tab: ["dashboard", "launch", "roi"].includes(tab) ? tab : "dashboard" };
     }
     if (head === "admin") {
       const tab = parts[1] || "crawls";
@@ -558,12 +558,10 @@
     const orgTabs = tabs([
       { href: "#/organizer", label: "Dashboard", on: route.tab === "dashboard" },
       { href: "#/organizer/launch", label: "Launch", on: route.tab === "launch" },
-      { href: "#/organizer/payout", label: "Payout", on: route.tab === "payout" },
       { href: "#/organizer/roi", label: "ROI report", on: route.tab === "roi" }
     ]);
     let body = "";
     if (route.tab === "launch") body = wizardHtml();
-    else if (route.tab === "payout") body = payoutHtml(crawl);
     else if (route.tab === "roi") body = roiHtml(crawl);
     else body = dashboardHtml(crawl);
     return `
@@ -631,7 +629,7 @@
     } else if (step === 2) {
       inner = `
         <h2>Template</h2>
-        <p class="muted small">Coffee, Pub, Taco, Ice Cream, or Small Business Saturday. Picking one fills example prizes and a sample price. You can edit them.</p>
+        <p class="muted small">Coffee, Taco, Ice Cream, or Small Business Saturday. Picking one fills example prizes and a sample price. You can edit them.</p>
         <div class="template-grid mt-2">${S.TEMPLATES.map((item) => `
           <button type="button" class="template-pick" data-action="pick-template" data-template="${item.id}" aria-pressed="${wizard.templateId === item.id ? "true" : "false"}">
             <span>${item.logo}</span><strong>${esc(item.label)}</strong><small class="muted">${esc(item.blurb)}</small>
@@ -643,7 +641,7 @@
         <label class="field mt-2">Starts<input class="input" type="date" data-bucket="wizard" data-field="start" value="${esc(wizard.start)}"></label>
         <label class="field">Ends<input class="input" type="date" data-bucket="wizard" data-field="end" value="${esc(wizard.end)}"></label>`;
     } else if (step === 4) {
-      const logos = ["☕", "🍺", "🌮", "🍦", "🛍️", "🌟"];
+      const logos = ["☕", "🌮", "🍦", "🛍️", "🌟"];
       inner = `
         <h2>Colors and logo</h2>
         <label class="field mt-2">Color<input class="input" type="color" data-bucket="wizard" data-field="color" value="${esc(S.safeColor(wizard.color))}"></label>
@@ -699,26 +697,6 @@
       </section>`;
   }
 
-  function payoutHtml(crawl) {
-    const split = S.payout(state, crawl.id);
-    const rows = split.rows.map((row) =>
-      `<tr><td>${esc(row.shop.name)}</td><td>${row.shop.paid ? "Paid" : "Unpaid"}</td><td>${S.money(row.gross)}</td><td>${S.money(row.organizer)}</td><td>${S.money(row.platform)}</td></tr>`
-    ).join("");
-    return `
-      <section class="section" style="padding-top:0">
-        <div class="callout"><strong>${esc(split.label)}</strong><p class="mt-1">This is an example 50/50 split of seat fees. No payout method is chosen and no money moves.</p></div>
-        <div class="metrics mt-2">
-          <div class="card metric"><strong>${S.money(split.price)}</strong><span class="small muted">Price per shop</span></div>
-          <div class="card metric"><strong>${split.paidCount}/${split.shopCount}</strong><span class="small muted">Seats marked paid</span></div>
-          <div class="card metric"><strong>${S.money(split.organizer)}</strong><span class="small muted">Example organizer half</span></div>
-          <div class="card metric"><strong>${S.money(split.platform)}</strong><span class="small muted">Example platform half</span></div>
-        </div>
-        <div class="card mt-2 table-scroll">
-          <table class="data-table"><thead><tr><th>Shop</th><th>Status</th><th>Gross</th><th>Organizer</th><th>Platform</th></tr></thead><tbody>${rows}</tbody></table>
-        </div>
-      </section>`;
-  }
-
   function roiHtml(crawl) {
     const report = S.roi(state, crawl.id);
     const max = Math.max(1, ...report.traffic.map((row) => row.visits));
@@ -744,7 +722,7 @@
           </div>
           <h3 class="mt-3">Foot traffic per shop</h3>
           <div class="mt-2">${bars || `<p class="muted">No example visits yet.</p>`}</div>
-          <p class="small muted mt-2">New vs returning is an example flag on the sample guests, not a live identity graph. ${report.stops} shops are on the map. Prize tiers and the 50/50 note are examples, not decisions.</p>
+          <p class="small muted mt-2">New vs returning is an example flag on the sample guests, not a live identity graph. ${report.stops} shops are on the map. Prize tiers are examples, not decisions.</p>
         </article>
       </section>`;
   }

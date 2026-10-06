@@ -33,19 +33,6 @@
       shops: ["North Porch Coffee", "Second Kettle", "Little Window Cafe", "Depot Pour"]
     },
     {
-      id: "pub",
-      label: "Pub",
-      logo: "🍺",
-      color: "#3d2b1f",
-      price: 59,
-      blurb: "Bars and breweries. Example only — 21+ would be decided later.",
-      prizes: [
-        { stamps: 4, name: "Tasting-card sticker" },
-        { stamps: 8, name: "Grand-prize drawing" }
-      ],
-      shops: ["The Painted Tap", "Low Bridge Pub", "Harbor & Rye", "Odd Fellows Bar"]
-    },
-    {
       id: "taco",
       label: "Taco",
       logo: "🌮",
@@ -155,7 +142,7 @@
       id: "launch",
       group: "Organizer",
       title: "Launch a crawl",
-      summary: "A wizard for town, template (Coffee, Pub, Taco, Ice Cream, or Small Business Saturday), dates, colors, prize tiers, and price per shop. Checkout is simulated.",
+      summary: "A wizard for town, template (Coffee, Taco, Ice Cream, or Small Business Saturday), dates, colors, prize tiers, and price per shop. Checkout is simulated.",
       hash: "#/organizer/launch",
       role: "organizer"
     },
@@ -165,14 +152,6 @@
       title: "Organizer dashboard and CSV",
       summary: "Shops, guests, stamps, and completions for the selected demo crawl, with CSV downloads.",
       hash: "#/organizer",
-      role: "organizer"
-    },
-    {
-      id: "payout",
-      group: "Organizer",
-      title: "Payout preview",
-      summary: "A 50/50 split of example seat fees. Labeled Example - payout method not decided. No transfer is sent.",
-      hash: "#/organizer/payout",
       role: "organizer"
     },
     {
@@ -438,7 +417,7 @@
         organization: "Riverbend Chamber (example)",
         town: "Riverbend",
         stateName: "DS",
-        templateId: "pub",
+        templateId: "coffee",
         crawlId: "",
         status: "pending",
         submitted: "2026-10-30",
@@ -654,32 +633,6 @@
 
   function money(amount) {
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount || 0);
-  }
-
-  function payout(state, crawlId) {
-    const crawl = crawlById(state, crawlId);
-    const shops = shopsFor(state, crawlId);
-    const price = Number(crawl.pricePerShop) || 0;
-    const rows = shops.map((shop) => {
-      const gross = shop.paid ? price : 0;
-      return {
-        shop,
-        gross,
-        organizer: gross / 2,
-        platform: gross / 2
-      };
-    });
-    const gross = rows.reduce((sum, row) => sum + row.gross, 0);
-    return {
-      price,
-      paidCount: shops.filter((shop) => shop.paid).length,
-      shopCount: shops.length,
-      gross,
-      organizer: gross / 2,
-      platform: gross / 2,
-      rows,
-      label: "Example - payout method not decided"
-    };
   }
 
   function dayKey(iso) {
@@ -1102,7 +1055,6 @@
     claimStamp,
     redeemVoucher,
     money,
-    payout,
     visitsByDay,
     repeatGuests,
     firstOnlyGuests,

@@ -82,14 +82,10 @@ test("stamp claim checks the code and the 150 m geofence", () => {
   assert.match(finish.voucher, /^EX-[A-Z0-9]{6}$/);
 });
 
-test("payout is a labeled 50/50 example and vouchers redeem once", () => {
+test("vouchers redeem once and the demo has no payout or pub crawl", () => {
   const state = S.createSeed();
-  const split = S.payout(state, S.CRAWL_ID);
-  assert.equal(split.label, "Example - payout method not decided");
-  assert.equal(split.paidCount, 6);
-  assert.equal(split.gross, 49 * 6);
-  assert.equal(split.organizer, split.gross / 2);
-  assert.equal(split.platform, split.gross / 2);
+  assert.equal(S.TEMPLATES.some((item) => item.id === "pub"), false);
+  assert.equal(state.applications.some((item) => item.templateId === "pub"), false);
 
   const guests = S.guestsFor(state, S.CRAWL_ID);
   const redeemed = guests.find((guest) => guest.id === "g1");
@@ -156,10 +152,30 @@ test("sandbox pages stay out of search and away from live keys", () => {
   assert.match(robots, /Disallow:\s*\/sandbox\/?/);
   assert.doesNotMatch(sitemap, /sandbox/i);
   assert.match(html, /noindex,\s*nofollow/);
+  const sandboxRobots = fs.readFileSync(path.join(root, "sandbox/robots.txt"), "utf8");
+  assert.match(sandboxRobots, /Disallow:\s*\//);
+  assert.doesNotMatch(robots, /^Disallow:\s*\/\s*$/m);
+  assert.match(robots, /Sitemap:\s*https:\/\/hometowncrawls\.com\/sitemap\.xml/);
+  const config = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"));
+  const sandboxHeaders = config.headers.filter((rule) =>
+    (rule.has || []).some((item) => item.type === "host" && /sandbox/.test(item.value))
+  );
+  assert.ok(sandboxHeaders.some((rule) =>
+    rule.headers.some((header) => header.key === "X-Robots-Tag" && header.value === "noindex, nofollow")
+  ));
+  const sandboxRedirects = config.redirects.filter((rule) =>
+    (rule.has || []).some((item) => item.type === "host" && /sandbox/.test(item.value))
+  );
+  assert.ok(sandboxRedirects.some((rule) => rule.source === "/" && rule.destination === "/sandbox"));
+  assert.ok(sandboxRedirects.some((rule) => rule.source === "/robots.txt" && rule.destination === "/sandbox/robots.txt"));
+  assert.equal(config.redirects.some((rule) => rule.source === "/puyallup" && rule.has), false);
   for (const source of [html, ui, store]) {
     assert.doesNotMatch(source, /config\.js/);
     assert.doesNotMatch(source, /supabase/i);
     assert.doesNotMatch(source, /sk_live|pk_live|STRIPE_SECRET|SUPABASE_ANON/i);
     assert.doesNotMatch(source, /api\/stripe/);
+    assert.doesNotMatch(source, /fetch\s*\(|XMLHttpRequest/);
+    assert.doesNotMatch(source, /payout|50\/50|organizer half|revenue share/i);
+    assert.doesNotMatch(source, /\bpub\b/i);
   }
 });
