@@ -1,5 +1,8 @@
 -- Local stub of the Hometown Crawls organizer tables plus auth.users.
--- Applies the co-organizer migration twice, then checks access rules.
+-- auth.users is owned by supabase_auth_admin. The migration runs as
+-- hc_postgres, a non-superuser with TRIGGER (not ownership) on auth.users.
+-- Applies the migration twice, rolls it back, restores hc_link_account,
+-- applies it again, then checks access rules.
 -- Not run against production.
 
 create schema if not exists auth;
@@ -14,7 +17,16 @@ begin
   if not exists (select 1 from pg_roles where rolname = 'authenticated') then
     create role authenticated nologin;
   end if;
+  if not exists (select 1 from pg_roles where rolname = 'supabase_auth_admin') then
+    create role supabase_auth_admin nologin nosuperuser;
+  end if;
+  if not exists (select 1 from pg_roles where rolname = 'hc_postgres') then
+    create role hc_postgres nologin nosuperuser;
+  end if;
 end $$;
+
+alter role supabase_auth_admin nosuperuser nologin;
+alter role hc_postgres nosuperuser nologin;
 
 create table auth.users (
   id uuid primary key,
@@ -24,6 +36,9 @@ create table auth.users (
   is_anonymous boolean not null default false,
   created_at timestamptz not null default now()
 );
+
+alter schema auth owner to supabase_auth_admin;
+alter table auth.users owner to supabase_auth_admin;
 
 create or replace function auth.uid()
 returns uuid
@@ -43,6 +58,14 @@ $$;
 
 grant execute on function auth.uid() to public;
 grant execute on function auth.jwt() to public;
+
+grant usage on schema auth to hc_postgres;
+grant select, trigger, references on table auth.users to hc_postgres;
+grant usage, create on schema public to hc_postgres;
+grant usage, create on schema private to hc_postgres;
+grant create on database hc_coorg_test to hc_postgres;
+
+set role hc_postgres;
 
 create table public.crawls (
   id text primary key,
@@ -75,6 +98,10 @@ create table public.shop_listings (
   display_name text not null
 );
 
+create index shop_listings_email_idx on public.shop_listings (owner_email);
+
+reset role;
+
 grant select on public.crawls, public.organizers, public.crawl_organizers, public.shop_listings to authenticated;
 
 create or replace function private.is_crawl_organizer(p_crawl text)
@@ -93,28 +120,38 @@ as $$
   );
 $$;
 
-insert into public.crawls (id, name) values ('puy-coffee', 'Puyallup Coffee');
+alter function private.is_crawl_organizer(text) owner to hc_postgres;
 
 insert into auth.users (id, email, email_confirmed_at, encrypted_password) values
   ('11111111-1111-4111-8111-111111111111', 'chris@beekings.com', now(), 'hash'),
   ('22222222-2222-4222-8222-222222222222', 'bryan@myanthemcoffee.com', now(), 'hash'),
   ('33333333-3333-4333-8333-333333333333', 'guest@example.com', now(), 'hash'),
   ('44444444-4444-4444-8444-444444444444', 'shop@example.com', now(), 'hash'),
-  ('66666666-6666-4666-8666-666666666666', 'fill@example.com', now(), 'hash');
+  ('66666666-6666-4666-8666-666666666666', 'fill@example.com', now(), 'hash'),
+  ('12121212-1212-4212-8212-121212121212', 'viewer@example.com', now(), 'hash');
+
+set role hc_postgres;
+
+insert into public.crawls (id, name) values ('puy-coffee', 'Puyallup Coffee');
 
 insert into public.organizers (id, email, name, user_id) values
   ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1', 'chris@beekings.com', 'Chris Miller', '11111111-1111-4111-8111-111111111111'),
   ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2', 'bryan@myanthemcoffee.com', 'Bryan Reynolds', null),
   ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3', 'keep@example.com', 'Keep Me', null),
-  ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa4', 'fill@example.com', null, null);
+  ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa4', 'fill@example.com', null, null),
+  ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa5', 'viewer@example.com', 'View Only', '12121212-1212-4212-8212-121212121212');
 
 insert into public.crawl_organizers (crawl_id, organizer_id, role) values
   ('puy-coffee', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1', 'owner'),
-  ('puy-coffee', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2', 'organizer');
+  ('puy-coffee', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2', 'organizer'),
+  ('puy-coffee', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa5', 'viewer');
 
 insert into public.shop_listings (crawl_id, owner_email, display_name) values
   ('puy-coffee', 'shop@example.com', 'Anthem'),
-  ('puy-coffee', 'Bryan@MyAnthemCoffee.com', 'Anthem Coffee');
+  ('puy-coffee', 'bryan@myanthemcoffee.com', 'Anthem Coffee'),
+  ('puy-coffee', 'Bryan@MyAnthemCoffee.com', 'Mixed Case');
+
+reset role;
 
 create or replace function test.as_user(p_id uuid, p_email text)
 returns void
@@ -167,11 +204,101 @@ begin
 end;
 $$;
 
-grant usage on schema test to authenticated;
-grant execute on all functions in schema test to authenticated;
+grant usage on schema test to authenticated, hc_postgres;
+grant execute on all functions in schema test to authenticated, hc_postgres;
 
+select test.expect(
+  (select rolsuper from pg_roles where rolname = 'hc_postgres') = false
+  and (select r.rolname from pg_class c join pg_roles r on r.oid = c.relowner where c.oid = 'auth.users'::regclass) = 'supabase_auth_admin'
+  and has_table_privilege('hc_postgres', 'auth.users', 'TRIGGER')
+  and not has_table_privilege('hc_postgres', 'auth.users', 'INSERT'),
+  'migration role has TRIGGER and is not the owner of auth.users'
+);
+
+begin;
+set local role hc_postgres;
 \ir ../migrations/20261006150000_organizer_co_organizers.sql
+commit;
+
+begin;
+set local role hc_postgres;
 \ir ../migrations/20261006150000_organizer_co_organizers.sql
+commit;
+
+select test.expect(
+  exists (
+    select 1 from pg_trigger
+    where tgname = 'organizers_link_auth_user' and not tgisinternal
+  ),
+  'second apply leaves the auth link trigger in place'
+);
+select test.expect(
+  position('encrypted_password' in pg_get_functiondef('public.hc_link_account()'::regprocedure)) = 0
+  and position('owner_email = v_email' in pg_get_functiondef('public.hc_link_account()'::regprocedure)) > 0,
+  'second apply keeps the replacement hc_link_account'
+);
+
+begin;
+set local role hc_postgres;
+select test.raises(
+  'drop trigger organizers_link_auth_user on auth.users',
+  'must be owner'
+);
+rollback;
+
+begin;
+set local role hc_postgres;
+set local lock_timeout = '5s';
+drop function if exists private.link_organizer_on_auth_user() cascade;
+drop function if exists public.organizer_add_co_organizer(text, text, text);
+drop function if exists public.organizer_list_co_organizers(text);
+drop function if exists public.organizer_remove_co_organizer(text, uuid);
+drop function if exists public.organizer_claim_by_email();
+create or replace function public.hc_link_account() returns jsonb language plpgsql security definer set search_path to '' as $function$
+declare v_uid uuid := auth.uid(); v_email text; v_ok boolean;
+begin
+  if v_uid is null then raise exception 'Not authenticated'; end if;
+  select lower(u.email), (u.email_confirmed_at is not null and coalesce(u.is_anonymous,false) = false and coalesce(u.encrypted_password,'') = '')
+    into v_email, v_ok from auth.users u where u.id = v_uid;
+  if v_email is null then return jsonb_build_object('email', null, 'eligible', false, 'is_organizer', false, 'listings', 0); end if;
+  if v_ok then
+    update public.organizers set user_id = v_uid where email = v_email and user_id is null;
+    update public.shop_listings set owner_user_id = v_uid where owner_email = v_email and owner_user_id is null;
+  end if;
+  return jsonb_build_object('email', v_email, 'eligible', v_ok,
+    'is_organizer', exists (select 1 from public.organizers o where o.user_id = v_uid),
+    'listings', (select count(*) from public.shop_listings l where l.owner_user_id = v_uid));
+end $function$;
+delete from public.crawl_organizers where role = 'co-organizer';
+alter table public.crawl_organizers drop constraint if exists crawl_organizers_role_check;
+alter table public.crawl_organizers add constraint crawl_organizers_role_check
+  check (role = any (array['owner'::text, 'organizer'::text, 'viewer'::text]));
+commit;
+
+select test.expect(
+  not exists (
+    select 1 from pg_trigger
+    where tgname = 'organizers_link_auth_user' and not tgisinternal
+  ),
+  'dropping the link function with cascade removes the auth trigger'
+);
+select test.expect(
+  position('encrypted_password' in pg_get_functiondef('public.hc_link_account()'::regprocedure)) > 0
+  and position('owner_email = v_email' in pg_get_functiondef('public.hc_link_account()'::regprocedure)) > 0
+  and position('taken' in pg_get_functiondef('public.hc_link_account()'::regprocedure)) = 0,
+  'rollback restores the original hc_link_account'
+);
+select test.expect(
+  pg_get_constraintdef(oid) not like '%co-organizer%',
+  'rollback restores the original role check'
+)
+from pg_constraint
+where conname = 'crawl_organizers_role_check';
+
+begin;
+set local role hc_postgres;
+\ir ../migrations/20261006150000_organizer_co_organizers.sql
+commit;
 
 select test.expect(
   (select user_id::text from public.organizers where email = 'bryan@myanthemcoffee.com')
@@ -230,22 +357,33 @@ reset role;
 
 select test.as_user('11111111-1111-4111-8111-111111111111'::uuid, 'chris@beekings.com');
 set role authenticated;
+select public.organizer_add_co_organizer('puy-coffee', '  Guest@Example.com ', 'Guest Person') as guest_add \gset
 select test.expect(
-  (public.organizer_add_co_organizer('puy-coffee', '  Guest@Example.com ', 'Guest Person') ->> 'status') = 'added',
-  'owner can add a confirmed co-organizer'
+  :'guest_add'::jsonb ->> 'status' = 'added'
+  and (:'guest_add'::jsonb ->> 'email') = 'guest@example.com'
+  and (:'guest_add'::jsonb ->> 'role') = 'co-organizer'
+  and not jsonb_exists(:'guest_add'::jsonb, 'linked')
+  and not jsonb_exists(:'guest_add'::jsonb, 'name'),
+  'owner can add a confirmed co-organizer without revealing account state'
 );
 select test.expect(
-  (public.organizer_add_co_organizer('puy-coffee', 'guest@example.com', 'Other Name') ->> 'status') = 'already_on_crawl'
+  (select user_id::text from public.organizers where email = 'guest@example.com')
+    = '33333333-3333-4333-8333-333333333333',
+  'confirmed guest is linked in the table even though the response omits that'
+);
+select test.expect(
+  (public.organizer_add_co_organizer('puy-coffee', 'guest@example.com', 'Other Name') ->> 'status') = 'already on crawl'
   and (public.organizer_add_co_organizer('puy-coffee', 'guest@example.com', null) ->> 'role') = 'co-organizer'
-  and (public.organizer_add_co_organizer('puy-coffee', 'guest@example.com', null) ->> 'linked') = 'true',
-  'adding the same email again does not change the role'
+  and not jsonb_exists(public.organizer_add_co_organizer('puy-coffee', 'guest@example.com', null), 'linked')
+  and not jsonb_exists(public.organizer_add_co_organizer('puy-coffee', 'guest@example.com', null), 'name'),
+  'adding the same email again does not change the role or reveal account state'
 );
 select test.expect(
   (select name from public.organizers where email = 'guest@example.com') = 'Guest Person',
   'new organizer keeps the supplied name'
 );
 select test.expect(
-  (public.organizer_add_co_organizer('puy-coffee', 'chris@beekings.com', 'Not Chris') ->> 'status') = 'already_on_crawl'
+  (public.organizer_add_co_organizer('puy-coffee', 'chris@beekings.com', 'Not Chris') ->> 'status') = 'already on crawl'
   and (public.organizer_add_co_organizer('puy-coffee', 'chris@beekings.com', 'Not Chris') ->> 'role') = 'owner'
   and (select name from public.organizers where email = 'chris@beekings.com') = 'Chris Miller'
   and (select user_id::text from public.organizers where email = 'chris@beekings.com') = '11111111-1111-4111-8111-111111111111',
@@ -265,9 +403,13 @@ select test.expect(
   (select name from public.organizers where email = 'fill@example.com') = 'Filled In',
   'null name is filled'
 );
+select public.organizer_add_co_organizer('puy-coffee', 'new.person@example.com', null) as unknown_add \gset
 select test.expect(
-  (public.organizer_add_co_organizer('puy-coffee', 'new.person@example.com', null) ->> 'linked') = 'false',
-  'unknown email is returned unlinked'
+  :'unknown_add'::jsonb ->> 'status' = 'added'
+  and (:'unknown_add'::jsonb ->> 'role') = 'co-organizer'
+  and not jsonb_exists(:'unknown_add'::jsonb, 'linked')
+  and not jsonb_exists(:'unknown_add'::jsonb, 'name'),
+  'add response does not reveal that no account exists'
 );
 select test.expect(
   (select user_id is null from public.organizers where email = 'new.person@example.com'),
@@ -309,6 +451,10 @@ select test.raises(
   'Only the crawl owner can remove a co-organizer'
 );
 select test.expect(
+  (public.organizer_add_co_organizer('puy-coffee', 'organizer.added@example.com', 'From Organizer') ->> 'status') = 'added',
+  'organizer role can add a co-organizer'
+);
+select test.expect(
   (select count(*) from public.organizer_list_co_organizers('puy-coffee')) >= 1,
   'linked organizer can list'
 );
@@ -316,13 +462,29 @@ reset role;
 
 select test.as_user('33333333-3333-4333-8333-333333333333'::uuid, 'guest@example.com');
 set role authenticated;
+select test.raises(
+  $$select public.organizer_add_co_organizer('puy-coffee', 'second@example.com', 'Second')$$,
+  'Not allowed to add co-organizers'
+);
 select test.expect(
-  (public.organizer_add_co_organizer('puy-coffee', 'second@example.com', 'Second') ->> 'status') = 'added',
-  'co-organizer passes is_crawl_organizer and can add'
+  (select count(*) from public.organizer_list_co_organizers('puy-coffee')) >= 1,
+  'co-organizer can still list'
 );
 select test.raises(
-  $$select public.organizer_remove_co_organizer('puy-coffee', (select id from public.organizers where email = 'second@example.com'))$$,
+  $$select public.organizer_remove_co_organizer('puy-coffee', (select id from public.organizers where email = 'guest@example.com'))$$,
   'Only the crawl owner can remove a co-organizer'
+);
+reset role;
+
+select test.as_user('12121212-1212-4212-8212-121212121212'::uuid, 'viewer@example.com');
+set role authenticated;
+select test.raises(
+  $$select public.organizer_add_co_organizer('puy-coffee', 'viewer.added@example.com', 'Nope')$$,
+  'Not allowed to add co-organizers'
+);
+select test.expect(
+  (select count(*) from public.organizer_list_co_organizers('puy-coffee')) >= 1,
+  'viewer can still list'
 );
 reset role;
 
@@ -351,8 +513,9 @@ set role authenticated;
 select public.hc_link_account();
 reset role;
 select test.expect(
-  (select count(*) from public.shop_listings where owner_user_id = '22222222-2222-4222-8222-222222222222'::uuid) = 1,
-  'mixed-case shop email links to the confirmed organizer'
+  (select count(*) from public.shop_listings where owner_user_id = '22222222-2222-4222-8222-222222222222'::uuid) = 1
+  and (select owner_user_id is null from public.shop_listings where owner_email = 'Bryan@MyAnthemCoffee.com'),
+  'shop link matches owner_email exactly and leaves a mixed-case row alone'
 );
 
 -- Unconfirmed sign-up does not link. Confirming the email does.

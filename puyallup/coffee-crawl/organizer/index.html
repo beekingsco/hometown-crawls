@@ -117,9 +117,9 @@
           </div>
           <div class="card" id="co-card">
             <h3>Co-organizers</h3>
-            <p class="muted small mt-1">Add someone with the email they will use to sign in. They'll get access the first time they sign in with this email. Nothing is emailed from here.</p>
+            <p class="muted small mt-1" id="co-intro">People on this crawl are listed here. They get access the first time they sign in with their email.</p>
             <div id="co-list" class="mt-2"></div>
-            <form id="co-form" class="mt-2">
+            <form id="co-form" class="mt-2 hidden">
               <div class="grid">
                 <label class="field"><span>Name <span class="muted">(optional)</span></span>
                   <input class="input" id="co-name" maxlength="200" autocomplete="name" />
@@ -167,7 +167,7 @@
     }
     function isDenied(error) {
       var msg = (error && (error.message || error.details)) || "";
-      return (error && error.code) === "42501" || /not an organizer|not authorized|permission denied/i.test(msg);
+      return (error && error.code) === "42501" || /not an organizer|not authorized|permission denied|not allowed/i.test(msg);
     }
     function usd(cents) {
       var n = Number(cents || 0) / 100;
@@ -316,6 +316,16 @@
       var msg = (error && (error.message || error.details)) || "";
       return error && (error.code === "PGRST202" || error.code === "42883" || /organizer_list_co_organizers|schema cache|does not exist/i.test(msg));
     }
+    function syncCoForm() {
+      var mine = crawls.filter(function (c) { return c.crawl_id === activeId; })[0];
+      var allowed = !!(mine && (mine.role === "owner" || mine.role === "organizer"));
+      $("co-form").classList.toggle("hidden", !allowed);
+      var intro = $("co-intro");
+      if (!intro) return;
+      intro.textContent = allowed
+        ? "Add someone with the email they will use to sign in. They'll get access the first time they sign in with this email. Nothing is emailed from here."
+        : "People on this crawl are listed here. They get access the first time they sign in with their email.";
+    }
     function renderTeam() {
       var mine = crawls.filter(function (c) { return c.crawl_id === activeId; })[0];
       var owner = !!(mine && mine.role === "owner");
@@ -357,6 +367,7 @@
       renderPerShop();
       renderShops();
       renderTeam();
+      syncCoForm();
       $("crawl-body").classList.remove("hidden");
     }
 
@@ -574,7 +585,7 @@
           });
           if (res.error) {
             if (isDenied(res.error)) {
-              $("co-err").textContent = "Only an organizer of this crawl can add a co-organizer.";
+              $("co-err").textContent = "Only an owner or organizer can add a co-organizer.";
               showBox($("co-err"), true);
               return;
             }
@@ -582,7 +593,7 @@
           }
           var row = res.data || {};
           var savedEmail = row.email || email;
-          var message = row.status === "already_on_crawl"
+          var message = row.status === "already on crawl"
             ? (savedEmail + " is already on this crawl" + (row.role ? " as " + row.role : "") + ".")
             : (savedEmail + " was added as a co-organizer.");
           $("co-email").value = "";
@@ -594,7 +605,7 @@
             showBox($("co-err"), true);
           }
           showShare(savedEmail, message);
-          if (window.HC) HC.toast(row.status === "already_on_crawl" ? "Already on this crawl" : "Co-organizer added");
+          if (window.HC) HC.toast(row.status === "already on crawl" ? "Already on this crawl" : "Co-organizer added");
         } catch (e) {
           $("co-err").textContent = e.message || "Could not add that co-organizer.";
           showBox($("co-err"), true);

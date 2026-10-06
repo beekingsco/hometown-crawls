@@ -2,20 +2,25 @@
 -- Review and apply manually. This file is not run against production by the app.
 -- It does not send email.
 --
--- Rollback (run only after review; not automatic):
---   drop trigger if exists organizers_link_auth_user on auth.users;
---   drop function if exists private.link_organizer_on_auth_user();
+-- Rollback (run only after review; not automatic). The full script, including
+-- the original hc_link_account body, is in the pull request. postgres can
+-- create this trigger but is not the owner of auth.users, so do not drop the
+-- trigger directly. Dropping the function with cascade removes it.
+--   drop function if exists private.link_organizer_on_auth_user() cascade;
 --   drop function if exists public.organizer_add_co_organizer(text, text, text);
 --   drop function if exists public.organizer_list_co_organizers(text);
 --   drop function if exists public.organizer_remove_co_organizer(text, uuid);
 --   drop function if exists public.organizer_claim_by_email();
---   -- Restore hc_link_account from a backup if this migration replaced it.
+--   -- Then restore the original public.hc_link_account() from the pull request.
 --   delete from public.crawl_organizers where role = 'co-organizer';
 --   alter table public.crawl_organizers drop constraint if exists crawl_organizers_role_check;
 --   alter table public.crawl_organizers add constraint crawl_organizers_role_check
 --     check (role = any (array['owner'::text, 'organizer'::text, 'viewer'::text]));
 --   -- Do not drop organizers_email_key; production already has that unique index.
 --   -- The backfill below sets organizers.user_id. That is not reversible from this file.
+
+-- Supabase runs this file in one transaction. Fail fast if a lock is held.
+set local lock_timeout = '5s';
 
 create schema if not exists private;
 
@@ -65,13 +70,6 @@ revoke all on function private.link_organizer_on_auth_user() from public;
 revoke all on function private.link_organizer_on_auth_user() from anon;
 revoke all on function private.link_organizer_on_auth_user() from authenticated;
 
-drop trigger if exists organizers_link_auth_user on auth.users;
-create trigger organizers_link_auth_user
-  after insert or update of email, email_confirmed_at
-  on auth.users
-  for each row
-  execute function private.link_organizer_on_auth_user();
-
 create or replace function public.organizer_add_co_organizer(
   p_crawl_id text,
   p_email text,
@@ -90,7 +88,6 @@ declare
   v_org_id uuid;
   v_auth_id uuid;
   v_role text;
-  v_linked boolean;
   v_rows integer := 0;
 begin
   if v_uid is null then
@@ -99,8 +96,15 @@ begin
   if v_crawl = '' or not exists (select 1 from public.crawls c where c.id = v_crawl) then
     raise exception 'Unknown crawl';
   end if;
-  if not private.is_crawl_organizer(v_crawl) then
-    raise exception 'Not an organizer of this crawl' using errcode = '42501';
+  if not exists (
+    select 1
+    from public.crawl_organizers co
+    join public.organizers o on o.id = co.organizer_id
+    where co.crawl_id = v_crawl
+      and o.user_id = v_uid
+      and co.role in ('owner', 'organizer')
+  ) then
+    raise exception 'Not allowed to add co-organizers' using errcode = '42501';
   end if;
   if v_name is not null and char_length(v_name) > 200 then
     raise exception 'Name needs to be 200 characters or fewer';
@@ -139,26 +143,23 @@ begin
   on conflict (crawl_id, organizer_id) do nothing;
   get diagnostics v_rows = row_count;
 
-  select co.role, (o.user_id is not null)
-    into v_role, v_linked
+  select co.role
+    into v_role
   from public.crawl_organizers co
-  join public.organizers o on o.id = co.organizer_id
   where co.crawl_id = v_crawl
     and co.organizer_id = v_org_id;
 
   return jsonb_build_object(
     'organizer_id', v_org_id,
     'email', v_email,
-    'name', (select o.name from public.organizers o where o.id = v_org_id),
     'role', v_role,
-    'linked', coalesce(v_linked, false),
-    'status', case when v_rows > 0 then 'added' else 'already_on_crawl' end
+    'status', case when v_rows > 0 then 'added' else 'already on crawl' end
   );
 end;
 $function$;
 
 comment on function public.organizer_add_co_organizer(text, text, text) is
-  'Adds a co-organizer by email for a crawl the caller already organizes. Does not send email.';
+  'Adds a co-organizer by email. Callers must be an owner or organizer of that crawl. The result does not reveal whether an account exists. Does not send email.';
 
 create or replace function public.organizer_list_co_organizers(p_crawl_id text)
 returns table (
@@ -212,18 +213,16 @@ as $function$
 declare
   v_uid uuid := (select auth.uid());
   v_crawl text := btrim(coalesce(p_crawl_id, ''));
-  v_my_id uuid;
   v_my_role text;
   v_target_role text;
   v_email text;
-  v_remaining integer;
 begin
   if v_uid is null then
     raise exception 'Not authenticated' using errcode = '42501';
   end if;
 
-  select o.id, co.role
-    into v_my_id, v_my_role
+  select co.role
+    into v_my_role
   from public.crawl_organizers co
   join public.organizers o on o.id = co.organizer_id
   where co.crawl_id = v_crawl
@@ -245,18 +244,6 @@ begin
   end if;
   if v_target_role = 'owner' then
     raise exception 'An owner cannot be removed';
-  end if;
-
-  if p_organizer_id = v_my_id then
-    select count(*)::integer
-      into v_remaining
-    from public.crawl_organizers co
-    where co.crawl_id = v_crawl
-      and co.organizer_id <> p_organizer_id
-      and co.role in ('owner', 'organizer');
-    if coalesce(v_remaining, 0) = 0 then
-      raise exception 'You are the last owner or organizer on this crawl';
-    end if;
   end if;
 
   if v_target_role <> 'co-organizer' then
@@ -411,7 +398,7 @@ begin
     update public.shop_listings
     set owner_user_id = v_uid
     where owner_user_id is null
-      and lower(btrim(owner_email)) = v_email;
+      and owner_email = v_email;
   end if;
   return jsonb_build_object(
     'email', v_email,
@@ -455,3 +442,8 @@ from (
     ) = 1
 ) picked
 where o.id = picked.organizer_id;
+
+-- Last, so a lock on auth.users is not held during the backfill.
+-- CREATE OR REPLACE needs TRIGGER on auth.users, not ownership. postgres has
+-- TRIGGER and is not the owner, so dropping the trigger here would fail.
+create or replace trigger organizers_link_auth_user after insert or update of email, email_confirmed_at on auth.users for each row execute function private.link_organizer_on_auth_user();
