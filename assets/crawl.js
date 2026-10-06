@@ -4,6 +4,14 @@
   const CRAWL = env.CRAWL_ID || "puy-coffee";
   let sb = null;
   let session = null;
+  const DASHBOARD_VIEW_KEY = "hc-dashboard-view";
+  const DASHBOARD_VIEWS = {
+    organizer: "/puyallup/coffee-crawl/organizer",
+    shop: "/puyallup/coffee-crawl/shop"
+  };
+  // Read before Supabase consumes the magic-link hash or code.
+  const arrivedByMagicLink = /access_token=|refresh_token=|type=magiclink|type=signup|type=recovery|type=invite/i.test(String(location.hash || ""))
+    || /(?:^|[?&])code=/.test(String(location.search || ""));
 
   function ready() {
     return !!(window.supabase && env.SUPABASE_URL && env.SUPABASE_ANON_KEY);
@@ -301,6 +309,82 @@
       .replace(/"/g, "&quot;");
   }
 
+  function rpcMissing(error, name) {
+    if (!error) return false;
+    const msg = String(error.message || error.details || "");
+    return error.code === "PGRST202"
+      || error.code === "42883"
+      || (/schema cache|does not exist|Could not find/i.test(msg) && msg.indexOf(name) !== -1);
+  }
+
+  function dashboardView() {
+    try {
+      const saved = localStorage.getItem(DASHBOARD_VIEW_KEY);
+      if (saved === "shop" || saved === "organizer") return saved;
+    } catch (e) {}
+    return "organizer";
+  }
+
+  function rememberDashboardView(view) {
+    if (view !== "shop" && view !== "organizer") return;
+    try { localStorage.setItem(DASHBOARD_VIEW_KEY, view); } catch (e) {}
+  }
+
+  async function claimOrganizer(clientOverride) {
+    const c = clientOverride || client();
+    if (!c) return;
+    try {
+      const res = await c.rpc("organizer_claim_by_email");
+      if (res && res.error && !rpcMissing(res.error, "organizer_claim_by_email")) return res.error;
+    } catch (e) {}
+  }
+
+  async function dashboardRoles(clientOverride) {
+    const c = clientOverride || client();
+    const empty = { organizer: false, host: false, crawls: [], listings: [], orgError: null, hostError: null };
+    if (!c) return empty;
+    const orgRes = await c.rpc("organizer_my_crawls");
+    const hostRes = await c.rpc("shop_my_listings");
+    return {
+      organizer: !orgRes.error && Array.isArray(orgRes.data) && orgRes.data.length > 0,
+      host: !hostRes.error && Array.isArray(hostRes.data) && hostRes.data.length > 0,
+      crawls: Array.isArray(orgRes.data) ? orgRes.data : [],
+      listings: Array.isArray(hostRes.data) ? hostRes.data : [],
+      orgError: orgRes.error || null,
+      hostError: hostRes.error || null
+    };
+  }
+
+  function landOnPreferredDashboard(current, roles) {
+    if (!arrivedByMagicLink || !roles || !roles.organizer || !roles.host) return false;
+    const want = dashboardView();
+    if (want === current) return false;
+    const path = DASHBOARD_VIEWS[want];
+    if (!path) return false;
+    location.replace(path);
+    return true;
+  }
+
+  function syncRoleSwitch(el, current, roles) {
+    if (!el) return;
+    if (!roles || !roles.organizer || !roles.host) {
+      el.classList.add("hidden");
+      el.innerHTML = "";
+      return;
+    }
+    el.classList.remove("hidden");
+    el.innerHTML = '<div class="role-switch" role="tablist" aria-label="Dashboard">'
+      + '<a role="tab" data-view="organizer" aria-selected="' + (current === "organizer" ? "true" : "false") + '" href="' + DASHBOARD_VIEWS.organizer + '">Organizer</a>'
+      + '<a role="tab" data-view="shop" aria-selected="' + (current === "shop" ? "true" : "false") + '" href="' + DASHBOARD_VIEWS.shop + '">My Shop</a>'
+      + "</div>";
+    el.onclick = function (ev) {
+      const link = ev.target.closest ? ev.target.closest("[data-view]") : null;
+      if (!link) return;
+      rememberDashboardView(link.getAttribute("data-view"));
+      if (link.getAttribute("data-view") === current) ev.preventDefault();
+    };
+  }
+
   window.HCCrawl = {
     CRAWL,
     client,
@@ -319,6 +403,12 @@
     renderShopList,
     renderStamps,
     initMap,
-    escapeHtml
+    escapeHtml,
+    claimOrganizer,
+    dashboardRoles,
+    dashboardView,
+    rememberDashboardView,
+    landOnPreferredDashboard,
+    syncRoleSwitch
   };
 })();
