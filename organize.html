@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Organize a Hometown Coffee or Pub Crawl — Free · Hometown Crawls</title>
+  <title>Organize a Hometown Coffee or Pub Crawl · Hometown Crawls</title>
   <meta name="theme-color" content="#1f3a24" />
-  <meta name="description" content="Apply to organize a hometown crawl. This form saves your application in this browser and does not send email. Write to hello@hometowncrawls.com to follow up." />
+  <meta name="description" content="Apply to organize a hometown crawl. Send your application to hello@hometowncrawls.com." />
   <link rel="canonical" href="https://www.hometowncrawls.com/organize" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Hometown Crawls" />
-  <meta property="og:title" content="Organize a Hometown Coffee or Pub Crawl — Free · Hometown Crawls" />
-  <meta property="og:description" content="Apply to organize a hometown crawl. This form saves your application in this browser and does not send email." />
+  <meta property="og:title" content="Organize a Hometown Coffee or Pub Crawl · Hometown Crawls" />
+  <meta property="og:description" content="Apply to organize a hometown crawl. Send your application to hello@hometowncrawls.com." />
   <meta property="og:url" content="https://www.hometowncrawls.com/organize" />
   <meta property="og:image" content="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=70" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Organize a Hometown Coffee or Pub Crawl — Free · Hometown Crawls" />
-  <meta name="twitter:description" content="Apply to organize a hometown crawl. This form saves your application in this browser and does not send email." />
+  <meta name="twitter:title" content="Organize a Hometown Coffee or Pub Crawl · Hometown Crawls" />
+  <meta name="twitter:description" content="Apply to organize a hometown crawl. Send your application to hello@hometowncrawls.com." />
   <meta name="keywords" content="organize coffee crawl, chamber organizer, hometown crawl" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -29,7 +29,7 @@
     <div class="wrap-narrow page-hero">
       <p class="eyebrow">Organize</p>
       <h1>Apply to organize a crawl</h1>
-      <p>Tell us who you are and which town you have in mind. This form saves the application in this browser. It does not send email. To follow up, write to <a href="mailto:hello@hometowncrawls.com">hello@hometowncrawls.com</a>.</p>
+      <p>Tell us who you are and which town you have in mind. Send my application opens an email to <a href="mailto:hello@hometowncrawls.com">hello@hometowncrawls.com</a> with what you wrote.</p>
     </div>
 
     <div class="wrap-narrow">
@@ -55,8 +55,8 @@
         </div>
         <div class="card">
           <div class="step-num">4</div>
-          <h3>Follow up</h3>
-          <p class="muted small">Email hello@hometowncrawls.com. This page does not send a message for you.</p>
+          <h3>Send it</h3>
+          <p class="muted small">Your email app opens with the application addressed to hello@hometowncrawls.com.</p>
         </div>
       </div>
       <style>
@@ -68,27 +68,20 @@
         }
       </style>
 
-      <div class="card mb-2">
-        <div class="row" style="justify-content:space-between">
-          <div>
-            <div class="price-tag">$0 <small>to send this form</small></div>
-            <p class="muted small mt-1">Payout terms are not set on this page.</p>
-          </div>
-          <span class="pill pill-ok">Organizer</span>
-        </div>
-      </div>
-
       <form class="card" id="organize-form">
         <h3>Apply to organize</h3>
-        <p class="muted small mt-1 mb-2">Saved in this browser only. Nothing is emailed from this form.</p>
+        <p class="muted small mt-1 mb-2">We'll open an email to hello@hometowncrawls.com with your application.</p>
         <label class="field"><span>Your name</span>
           <input class="input" name="name" required placeholder="Alex Rivera" />
+        </label>
+        <label class="field"><span>Organization</span>
+          <input class="input" name="organization" required placeholder="Downtown association, chamber, or shop" />
         </label>
         <label class="field"><span>Email</span>
           <input class="input" type="email" name="email" required placeholder="you@example.com" />
         </label>
-        <label class="field"><span>City</span>
-          <input class="input" name="city" required placeholder="Puyallup, WA" />
+        <label class="field"><span>Town</span>
+          <input class="input" name="town" required placeholder="Puyallup, WA" />
         </label>
         <label class="field"><span>Crawl type</span>
           <select class="input" name="crawl_type" required>
@@ -99,14 +92,12 @@
         <label class="field"><span>Phone</span>
           <input class="input" type="tel" name="phone" placeholder="(253) 555-0100" />
         </label>
-        <label class="field"><span>Payout notes</span>
-          <textarea class="input" name="payout_notes" placeholder="Preferred payout method, business name for checks, timing notes…"></textarea>
+        <label class="field"><span>Notes</span>
+          <textarea class="input" name="notes" placeholder="Anything we should know about your town or the crawl."></textarea>
         </label>
-        <p class="form-note mb-2">This application stays in this browser. Payout terms are not set here. Email <a href="mailto:hello@hometowncrawls.com">hello@hometowncrawls.com</a> if you want to talk about organizing.</p>
-        <button class="btn btn-primary" type="submit">Submit application</button>
+        <button class="btn btn-primary" type="submit">Send my application</button>
         <div class="form-success mt-2" id="org-success">
-          Your application was received in this browser. Nothing was emailed.
-          To follow up, write to <a href="mailto:hello@hometowncrawls.com">hello@hometowncrawls.com</a>.
+          Thanks — your email app should open with your application. If it didn't, email <a href="mailto:hello@hometowncrawls.com">hello@hometowncrawls.com</a>.
         </div>
         <div class="form-error mt-2" id="org-error"></div>
       </form>
@@ -129,26 +120,33 @@
         const fd = new FormData(form);
         const row = {
           name: String(fd.get("name") || "").trim(),
+          organization: String(fd.get("organization") || "").trim(),
           email: String(fd.get("email") || "").trim(),
-          city: String(fd.get("city") || "").trim(),
+          town: String(fd.get("town") || "").trim(),
           crawl_type: fd.get("crawl_type"),
           phone: String(fd.get("phone") || "").trim(),
-          payout_notes: String(fd.get("payout_notes") || "").trim(),
+          notes: String(fd.get("notes") || "").trim(),
           created_at: new Date().toISOString(),
-          status: "received-in-browser"
+          status: "mailto-opened"
         };
         try {
           const prev = JSON.parse(localStorage.getItem(KEY) || "[]");
-          if (!Array.isArray(prev)) throw new Error("Corrupt local storage");
-          prev.push(row);
-          localStorage.setItem(KEY, JSON.stringify(prev));
-          form.reset();
-          ok.classList.add("show");
-          HC.toast("Application saved in this browser");
-        } catch (ex) {
-          err.textContent = "Could not save locally: " + ex.message;
-          err.classList.add("show");
-        }
+          if (Array.isArray(prev)) {
+            prev.push(row);
+            localStorage.setItem(KEY, JSON.stringify(prev));
+          }
+        } catch (_) {}
+        const subject = "Organize a crawl in " + row.town;
+        const body = [
+          "Name: " + row.name,
+          "Organization: " + row.organization,
+          "Town: " + row.town,
+          "Email: " + row.email,
+          "Phone: " + row.phone,
+          "Notes: " + row.notes
+        ].join("\n");
+        ok.classList.add("show");
+        window.location.href = "mailto:hello@hometowncrawls.com?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
       });
     });
   </script>

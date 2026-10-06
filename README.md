@@ -18,7 +18,7 @@ Open http://localhost:8080
 
 ## Organizer apps
 
-- Form: `organize.html` → persists to `localStorage` key **`hc-organizer-apps-v1`**
+- Form: `organize.html` → mailto `hello@hometowncrawls.com`, with a silent backup in `localStorage` key **`hc-organizer-apps-v1`**
 - Dashboard stub: `organizer.html` (passwordless, local-only read)
 - `data/organizer-apps.jsonl` is a placeholder only — browsers cannot append to disk
 
@@ -28,7 +28,7 @@ Open http://localhost:8080
 |------|----------|-----------|
 | `/puyallup/holiday-coffee-crawl` | `puy-coffee` | $49.99 for the 2026 holiday season, one-time |
 | `/puyallup/coffee-crawl` | shop signup | same fee; inserts `crawl_signups` |
-| `/puyallupwa/pub/` | `puy-pub` | not open; noindex; no payment link |
+| `/puyallupwa/pub/` | `puy-pub` | coming soon; noindex |
 
 ## Supabase
 

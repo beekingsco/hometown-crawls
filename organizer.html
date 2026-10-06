@@ -6,7 +6,7 @@
   <title>Organizer Applications (Local Stub) · Hometown Crawls</title>
   <meta name="theme-color" content="#1f3a24" />
   <meta name="robots" content="noindex" />
-  <meta name="description" content="Local-only organizer application list stored in this browser. Nothing on this page is emailed." />
+  <meta name="description" content="Organizer applications from this browser." />
   <link rel="canonical" href="https://www.hometowncrawls.com/organizer" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Hometown Crawls" />
@@ -28,7 +28,7 @@
     <div class="wrap-narrow page-hero">
       <p class="eyebrow">Organizer</p>
       <h1>Local applications</h1>
-      <p>This list is stored in this browser only (<code>hc-organizer-apps-v1</code>). Nothing on this page is emailed.</p>
+      <p>Applications you've sent from this browser.</p>
     </div>
     <div class="wrap-narrow">
       <div class="card mb-2">
@@ -75,20 +75,20 @@
 
       listEl.innerHTML = apps.slice().reverse().map((a, i) => {
         const when = a.created_at ? new Date(a.created_at).toLocaleString() : "—";
-        const seat = "Saved in this browser";
+        const town = a.town || a.city || "";
+        const notes = a.notes || a.payout_notes || "";
         return `
           <div class="shop-row" style="${i === apps.length - 1 ? "" : ""}">
             <div class="shop-avatar">${esc((a.name || "?").slice(0, 2).toUpperCase())}</div>
             <div style="flex:1;min-width:0">
               <strong>${esc(a.name)}</strong>
-              <div class="muted small">${esc(a.email)} · ${esc(a.city)}</div>
+              <div class="muted small">${esc(a.organization ? a.organization + " · " : "")}${esc(a.email)} · ${esc(town)}</div>
               <div class="row mt-1">
                 <span class="pill pill-ok">${esc(a.crawl_type || "—")}</span>
                 <span class="pill pill-muted">${esc(a.status || "applied")}</span>
-                <span class="pill pill-wait">${esc(seat)}</span>
               </div>
               <p class="muted small mt-1">${esc(when)}${a.phone ? " · " + esc(a.phone) : ""}</p>
-              ${a.payout_notes ? `<p class="small mt-1">${esc(a.payout_notes)}</p>` : ""}
+              ${notes ? `<p class="small mt-1">${esc(notes)}</p>` : ""}
             </div>
           </div>`;
       }).join("");

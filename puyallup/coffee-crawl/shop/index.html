@@ -228,12 +228,13 @@
         else html += '<p class="mt-2">Paid. This listing is hidden from the public map until it\'s turned back on.</p>';
       } else {
         html += '<span class="pill pill-wait">Not paid yet</span>';
-        var href = l.payment_link ? payHref(l.payment_link, l.signup_id, l.owner_email) : "";
+        var holidayLink = "https://buy.stripe.com/8x214n6gm4Op89Ja9ngQE0e";
+        var href = l.signup_id ? payHref(holidayLink, l.signup_id, l.owner_email) : "";
         if (href) {
           html += '<p class="mt-2">$49.99 for the 2026 holiday season, one-time.</p>';
-          html += '<p class="mt-2"><a class="btn btn-primary" href="' + esc(href) + '">Pay $49.99</a></p>';
+          html += '<p class="mt-2"><a class="btn btn-primary" href="' + esc(href) + '">Finish your $49.99 signup</a></p>';
         } else {
-          html += '<p class="mt-2">Payment link coming soon. Email <a href="mailto:hello@hometowncrawls.com">hello@hometowncrawls.com</a> if you need help.</p>';
+          html += '<p class="mt-2">Email <a href="mailto:hello@hometowncrawls.com">hello@hometowncrawls.com</a> if you need help.</p>';
         }
       }
       if (l.paid_at) html += '<p class="small muted mt-1">Paid ' + esc(new Date(l.paid_at).toLocaleString()) + "</p>";
