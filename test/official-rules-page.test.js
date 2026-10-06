@@ -12,10 +12,12 @@ const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
 const FILLED = {
   crawl_name: "Puyallup Holiday Coffee Crawl",
   start_date: "November 1, 2026",
-  end_date: "December 31, 2026"
+  end_date: "December 31, 2026",
+  sponsor_name: "Miracle Studios, Inc.",
+  sponsor_address: "204 Still Glen Drive, Terrell, Texas 75160"
 };
 
-test("official rules config fills only proven crawl facts", () => {
+test("official rules config fills the owner sponsor and proven crawl facts", () => {
   assert.equal(config.crawl_name, FILLED.crawl_name);
   assert.equal(config.start_date, FILLED.start_date);
   assert.equal(config.end_date, FILLED.end_date);
@@ -51,6 +53,9 @@ test("official rules page is indexable and has no raw placeholders", () => {
   assert.match(page, /rel="canonical" href="https:\/\/www\.hometowncrawls\.com\/puyallup\/holiday-coffee-crawl\/rules"/);
   assert.match(page, /Privacy policy link will go here when that page exists/);
   assert.doesNotMatch(page, /href="[^"]*privacy[-.]/i);
+  assert.match(page, /All prizes are owned, sourced and provided by the Sponsor\./);
+  assert.doesNotMatch(page, /does not supply prizes/i);
+  assert.doesNotMatch(page, /not responsible for prize delivery/i);
   assert.doesNotMatch(page, /revenue share|splits each shop/i);
 });
 
