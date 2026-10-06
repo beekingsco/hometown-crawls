@@ -138,32 +138,36 @@
       crawl_name — h1 and Event schema name
       start_date — "November 1 through December 31, 2026" and startDate 2026-11-01
       end_date — "November 1 through December 31, 2026" and endDate 2026-12-31
-    Sponsor name and address were set by the owner for this crawl.
+    Sponsor, eligibility, drawing date, completion bonus, notice and claim
+    windows, contact, and governing law were set by the owner for this crawl.
+    venue_county is "Kaufman" because the Rules already say
+    "a court in [venue county] County, [governing state]."
     The live crawl page does not state a clock time or time zone.
+    Prize count, prize description, and total ARV stay unannounced.
   -->
   <script type="application/json" id="crawl-rules-config">
 {
   "crawl_name": "Puyallup Holiday Coffee Crawl",
   "sponsor_name": "Miracle Studios, Inc.",
   "sponsor_address": "204 Still Glen Drive, Terrell, Texas 75160",
-  "eligible_states": null,
-  "min_age": null,
+  "eligible_states": "the United States",
+  "min_age": 18,
   "start_date": "November 1, 2026",
   "start_time": null,
   "end_date": "December 31, 2026",
   "end_time": null,
   "time_zone": null,
-  "drawing_date": null,
-  "completion_bonus": null,
+  "drawing_date": "Monday, January 4, 2027",
+  "completion_bonus": 3,
   "num_winners": null,
   "prize_description": null,
   "total_arv": null,
   "registration_notice": "",
-  "notify_days": null,
-  "claim_days": null,
-  "rules_contact": null,
-  "governing_state": null,
-  "venue_county": null
+  "notify_days": 7,
+  "claim_days": 7,
+  "rules_contact": "chris@beekings.com",
+  "governing_state": "Texas",
+  "venue_county": "Kaufman"
 }
   </script>
 </head>
@@ -205,7 +209,7 @@
         <p>The Crawl is organized by <span data-field="sponsor_name">Miracle Studios, Inc.</span> (the "Sponsor"). The digital passport, the check-in system and the Drawing are run by Hometown Crawls, which is operated by Miracle Studios, Inc. ("Hometown Crawls" or the "Administrator").</p>
         <h2 id="eligibility">1. Who can enter (eligibility)</h2>
         <ul>
-          <li>The Drawing is open only to legal residents of <span class="tba" data-field="eligible_states">To be announced</span> who are at least <span class="tba" data-field="min_age">To be announced</span> years old when they enter.</li>
+          <li>The Drawing is open only to legal residents of <span data-field="eligible_states">the United States</span> who are at least <span data-field="min_age">18</span> years old when they enter.</li>
           <li><strong>Not eligible:</strong>
             <ul>
               <li>employees and staff of the Sponsor;</li>
@@ -237,9 +241,9 @@
         <h3>4B. How many entries you get</h3>
         <ul>
           <li><strong>1 entry for each Stop you check in at.</strong> Only one check-in per Stop per person counts. Checking in again at the same Stop does not add entries.</li>
-          <li><strong>Active Stops.</strong> An "Active Stop" is a Stop that is shown as active in the Crawl on the day of the Drawing (<span class="tba" data-field="drawing_date">To be announced</span>).</li>
+          <li><strong>Active Stops.</strong> An "Active Stop" is a Stop that is shown as active in the Crawl on the day of the Drawing (<span data-field="drawing_date">Monday, January 4, 2027</span>).</li>
           <li><strong>Completing the Crawl.</strong> You "Complete the Crawl" if, during the Promotion Period, you check in at every Stop that is an Active Stop on the day of the Drawing.</li>
-          <li><strong>Completion bonus.</strong> If you Complete the Crawl, you get <strong><span class="tba" data-field="completion_bonus">To be announced</span> bonus entries</strong> on top of your Stop entries.</li>
+          <li><strong>Completion bonus.</strong> If you Complete the Crawl, you get <strong><span data-field="completion_bonus">3</span> bonus entries</strong> on top of your Stop entries.</li>
           <li><strong>Example:</strong> Suppose the Crawl has 8 Active Stops and the completion bonus is 3 entries. A guest who checks in at 5 of those Stops has 5 entries. A guest who checks in at all 8 Active Stops Completes the Crawl and has 8 + 3 = <strong>11 entries</strong>.</li>
           <li><strong>The Passport is free.</strong> The Sponsor may not charge you any fee for the Passport, for check-ins, or for entry in the Drawing.</li>
         </ul>
@@ -251,7 +255,7 @@
         204 Still Glen Drive<br>
         Terrell, Texas 75160</p>
         </blockquote>
-        <p>Mail-in entries must be <strong>postmarked by <span data-field="end_date">December 31, 2026</span></strong>. Each valid mail-in entry receives the same number of entries as Completing the Crawl: <strong>1 entry for each Active Stop, plus the completion bonus of <span class="tba" data-field="completion_bonus">To be announced</span> entries</strong>. Limit one mail-in entry per person. Mechanically reproduced cards are not accepted. Illegible, incomplete, late, lost or misdirected mail does not count. No selfie is required for a mail-in entry.</p>
+        <p>Mail-in entries must be <strong>postmarked by <span data-field="end_date">December 31, 2026</span></strong>. Each valid mail-in entry receives the same number of entries as Completing the Crawl: <strong>1 entry for each Active Stop, plus the completion bonus of <span data-field="completion_bonus">3</span> entries</strong>. Limit one mail-in entry per person. Mechanically reproduced cards are not accepted. Illegible, incomplete, late, lost or misdirected mail does not count. No selfie is required for a mail-in entry.</p>
         <h3>4D. Entry limits and fair play</h3>
         <ul>
           <li>One Passport per person. You may not use more than one Passport, email address, phone number, identity or device to get more entries than these Rules allow.</li>
@@ -279,9 +283,9 @@
         <p>Your odds of winning depend on how many entries you earn and on the total number of eligible entries earned by everyone. Each entry is one chance.</p>
         <h2 id="winner-selection">7. Winner selection and notification</h2>
         <ul>
-          <li><strong>Drawing:</strong> On <span class="tba" data-field="drawing_date">To be announced</span>, the Administrator's system will run a <strong>random weighted drawing</strong> from all eligible entries. <strong>Each entry is one chance</strong>, so a guest with 11 entries has 11 chances. The system will also draw <strong>alternate winners</strong>, in order, to be used if a winner is disqualified, can't be reached or doesn't respond in time.</li>
-          <li><strong>Notification:</strong> Winners will be contacted by email and/or phone, using the contact information on their Passport (or mail-in card), within <span class="tba" data-field="notify_days">To be announced</span> days after the Drawing. The Sponsor and the Administrator are not responsible if a notice is missed because of spam filters, junk-mail settings, or wrong or out-of-date contact information.</li>
-          <li><strong>Responding:</strong> A winner must respond within <strong><span class="tba" data-field="claim_days">To be announced</span> days</strong> after the notice is sent. A winner may also be asked to sign a declaration of eligibility, a liability release and (where lawful) a publicity release, and to provide a W-9 if required (Section 5D). If a winner doesn't respond in time, can't be reached, is ineligible or doesn't return the required forms, the prize is forfeited and the next alternate winner is selected.</li>
+          <li><strong>Drawing:</strong> On <span data-field="drawing_date">Monday, January 4, 2027</span>, the Administrator's system will run a <strong>random weighted drawing</strong> from all eligible entries. <strong>Each entry is one chance</strong>, so a guest with 11 entries has 11 chances. The system will also draw <strong>alternate winners</strong>, in order, to be used if a winner is disqualified, can't be reached or doesn't respond in time.</li>
+          <li><strong>Notification:</strong> Winners will be contacted by email and/or phone, using the contact information on their Passport (or mail-in card), within <span data-field="notify_days">7</span> days after the Drawing. The Sponsor and the Administrator are not responsible if a notice is missed because of spam filters, junk-mail settings, or wrong or out-of-date contact information.</li>
+          <li><strong>Responding:</strong> A winner must respond within <strong><span data-field="claim_days">7</span> days</strong> after the notice is sent. A winner may also be asked to sign a declaration of eligibility, a liability release and (where lawful) a publicity release, and to provide a W-9 if required (Section 5D). If a winner doesn't respond in time, can't be reached, is ineligible or doesn't return the required forms, the prize is forfeited and the next alternate winner is selected.</li>
           <li><strong>Prize pickup or delivery</strong> will be arranged by the Sponsor.</li>
           <li>Any violation of these Rules by a winner, as determined by the Sponsor, results in disqualification and loss of the prize.</li>
         </ul>
@@ -300,17 +304,17 @@
         </ol>
         <p>Please don't use your phone while driving to or between Stops.</p>
         <h2 id="disputes">11. Disputes and governing law</h2>
-        <p>These Rules and the Drawing are governed by the laws of the State of <span class="tba" data-field="governing_state">To be announced</span>, without regard to conflict-of-law rules. Any dispute that the parties can't resolve must be handled individually (no class actions) and only in a court in <span class="tba" data-field="venue_county">To be announced</span> County, <span class="tba" data-field="governing_state">To be announced</span>. To the extent allowed by law, you may recover only your actual out-of-pocket costs of entering. You may not recover punitive, incidental or consequential damages or attorneys' fees, or have damages multiplied or increased.</p>
+        <p>These Rules and the Drawing are governed by the laws of the State of <span data-field="governing_state">Texas</span>, without regard to conflict-of-law rules. Any dispute that the parties can't resolve must be handled individually (no class actions) and only in a court in <span data-field="venue_county">Kaufman</span> County, <span data-field="governing_state">Texas</span>. To the extent allowed by law, you may recover only your actual out-of-pocket costs of entering. You may not recover punitive, incidental or consequential damages or attorneys' fees, or have damages multiplied or increased.</p>
         <h2 id="privacy">12. Privacy</h2>
         <p>The information collected when you enter goes to the Administrator and the Sponsor. That includes your name, contact details, check-in records and selfies (and the details on a mail-in card). It is used to run the Crawl and the Drawing, verify entries, and contact winners and award prizes. Your photo is displayed only if you check the optional photo display checkbox.</p>
         <!-- Privacy policy link will go here when that page exists. -->
         <h2 id="winners-list">13. Winners list</h2>
-        <p>To get the names of the winners, email <span class="tba" data-field="rules_contact">To be announced</span> with the subject "Winners list – <span data-field="crawl_name">Puyallup Holiday Coffee Crawl</span>" within 60 days after <span class="tba" data-field="drawing_date">To be announced</span>.</p>
+        <p>To get the names of the winners, email <span data-field="rules_contact"><a href="mailto:chris@beekings.com">chris@beekings.com</a></span> with the subject "Winners list – <span data-field="crawl_name">Puyallup Holiday Coffee Crawl</span>" within 60 days after <span data-field="drawing_date">Monday, January 4, 2027</span>.</p>
         <h2 id="sponsor">14. Sponsor and Administrator</h2>
         <ul>
           <li><strong>Sponsor:</strong> <span data-field="sponsor_name">Miracle Studios, Inc.</span>, <span data-field="sponsor_address">204 Still Glen Drive, Terrell, Texas 75160</span>. The Sponsor is the organizer of the Crawl and is responsible for the Crawl and all prizes.</li>
           <li><strong>Administrator:</strong> Hometown Crawls, operated by Miracle Studios, Inc., 204 Still Glen Drive, Terrell, Texas 75160. Hometown Crawls provides the digital Passport and check-in system and runs the random Drawing.</li>
-          <li><strong>Questions about these Rules:</strong> <span class="tba" data-field="rules_contact">To be announced</span>.</li>
+          <li><strong>Questions about these Rules:</strong> <span data-field="rules_contact"><a href="mailto:chris@beekings.com">chris@beekings.com</a></span>.</li>
         </ul>
         <h2 id="platform">15. Platform disclaimer</h2>
         <p>The Drawing is not sponsored, endorsed or run by, or associated with, Apple, Google, Facebook, Instagram, X (Twitter), TikTok or any other platform. You are providing your information to the Sponsor and the Administrator, not to any of those platforms.</p>
@@ -335,6 +339,14 @@
             return;
           }
           el.classList.remove("tba");
+          if (key === "rules_contact") {
+            el.textContent = "";
+            var link = document.createElement("a");
+            link.href = "mailto:" + String(val);
+            link.textContent = String(val);
+            el.appendChild(link);
+            return;
+          }
           el.textContent = String(val);
         });
       }
