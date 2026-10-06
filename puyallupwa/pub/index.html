@@ -118,7 +118,8 @@
       <div class="wrap-narrow">
         <div class="card">
           <h3>Quick stamp</h3>
-          <p class="muted small mt-1">Already at the counter? Enter the shop code here.</p>
+          <p class="age-gate mt-1" id="pub-checkin-note" role="status"></p>
+          <p class="muted small mt-1">Already at the counter? Enter the shop code here. A live selfie confirms the visit.</p>
           <label class="field mt-2"><span>Shop</span>
             <select class="input" id="quick-shop"></select>
           </label>
@@ -138,6 +139,10 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../../assets/crawl.js"></script>
+  <script src="../../assets/photo-consent.js"></script>
+  <script src="../../assets/checkin-image.js"></script>
+  <script src="../../assets/visit-photo-files-client.js"></script>
+  <script src="../../assets/checkin.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", async () => {
       const CRAWL = "puy-pub";
@@ -190,14 +195,21 @@
         sel.innerHTML = shops.map(s => `<option value="${s.id}">${HCCrawl.escapeHtml(s.name)}</option>`).join("");
       }
 
+      const pubCopy = window.HCPhotoConsent || {};
+      const pubNote = document.getElementById("pub-checkin-note");
+      if (pubNote) pubNote.textContent = pubCopy.pubCheckinNotice || "";
+      if (joinStatus && pubCopy.pubJoinNotice) {
+        joinStatus.textContent = pubCopy.pubJoinNotice;
+      }
+
       const session = await HCCrawl.getSession();
-      if (session) joinStatus.textContent = "Signed in — you can join and stamp (21+).";
+      if (session) joinStatus.textContent = (pubCopy.pubJoinNotice || "21+.") + " Signed in — you can join and stamp.";
 
       document.getElementById("btn-join").onclick = async () => {
         try {
           await HCCrawl.joinCrawl(CRAWL);
           HC.toast("Passport joined");
-          joinStatus.textContent = "You’re on the Puyallup Pub passport (21+).";
+          joinStatus.textContent = (pubCopy.pubJoinNotice || "You’re on the Puyallup Pub passport (21+).");
           const stamps2 = await HCCrawl.myStamps(CRAWL);
           if (shops.length) HCCrawl.renderStamps(document.getElementById("passport-area"), shops, stamps2);
         } catch (e) {
@@ -222,6 +234,7 @@
           HCCrawl.renderShopList(document.getElementById("shop-list"), shops, stamps2);
           HCCrawl.renderStamps(document.getElementById("passport-area"), shops, stamps2);
         } catch (e) {
+          if (window.HCCheckin && HCCheckin.isCancel(e)) return;
           errEl.textContent = e.message || String(e);
           errEl.classList.add("show");
         }

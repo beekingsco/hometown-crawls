@@ -68,6 +68,11 @@
         <div id="passport-stamps" class="mt-3"></div>
       </div>
 
+      <div class="card" id="passport-photos">
+        <h3>Your visit photos</h3>
+        <p class="muted small mt-1">Sign in to see the selfies on this passport.</p>
+      </div>
+
       <div class="card">
         <h3>Scan QR</h3>
         <p class="muted small mt-1">Point your camera at the shop tent-card QR.</p>
@@ -88,6 +93,11 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="assets/crawl.js"></script>
+  <script src="assets/photo-consent.js"></script>
+  <script src="assets/checkin-image.js"></script>
+  <script src="assets/visit-photo-files-client.js"></script>
+  <script src="assets/checkin.js"></script>
+  <script src="assets/passport-photos.js"></script>
   <script>
     function show(el, on) { el.classList.toggle("show", !!on); el.style.display = on ? "block" : "none"; }
     async function refreshAuth() {
@@ -115,13 +125,14 @@
         sel.disabled = true;
         if (stampBtn) stampBtn.disabled = true;
         document.getElementById("passport-stamps").innerHTML = `<p class="muted">Shops announced soon. Stamps will show up here after coffee shops join.</p>`;
-        return;
+      } else {
+        sel.disabled = false;
+        if (stampBtn) stampBtn.disabled = false;
+        sel.innerHTML = shops.map(s => `<option value="${s.id}">${HCCrawl.escapeHtml(s.name)}</option>`).join("");
+        const stamps = await HCCrawl.myStamps("puy-coffee");
+        HCCrawl.renderStamps(document.getElementById("passport-stamps"), shops, stamps);
       }
-      sel.disabled = false;
-      if (stampBtn) stampBtn.disabled = false;
-      sel.innerHTML = shops.map(s => `<option value="${s.id}">${HCCrawl.escapeHtml(s.name)}</option>`).join("");
-      const stamps = await HCCrawl.myStamps("puy-coffee");
-      HCCrawl.renderStamps(document.getElementById("passport-stamps"), shops, stamps);
+      if (window.HCPassportPhotos && window.HCCrawl) HCPassportPhotos.load(HCCrawl.client());
     }
     document.addEventListener("DOMContentLoaded", async () => {
       const msg = document.getElementById("auth-msg");
@@ -176,7 +187,11 @@
           HC.toast("Stamp claimed");
           document.getElementById("stamp-code").value = "";
           await loadPassportUI(shops);
-        } catch (e) { err.textContent = e.message || String(e); show(err, true); }
+        } catch (e) {
+          if (window.HCCheckin && HCCheckin.isCancel(e)) return;
+          err.textContent = e.message || String(e);
+          show(err, true);
+        }
       };
 
       // QR scanner starts only after an explicit click.
@@ -228,7 +243,10 @@
                   HC.toast("Stamp claimed");
                   await loadPassportUI(shops);
                   await stopCamera();
-                } catch (e) { HC.toast(e.message || "Stamp failed"); }
+                } catch (e) {
+                  if (window.HCCheckin && HCCheckin.isCancel(e)) return;
+                  HC.toast(e.message || "Stamp failed");
+                }
               }
             );
           cameraOn = true;
