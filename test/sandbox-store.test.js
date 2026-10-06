@@ -180,3 +180,35 @@ test("sandbox pages stay out of search and away from live keys", () => {
     assert.doesNotMatch(source, /\bpub\b/i);
   }
 });
+
+test("public pages do not sell a revenue share, payout, or $59 pub seat", () => {
+  const root = path.join(__dirname, "..");
+  const pages = [];
+  function walk(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name === "node_modules" || entry.name === ".git") continue;
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith(".html") || entry.name.endsWith(".md")) pages.push(full);
+    }
+  }
+  walk(root);
+  const banned = /revenue share|50\/50|half of|keep 50|payout|share_pct|organizer_share|hc_share|stripe connect|\$59/i;
+  assert.ok(pages.some((file) => file.endsWith("shops/join.html")));
+  for (const file of pages) {
+    const text = fs.readFileSync(file, "utf8");
+    assert.doesNotMatch(text, banned, path.relative(root, file));
+    const copy = text.replace(/cta-split/g, "").replace(/\.split\s*\(/g, "");
+    assert.doesNotMatch(copy, /\bsplit\b/i, path.relative(root, file));
+  }
+  const join = fs.readFileSync(path.join(root, "shops/join.html"), "utf8");
+  const home = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  const organize = fs.readFileSync(path.join(root, "organize.html"), "utf8");
+  assert.match(join, /\$49\.99/);
+  assert.match(join, /2026 holiday season/);
+  assert.match(home, /\$49\.99/);
+  assert.match(home, /Free to organize/);
+  assert.match(organize, /Free to organize/);
+  assert.match(organize, /You own the prizes and promotion/);
+  assert.doesNotMatch(organize, /payout_notes|payout_model/);
+});

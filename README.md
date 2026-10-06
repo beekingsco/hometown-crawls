@@ -13,7 +13,7 @@ Open http://localhost:8080
 
 ## Current blockers
 
-1. **Stripe Payment Link** — paste the live Payment Link into `#stripe-seat-link` `href` on `shops/join.html` (coffee $49 default; pub `$59` when `?crawl=puy-pub`). `data-crawl` / `data-price` are set from the query.
+1. **Stripe Payment Link** — the live coffee Payment Link is on `#stripe-seat-link` in `shops/join.html` ($49.99 one-time for the 2026 holiday season). Pub seats are not sold; the pub crawl stays hidden until 2027.
 2. **Vercel deploy** — publish this folder to the **hometown-crawls** Vercel project (`npx vercel --prod` from site root, or connect in the dashboard). Do not deploy from agents unless asked.
 
 ## Organizer apps
@@ -26,8 +26,8 @@ Open http://localhost:8080
 
 | Path | Crawl id | Shop seat |
 |------|----------|-----------|
-| `/puyallupwa/coffee/` | `puy-coffee` | $49/mo |
-| `/puyallupwa/pub/` | `puy-pub` | $59/mo (21+) |
+| `/puyallupwa/coffee/` | `puy-coffee` | $49.99 one-time (2026 holiday season) |
+| `/puyallupwa/pub/` | `puy-pub` | Hidden until 2027 — no shop seat for sale |
 
 ## Supabase
 
