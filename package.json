@@ -4,6 +4,7 @@
   "description": "Hometown Crawls static site and Stripe webhook",
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",
+    "@vercel/functions": "^3.9.11",
     "stripe": "^22.6.2"
   }
 }

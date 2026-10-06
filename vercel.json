@@ -1,6 +1,10 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "proxy": {
+    "entrypoint": "proxy.js",
+    "matcher": ["/", "/(.*)"]
+  },
   "rewrites": [
     {
       "source": "/shops/join",
@@ -63,45 +67,24 @@
   ],
   "redirects": [
     {
-      "source": "/",
-      "has": [
-        {
-          "type": "host",
-          "value": "sandbox\\.hometowncrawls\\.com"
-        }
-      ],
-      "destination": "/sandbox",
-      "permanent": false
-    },
-    {
-      "source": "/robots.txt",
-      "has": [
-        {
-          "type": "host",
-          "value": "sandbox\\.hometowncrawls\\.com"
-        }
-      ],
-      "destination": "/sandbox/robots.txt",
-      "permanent": false
-    },
-    {
-      "source": "/:path((?!sandbox(?:/|$)|assets(?:/|$)|robots\\.txt$).*)",
-      "has": [
-        {
-          "type": "host",
-          "value": "sandbox\\.hometowncrawls\\.com"
-        }
-      ],
-      "destination": "/sandbox",
-      "permanent": false
-    },
-    {
       "source": "/puyallup",
+      "missing": [
+        {
+          "type": "host",
+          "value": "sandbox\\.hometowncrawls\\.com"
+        }
+      ],
       "destination": "/puyallup/coffee-crawl",
       "permanent": false
     },
     {
       "source": "/puyallup/",
+      "missing": [
+        {
+          "type": "host",
+          "value": "sandbox\\.hometowncrawls\\.com"
+        }
+      ],
       "destination": "/puyallup/coffee-crawl",
       "permanent": false
     }

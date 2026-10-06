@@ -163,12 +163,13 @@ test("sandbox pages stay out of search and away from live keys", () => {
   assert.ok(sandboxHeaders.some((rule) =>
     rule.headers.some((header) => header.key === "X-Robots-Tag" && header.value === "noindex, nofollow")
   ));
-  const sandboxRedirects = config.redirects.filter((rule) =>
-    (rule.has || []).some((item) => item.type === "host" && /sandbox/.test(item.value))
-  );
-  assert.ok(sandboxRedirects.some((rule) => rule.source === "/" && rule.destination === "/sandbox"));
-  assert.ok(sandboxRedirects.some((rule) => rule.source === "/robots.txt" && rule.destination === "/sandbox/robots.txt"));
-  assert.equal(config.redirects.some((rule) => rule.source === "/puyallup" && rule.has), false);
+  assert.equal(config.proxy.entrypoint, "proxy.js");
+  assert.equal(config.redirects.some((rule) => rule.has), false);
+  assert.equal(config.redirects.some((rule) => rule.source === "/puyallup" && rule.destination === "/puyallup/coffee-crawl" && (rule.missing || []).some((item) => item.type === "host" && /sandbox/.test(item.value))), true);
+  const proxy = fs.readFileSync(path.join(root, "proxy.js"), "utf8");
+  assert.match(proxy, /sandbox\.hometowncrawls\.com/);
+  assert.match(proxy, /\/sandbox\/robots\.txt/);
+  assert.match(proxy, /status:\s*307/);
   for (const source of [html, ui, store]) {
     assert.doesNotMatch(source, /config\.js/);
     assert.doesNotMatch(source, /supabase/i);
