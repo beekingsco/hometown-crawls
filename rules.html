@@ -72,6 +72,7 @@
         <h3>Conduct</h3>
         <p>Harassment of staff or other crawlers, vandalism, or unsafe behavior can result in passport removal and prize ineligibility. When in doubt, leave the shop better than you found it.</p>
 
+        <div id="photo-privacy"></div>
         <p class="muted small mt-2">Questions? See <a href="faqs.html" style="text-decoration:underline">FAQs</a>, read <a href="guides/how-a-hometown-coffee-crawl-works.html" style="text-decoration:underline">how a coffee crawl works</a>, or email hello@hometowncrawls.com.</p>
       </div>
     </div>
@@ -80,5 +81,10 @@
   <footer class="site-footer" id="site-footer"></footer>
   <script src="assets/config.js"></script>
   <script src="assets/site.js"></script>
+  <script src="assets/photo-consent.js"></script>
+  <script>
+    var privacy = document.getElementById("photo-privacy");
+    if (privacy && window.HCPhotoConsent) privacy.innerHTML = HCPhotoConsent.privacyHtml();
+  </script>
 </body>
 </html>

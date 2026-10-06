@@ -203,29 +203,15 @@
   }
 
   async function claimStamp({ crawl, business, code, lat, lng }) {
-    const c = client();
-    if (!c) throw new Error("Supabase not loaded");
-    let s = await getSession();
-    if (!s) s = await ensureAuth();
-    if (!s) throw new Error("Please sign in with email to stamp.");
-    let coords = { lat, lng };
-    if (coords.lat == null || coords.lng == null) coords = await getPosition();
-    if (coords.lat == null || coords.lng == null) {
-      throw new Error("Location required");
+    if (!window.HCCheckin || typeof window.HCCheckin.claimWithSelfie !== "function") {
+      throw new Error("Photo check-in isn’t turned on yet.");
     }
-    const { data, error } = await c.rpc("claim_stamp", {
-      p_crawl: crawl || CRAWL,
-      p_business: business,
-      p_code: code,
-      p_lat: coords.lat,
-      p_lng: coords.lng
-    });
-    if (error) throw new Error(plainStampError(error));
-    return data;
+    return window.HCCheckin.claimWithSelfie({ crawl: crawl || CRAWL, business, code, lat, lng });
   }
 
   function renderShopList(container, shops, stamps) {
     if (!container) return;
+    const crawlId = container.getAttribute("data-crawl") || "";
     const stamped = new Set((stamps || []).map((s) => s.business_id));
     if (!shops.length) {
       container.innerHTML = `<p class="muted">Shops will appear here once seats are live.</p>`;
@@ -238,16 +224,21 @@
         const avatar = s.logo_url
           ? `<span class="shop-avatar"><img src="${s.logo_url}" alt=""></span>`
           : `<span class="shop-avatar">${init}</span>`;
+        const strip = crawlId
+          ? `<div class="visitor-strip" data-business="${escapeHtml(s.id)}" data-crawl="${escapeHtml(crawlId)}"></div>`
+          : "";
         return `<div class="shop-row" data-id="${s.id}">
           ${avatar}
           <div style="flex:1;min-width:0">
             <b>${escapeHtml(s.name)}</b>
             <div class="muted small">${escapeHtml(s.address || "")}</div>
+            ${strip}
           </div>
           <span class="pill ${got ? "pill-ok" : "pill-muted"}">${got ? "Stamped" : "Open"}</span>
         </div>`;
       })
       .join("");
+    if (crawlId && window.HCVisitGallery) window.HCVisitGallery.paint();
   }
 
   function renderStamps(container, shops, stamps) {

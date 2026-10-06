@@ -104,10 +104,14 @@
           <p class="eyebrow">Stops</p>
           <h2>Stamp at these shops</h2>
         </div>
-        <div class="card" id="shop-list"><p class="muted">Loading shops…</p></div>
+        <div class="card" id="shop-list" data-crawl="puy-coffee"><p class="muted">Loading shops…</p></div>
         <div id="coffee-shops-empty" class="card mt-2 hidden">
           <h3>Shops announced soon</h3>
           <p class="muted mt-1">The map is centered on downtown Puyallup. Pins and shop cards will show up as coffee shops join.</p>
+        </div>
+        <div class="card mt-2">
+          <h3>Visitors</h3>
+          <div data-visit-wall data-crawl="puy-coffee"></div>
         </div>
       </div>
     </section>
@@ -137,6 +141,10 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../../assets/crawl.js"></script>
+  <script src="../../assets/photo-consent.js"></script>
+  <script src="../../assets/checkin-image.js"></script>
+  <script src="../../assets/checkin.js"></script>
+  <script src="../../assets/visit-gallery.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", async () => {
       const statusEl = document.getElementById("crawl-status");
@@ -190,6 +198,7 @@
         sel.innerHTML = shops.map(s => `<option value="${s.id}">${HCCrawl.escapeHtml(s.name)}</option>`).join("");
       }
       HCCrawl.initMap(document.getElementById("coffee-map"), shops, { lat: 47.191, lng: -122.293 });
+      if (window.HCVisitGallery) HCVisitGallery.paint();
 
       const session = await HCCrawl.getSession();
       if (session) joinStatus.textContent = "Signed in — you can join and stamp.";
@@ -218,12 +227,14 @@
             business: sel.value,
             code: document.getElementById("quick-code").value.trim()
           });
+          if (window.HCVisitGallery) HCVisitGallery.paint();
           HC.toast("Stamp claimed");
           document.getElementById("quick-code").value = "";
           const stamps2 = await HCCrawl.myStamps("puy-coffee");
           HCCrawl.renderShopList(document.getElementById("shop-list"), shops, stamps2);
           HCCrawl.renderStamps(document.getElementById("passport-area"), shops, stamps2);
         } catch (e) {
+          if (window.HCCheckin && HCCheckin.isCancel(e)) return;
           errEl.textContent = e.message || String(e);
           errEl.classList.add("show");
         }

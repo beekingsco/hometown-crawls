@@ -645,3 +645,85 @@ textarea.input { min-height: 100px; resize: vertical; }
   line-height: 1.45;
 }
 .age-gate strong { font-weight: 700; }
+
+/* Visit selfies */
+body.hc-checkin-open { overflow: hidden; }
+.hc-checkin {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+.hc-checkin[hidden] { display: none !important; }
+.hc-checkin-backdrop { position: absolute; inset: 0; background: rgba(26, 26, 23, 0.46); }
+.hc-checkin-card {
+  position: relative;
+  width: min(440px, 100%);
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  background: var(--paper);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.15rem 1.2rem;
+  box-shadow: var(--shadow);
+}
+.hc-checkin-shop, .hc-checkin-line, .hc-checkin-notice { color: var(--ink-soft); font-size: 0.92rem; margin-top: 0.35rem; }
+.hc-checkin-notice { background: var(--gold-soft); color: var(--gold-ink); border-radius: var(--radius-sm); padding: 0.7rem 0.8rem; }
+.hc-checkin-stage {
+  margin-top: 0.8rem;
+  background: #111;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  aspect-ratio: 3 / 4;
+}
+.hc-checkin-stage video, .hc-checkin-still, .hc-share-card { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hc-share-card { height: auto; background: var(--green); border-radius: var(--radius-sm); }
+.hc-checkin-help { margin-top: 0.65rem; color: var(--gold-ink); }
+.hc-checkin-file-label { display: block; margin-top: 0.65rem; font-size: 0.9rem; font-weight: 600; color: var(--green); }
+.hc-checkin-file { display: block; margin-top: 0.3rem; }
+.hc-check { display: flex; gap: 0.55rem; align-items: flex-start; margin-top: 0.7rem; font-size: 0.92rem; }
+.hc-check input { margin-top: 0.25rem; }
+.hc-checkin-age-note { margin-top: 0.55rem; font-size: 0.85rem; color: var(--muted); }
+.hc-checkin-actions { margin-top: 0.9rem; flex-wrap: wrap; }
+.hc-checkin-err { margin-top: 0.7rem; }
+.visitor-strip { display: flex; gap: 0.35rem; align-items: center; margin-top: 0.45rem; flex-wrap: wrap; }
+.visitor-kicker { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-right: 0.15rem; }
+.visitor-thumb, .visitor-more {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.visitor-thumb img, .visitor-tile img, .visitor-shop-list img, .passport-photo img, .hc-queue-frame img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+}
+.visitor-more { font-size: 0.8rem; font-weight: 600; color: var(--green); }
+.visitor-wall { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; }
+.visitor-tile { margin: 0; }
+.visitor-tile img, .visitor-shop-list img, .passport-photo img { width: 100%; height: 140px; }
+.visitor-tile figcaption, .visitor-shop-list figcaption { font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem; }
+.visitor-report, .visitor-shop-list button { font-size: 0.78rem; color: var(--green); font-weight: 600; background: none; border: 0; cursor: pointer; }
+.visitor-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgba(26, 26, 23, 0.55);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+.visitor-lightbox[hidden] { display: none !important; }
+.visitor-lightbox-card { background: var(--paper); border-radius: var(--radius); padding: 0.8rem; width: min(420px, 100%); }
+.visitor-lightbox-card img { width: 100%; height: auto; max-height: 70vh; object-fit: contain; border-radius: var(--radius-sm); }
+.hc-queue-frame { margin: 0.75rem 0; background: var(--cream); border-radius: var(--radius-sm); min-height: 180px; display: grid; place-items: center; }
+.hc-queue-frame img { width: min(100%, 320px); height: 320px; }
+.hc-queue-filters, .hc-queue-actions { flex-wrap: wrap; margin-top: 0.6rem; }
+.hc-queue kbd { font-family: var(--font-body); font-size: 0.72rem; border: 1px solid var(--line-strong); border-radius: 4px; padding: 0 0.25rem; }
+.hc-staff-tools, .hc-kind-editor { margin-top: 0.75rem; }
+.passport-photo, .visitor-shop-list figure { margin-top: 0.9rem; }
+.passport-photo img { max-width: 220px; }

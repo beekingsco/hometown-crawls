@@ -100,6 +100,7 @@
             <p class="form-error mt-2" id="action-err" role="alert"></p>
           </div>
         </div>
+        <div id="photo-queue" class="card hidden"></div>
       </section>
     </div>
   </main>
@@ -108,6 +109,9 @@
   <script src="/assets/site.js?v=2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/assets/crawl.js"></script>
+  <script src="/assets/photo-consent.js"></script>
+  <script src="/assets/checkin-image.js"></script>
+  <script src="/assets/visit-moderate.js"></script>
   <script>
   (function () {
     var sb = null;
@@ -318,15 +322,40 @@
       setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
     }
 
+    async function photoAccess(id) {
+      if (!window.HCVisitModerate) return { allowed: false };
+      try { return await HCVisitModerate.access(sb, id); }
+      catch (e) { return { allowed: false }; }
+    }
+
+    function showPhotoQueue(id, access) {
+      var host = $("photo-queue");
+      if (!window.HCVisitModerate || !host) return;
+      if (!access || !access.allowed) {
+        HCVisitModerate.hide(host);
+        return;
+      }
+      HCVisitModerate.open(sb, id, { host: host, access: access });
+    }
+
     async function openCrawl(id) {
       activeId = id;
       setCrawlParam(id);
       renderCrawls();
       showBox($("action-err"), false);
+      var access = await photoAccess(id);
       var shopsRes = await sb.rpc("organizer_crawl_shops", { p_crawl: id });
       var statsRes = await sb.rpc("organizer_crawl_stats", { p_crawl: id });
       if (shopsRes.error || statsRes.error) {
         var err = shopsRes.error || statsRes.error;
+        if (isDenied(err) && access.staff) {
+          shops = [];
+          stats = {};
+          showView("dash");
+          $("crawl-body").classList.add("hidden");
+          showPhotoQueue(id, access);
+          return;
+        }
         if (isDenied(err)) {
           note("<h2>You're not authorized</h2><p class=\"mt-1\">This sign-in can't view that crawl.</p>");
           return;
@@ -337,6 +366,7 @@
       stats = statsRes.data || {};
       showView("dash");
       renderAll();
+      showPhotoQueue(id, access);
     }
 
     function chooseInitial() {
@@ -346,23 +376,55 @@
       return null;
     }
 
+    async function amStaff() {
+      try {
+        var res = await sb.rpc("am_hc_staff");
+        if (res.error) return false;
+        return !!res.data;
+      } catch (e) {
+        return false;
+      }
+    }
+
     async function enter(session) {
       if (!session || loadedFor === session.user.id + ":ready") return;
       if (loadedFor && loadedFor.indexOf(session.user.id) === 0) return;
       loadedFor = session.user.id;
       try {
+        var staff = await amStaff();
         var linkRes = await sb.rpc("hc_link_account");
-        if (linkRes.error) throw linkRes.error;
+        if (linkRes.error && !staff) throw linkRes.error;
         var link = linkRes.data || {};
-        if (!link.eligible && !link.is_organizer) {
+        if (!staff && !link.eligible && !link.is_organizer) {
           note("<h2>Check the magic link</h2><p class=\"mt-1\">Use the magic link sent to the email you signed up with. If this persists, contact <a href=\"mailto:bryan@myanthemcoffee.com\">bryan@myanthemcoffee.com</a>.</p>");
           return;
         }
         var mine = await sb.rpc("organizer_my_crawls");
-        if (mine.error) throw mine.error;
-        crawls = mine.data || [];
+        if (mine.error && !staff) throw mine.error;
+        crawls = mine.error ? [] : (mine.data || []);
+        if (staff) {
+          var extra = await sb.rpc("staff_photo_crawls");
+          if (!extra.error && extra.data) {
+            extra.data.forEach(function (c) {
+              if (!crawls.some(function (row) { return row.crawl_id === c.crawl_id; })) {
+                crawls.push({
+                  crawl_id: c.crawl_id,
+                  name: c.name,
+                  city: c.city,
+                  starts_at: c.starts_at,
+                  ends_at: c.ends_at,
+                  applied: 0,
+                  paid: 0,
+                  visible: 0
+                });
+              }
+            });
+          }
+        }
         if (!crawls.length) {
-          note("<h2>This email isn't an organizer</h2><p class=\"muted mt-1\">Sign in with the email that was added as an organizer.</p>");
+          note(staff
+            ? "<h2>No crawls to review</h2><p class=\"muted mt-1\">Staff photo review appears here when a crawl exists.</p>"
+            : "<h2>This email isn't an organizer</h2><p class=\"muted mt-1\">Sign in with the email that was added as an organizer.</p>");
           return;
         }
         loadedFor = session.user.id + ":ready";

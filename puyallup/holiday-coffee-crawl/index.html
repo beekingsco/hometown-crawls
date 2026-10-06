@@ -203,6 +203,7 @@
             <li>One stamp per shop.</li>
             <li>Scan the QR or type the counter code.</li>
             <li>You must be at the shop.</li>
+            <li>A live selfie confirms the visit.</li>
             <li>Buy something if the shop asks.</li>
             <li>Prizes are TBA. They will be announced later.</li>
           </ul>
@@ -226,6 +227,10 @@
           <p class="muted mt-1">The map is centered on downtown Puyallup. Pins and shop cards will show up as coffee shops join.</p>
         </div>
         <p class="form-error mt-2" id="shops-err" role="alert"></p>
+        <div class="card mt-2">
+          <h3>Visitors</h3>
+          <div data-visit-wall data-crawl="puy-coffee"></div>
+        </div>
       </div>
     </section>
 
@@ -283,7 +288,7 @@
           </details>
           <details>
             <summary>How do stamps work?</summary>
-            <p>Join the passport, go to a participating shop, and scan that shop's QR code or type the counter code. Each shop stamps once.</p>
+            <p>Join the passport, go to a participating shop, and scan that shop's QR code or type the counter code. A live selfie confirms the visit. Each shop stamps once.</p>
           </details>
           <details>
             <summary>When are shops announced?</summary>
@@ -307,6 +312,10 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/assets/crawl.js"></script>
+  <script src="/assets/photo-consent.js"></script>
+  <script src="/assets/checkin-image.js"></script>
+  <script src="/assets/checkin.js"></script>
+  <script src="/assets/visit-gallery.js"></script>
   <script>
   (function () {
     var CRAWL = "puy-coffee";
@@ -416,6 +425,7 @@
           (s.hours ? '<p class="small"><strong>Hours</strong> · ' + esc(s.hours) + "</p>" : "") +
           (s.blurb ? "<p>" + esc(s.blurb) + "</p>" : "") +
           (links.length ? '<p class="row shop-links">' + links.join("") + "</p>" : "") +
+          '<div class="visitor-strip" data-business="' + esc(s.business_id) + '" data-crawl="' + esc(CRAWL) + '"></div>' +
           "</div></article>";
       }).join("");
     }
@@ -490,6 +500,7 @@
       }
 
       renderCards();
+      if (window.HCVisitGallery) HCVisitGallery.paint();
       renderShopSelect();
       var mapped = mapForMap(shops);
       var pinned = mapped.filter(function (s) { return s.lat != null && s.lng != null; });
@@ -534,6 +545,7 @@
           if (window.HC) HC.toast("Stamp claimed");
           await refreshStamps();
         } catch (e) {
+          if (window.HCCheckin && HCCheckin.isCancel(e)) return;
           if (needsSignIn(e)) {
             showMagic();
             $("claim-err").textContent = "Sign in below, then claim this stamp.";
@@ -574,6 +586,7 @@
           if (window.HC) HC.toast("Stamp claimed");
           await refreshStamps();
         } catch (e) {
+          if (window.HCCheckin && HCCheckin.isCancel(e)) return;
           if (needsSignIn(e)) showMagic();
           $("passport-err").textContent = e.message || "Could not claim that stamp.";
           showBox($("passport-err"), true);

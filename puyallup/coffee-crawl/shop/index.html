@@ -128,6 +128,8 @@
           </label>
           <p class="form-error mt-2" id="photo-err" role="alert"></p>
         </div>
+
+        <div class="card hidden" id="visitor-photos"></div>
       </section>
     </div>
   </main>
@@ -137,6 +139,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
   <script src="/assets/crawl.js"></script>
+  <script src="/assets/shop-visitors.js"></script>
   <script>
   (function () {
     var IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"];
@@ -302,6 +305,7 @@
       renderPhotos();
       fillForm();
       renderChecklist();
+      if (window.HCShopVisitors && sb && current) HCShopVisitors.load(sb, current);
     }
 
     function checkItem(done, label, href) {
