@@ -7,6 +7,7 @@
   let flash = null;
   let mapRef = null;
   let mapPayload = null;
+  let lastHash = "";
 
   const ROLES = [
     { id: "guest", label: "Guest" },
@@ -357,7 +358,7 @@
     const sample = S.guestsFor(state, crawl.id).find((person) => person.voucher && person.id !== guest.id);
     let primary = "";
     if (prog.done && guest.voucher) {
-      primary = `<h2>You finished</h2><p class="muted mt-1">This voucher is an example code for the sandbox. Shops can redeem it on the shop desk.</p>${shareCard(guest, crawl, false)}`;
+        primary = `<h2>You finished</h2><p class="muted mt-1">This voucher is an example code for the sandbox. Shops can redeem it on the shop desk.</p>${shareCardHtml(guest, crawl, false)}`;
     } else if (prog.total === 0) {
       primary = `<h2>Nothing to finish yet</h2><p class="muted mt-1">Put shops on the map before this passport can be completed.</p>`;
     } else {
@@ -367,12 +368,12 @@
         ${prog.nudge === "You're 2 away" ? `<div class="nudge"><strong>You're 2 away</strong></div>` : ""}`;
     }
     const example = sample
-      ? `<div class="mt-3"><p class="example-flag">Example card · not ${esc(guest.name)}'s voucher</p>${shareCard(sample, crawl, true)}</div>`
+      ? `<div class="mt-3"><p class="example-flag">Example card · not ${esc(guest.name)}'s voucher</p>${shareCardHtml(sample, crawl, true)}</div>`
       : "";
     return `<section class="section" style="padding-top:0"><div class="card">${primary}${example}</div></section>`;
   }
 
-  function shareCard(guest, crawl, example) {
+  function shareCardHtml(guest, crawl, example) {
     const caption = `${example ? "EXAMPLE card. " : ""}I finished the ${crawl.name} in ${crawl.city}. ${guest.name} · voucher ${guest.voucher}. Sandbox demo, not a real prize.`;
     return `
       <article class="share-card mt-2">
@@ -383,6 +384,9 @@
         <p class="voucher-code">${esc(guest.voucher)}</p>
         <p class="small" style="opacity:.75;margin-top:.55rem">${example ? "Example voucher. Not a real prize." : "Example voucher code. Not a real prize."}</p>
       </article>
+      <label class="field mt-2">Share caption
+        <textarea class="input" readonly rows="3">${esc(caption)}</textarea>
+      </label>
       <div class="row mt-2">
         <button type="button" class="btn btn-primary" data-action="share-card" data-guest="${esc(guest.id)}" data-crawl="${esc(crawl.id)}" data-example="${example ? "yes" : "no"}">Share caption</button>
         <button type="button" class="btn btn-ghost" data-action="download-card" data-guest="${esc(guest.id)}" data-crawl="${esc(crawl.id)}" data-example="${example ? "yes" : "no"}">Download card</button>
@@ -940,6 +944,8 @@
   }
 
   function render() {
+    const hashChanged = location.hash !== lastHash;
+    lastHash = location.hash;
     teardownMap();
     const route = parseHash();
     syncRoute(route);
@@ -955,9 +961,10 @@
     mountMap();
     mountQr();
     bindFilter();
+    if (hashChanged) window.scrollTo(0, 0);
   }
 
-  function applyField(el) {
+  function applyField(el, fromUser) {
     const bucket = el.dataset.bucket;
     const field = el.dataset.field;
     if (!bucket || !field) return;
@@ -973,7 +980,7 @@
         return;
       }
       state.wizard[field] = el.value;
-      if (field === "crawlName") state.wizard.nameTouched = true;
+      if (field === "crawlName" && fromUser) state.wizard.nameTouched = true;
       if (field === "town" && !state.wizard.nameTouched) {
         const template = S.templateById(state.wizard.templateId);
         const town = String(el.value || "").trim() || "Your town";
@@ -994,7 +1001,7 @@
   }
 
   function pullFields() {
-    document.querySelectorAll("#app [data-bucket]").forEach(applyField);
+    document.querySelectorAll("#app [data-bucket]").forEach((el) => applyField(el, false));
   }
 
   function resizeImage(file, max, quality) {
@@ -1096,8 +1103,20 @@
 
   async function copyText(text) {
     try {
-      if (navigator.clipboard && navigator.clipboard.writeText) await navigator.clipboard.writeText(text);
-      else throw new Error("clipboard");
+      if (navigator.clipboard && window.isSecureContext && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const area = document.createElement("textarea");
+        area.value = text;
+        area.setAttribute("readonly", "");
+        area.style.position = "fixed";
+        area.style.left = "-9999px";
+        document.body.appendChild(area);
+        area.select();
+        const copied = document.execCommand("copy");
+        area.remove();
+        if (!copied) throw new Error("copy");
+      }
       flash = { type: "ok", text: "Copied." };
     } catch (err) {
       flash = { type: "error", text: "Copy did not complete. Select the code and copy it manually." };
@@ -1305,7 +1324,7 @@
   function onFieldEvent(event) {
     const el = event.target.closest("[data-bucket]");
     if (!el) return;
-    applyField(el);
+    applyField(el, true);
     if (el.dataset.bucket !== "scan" || el.dataset.field === "place" || el.dataset.field === "shopId") persist();
     else persist();
   }
