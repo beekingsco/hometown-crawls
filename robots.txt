@@ -1,5 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /sandbox
+Disallow: /sandbox/
 Disallow: /puyallup/coffee-crawl/organizer
 Disallow: /puyallup/coffee-crawl/shop
 
