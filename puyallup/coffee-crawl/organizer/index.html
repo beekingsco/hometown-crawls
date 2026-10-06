@@ -22,6 +22,19 @@
     table.shops th { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
     .legend { display: flex; gap: 1rem; font-size: .85rem; color: var(--muted); }
     .swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; margin-right: .35rem; vertical-align: -1px; }
+    .dash-head { display: flex; gap: .75rem; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+    .role-switch { display: inline-flex; border: 1px solid var(--line-strong); border-radius: var(--radius-pill); overflow: hidden; background: #fff; }
+    .role-switch a { padding: .45rem .9rem; font-weight: 600; font-size: .85rem; color: var(--ink-soft); text-decoration: none; }
+    .role-switch a[aria-selected="true"] { background: var(--green); color: #fff; }
+    .co-person { flex-wrap: wrap; }
+    .co-person .btn { margin-left: auto; }
+    .co-share { width: 100%; min-height: 7.5rem; font: inherit; }
+    @media (max-width: 640px) {
+      .dash-head { align-items: stretch; }
+      .role-switch { display: flex; width: 100%; }
+      .role-switch a { flex: 1; text-align: center; }
+      .co-person .btn { margin-left: 0; width: 100%; }
+    }
   </style>
 </head>
 <body>
@@ -53,9 +66,12 @@
       </section>
 
       <section id="view-dash" class="stack hidden">
-        <div class="row" style="justify-content:space-between">
+        <div class="dash-head">
           <p class="small muted" id="who"></p>
-          <button class="btn btn-ghost" type="button" id="btn-out">Sign out</button>
+          <div class="row">
+            <div id="role-switch" class="hidden"></div>
+            <button class="btn btn-ghost" type="button" id="btn-out">Sign out</button>
+          </div>
         </div>
         <div class="grid" id="crawl-switch"></div>
         <div id="crawl-body" class="stack hidden">
@@ -99,6 +115,24 @@
             <p class="muted small mt-2 hidden" id="shops-empty">No shops have applied yet.</p>
             <p class="form-error mt-2" id="action-err" role="alert"></p>
           </div>
+          <div class="card" id="co-card">
+            <h3>Co-organizers</h3>
+            <p class="muted small mt-1">Add someone with the email they will use to sign in. They'll get access the first time they sign in with this email. Nothing is emailed from here.</p>
+            <div id="co-list" class="mt-2"></div>
+            <form id="co-form" class="mt-2">
+              <div class="grid">
+                <label class="field"><span>Name <span class="muted">(optional)</span></span>
+                  <input class="input" id="co-name" maxlength="200" autocomplete="name" />
+                </label>
+                <label class="field"><span>Email</span>
+                  <input class="input" id="co-email" type="email" required maxlength="320" autocomplete="email" placeholder="name@example.com" />
+                </label>
+              </div>
+              <button class="btn btn-primary" type="submit" id="co-add">Add co-organizer</button>
+            </form>
+            <div class="form-success mt-2" id="co-ok" role="status"></div>
+            <p class="form-error mt-2" id="co-err" role="alert"></p>
+          </div>
         </div>
       </section>
     </div>
@@ -107,7 +141,7 @@
   <script src="/assets/config.js"></script>
   <script src="/assets/site.js?v=2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/assets/crawl.js"></script>
+  <script src="/assets/crawl.js?v=3"></script>
   <script>
   (function () {
     var sb = null;
@@ -116,6 +150,7 @@
     var activeId = null;
     var shops = [];
     var stats = {};
+    var team = [];
     var busy = false;
     var esc = function (s) { return window.HCCrawl ? HCCrawl.escapeHtml(s) : String(s || ""); };
 
@@ -264,12 +299,64 @@
       }).join("");
     }
 
+    function initials(value) {
+      var parts = String(value || "").trim().split(/\s+/).filter(Boolean);
+      if (!parts.length) return "?";
+      return parts.slice(0, 2).map(function (part) { return part.charAt(0).toUpperCase(); }).join("");
+    }
+    function signInLink() {
+      return location.origin + "/puyallup/coffee-crawl/organizer";
+    }
+    function shareText(email) {
+      return "Sign in to the Hometown Crawls organizer dashboard with this email: " + email + "\n"
+        + signInLink() + "\n"
+        + "They'll get access the first time they sign in with this email. Request a magic link on that page. No invite email was sent.";
+    }
+    function missingCoOrg(error) {
+      var msg = (error && (error.message || error.details)) || "";
+      return error && (error.code === "PGRST202" || error.code === "42883" || /organizer_list_co_organizers|schema cache|does not exist/i.test(msg));
+    }
+    function renderTeam() {
+      var mine = crawls.filter(function (c) { return c.crawl_id === activeId; })[0];
+      var owner = !!(mine && mine.role === "owner");
+      var list = $("co-list");
+      if (!team.length) {
+        list.innerHTML = '<p class="muted small">No organizers on this crawl yet.</p>';
+        return;
+      }
+      list.innerHTML = team.map(function (person) {
+        var label = person.name || person.email || "Organizer";
+        var badge = person.linked
+          ? '<span class="pill pill-ok">Linked</span>'
+          : '<span class="pill pill-wait">Waiting for first sign-in</span>';
+        var remove = owner && person.role === "co-organizer"
+          ? '<button class="btn btn-ghost" type="button" data-remove="' + esc(person.organizer_id) + '">Remove</button>'
+          : "";
+        return '<div class="shop-row co-person"><div class="shop-avatar" aria-hidden="true">' + esc(initials(label)) + "</div>"
+          + '<div style="flex:1;min-width:12rem"><b>' + esc(label) + "</b>"
+          + '<div class="muted small">' + esc(person.email) + "</div>"
+          + '<div class="row mt-1"><span class="pill pill-muted">' + esc(person.role || "") + "</span>" + badge + "</div></div>"
+          + remove + "</div>";
+      }).join("");
+    }
+    function showShare(email, message) {
+      var ok = $("co-ok");
+      ok.innerHTML = "<p>" + esc(message) + "</p>"
+        + '<p class="mt-1">They\'ll get access the first time they sign in with this email. Share this yourself. Nothing was emailed.</p>'
+        + '<label class="field mt-2"><span>Sign-in instructions</span>'
+        + '<textarea class="input co-share" id="co-share" readonly></textarea></label>'
+        + '<button class="btn btn-soft" type="button" id="co-copy">Copy instructions</button>';
+      $("co-share").value = shareText(email);
+      showBox(ok, true);
+    }
+
     function renderAll() {
       renderCrawls();
       renderStats();
       renderTrend();
       renderPerShop();
       renderShops();
+      renderTeam();
       $("crawl-body").classList.remove("hidden");
     }
 
@@ -323,8 +410,16 @@
       setCrawlParam(id);
       renderCrawls();
       showBox($("action-err"), false);
-      var shopsRes = await sb.rpc("organizer_crawl_shops", { p_crawl: id });
-      var statsRes = await sb.rpc("organizer_crawl_stats", { p_crawl: id });
+      showBox($("co-ok"), false);
+      showBox($("co-err"), false);
+      var results = await Promise.all([
+        sb.rpc("organizer_crawl_shops", { p_crawl: id }),
+        sb.rpc("organizer_crawl_stats", { p_crawl: id }),
+        sb.rpc("organizer_list_co_organizers", { p_crawl_id: id })
+      ]);
+      var shopsRes = results[0];
+      var statsRes = results[1];
+      var teamRes = results[2];
       if (shopsRes.error || statsRes.error) {
         var err = shopsRes.error || statsRes.error;
         if (isDenied(err)) {
@@ -335,6 +430,17 @@
       }
       shops = shopsRes.data || [];
       stats = statsRes.data || {};
+      if (teamRes.error) {
+        team = [];
+        if (!isDenied(teamRes.error)) {
+          $("co-err").textContent = missingCoOrg(teamRes.error)
+            ? "Co-organizer invites aren't available yet."
+            : (teamRes.error.message || "Could not load co-organizers.");
+          showBox($("co-err"), true);
+        }
+      } else {
+        team = teamRes.data || [];
+      }
       showView("dash");
       renderAll();
     }
@@ -353,20 +459,26 @@
       try {
         var linkRes = await sb.rpc("hc_link_account");
         if (linkRes.error) throw linkRes.error;
+        if (window.HCCrawl && HCCrawl.claimOrganizer) await HCCrawl.claimOrganizer(sb);
+        var roles = window.HCCrawl && HCCrawl.dashboardRoles
+          ? await HCCrawl.dashboardRoles(sb)
+          : { organizer: false, host: false, crawls: [], orgError: null };
+        if (window.HCCrawl && HCCrawl.landOnPreferredDashboard && HCCrawl.landOnPreferredDashboard("organizer", roles)) return;
         var link = linkRes.data || {};
-        if (!link.eligible && !link.is_organizer) {
+        if (!link.eligible && !roles.organizer && !link.is_organizer) {
           note("<h2>Check the magic link</h2><p class=\"mt-1\">Use the magic link sent to the email you signed up with. If this persists, contact <a href=\"mailto:bryan@myanthemcoffee.com\">bryan@myanthemcoffee.com</a>.</p>");
           return;
         }
-        var mine = await sb.rpc("organizer_my_crawls");
-        if (mine.error) throw mine.error;
-        crawls = mine.data || [];
+        if (roles.orgError) throw roles.orgError;
+        crawls = roles.crawls || [];
         if (!crawls.length) {
           note("<h2>This email isn't an organizer</h2><p class=\"muted mt-1\">Sign in with the email that was added as an organizer.</p>");
           return;
         }
         loadedFor = session.user.id + ":ready";
         $("who").textContent = session.user.email ? ("Signed in as " + session.user.email) : "Signed in";
+        if (window.HCCrawl && HCCrawl.syncRoleSwitch) HCCrawl.syncRoleSwitch($("role-switch"), "organizer", roles);
+        if (window.HCCrawl && HCCrawl.rememberDashboardView) HCCrawl.rememberDashboardView("organizer");
         showView("dash");
         renderCrawls();
         var pick = chooseInitial();
@@ -386,7 +498,9 @@
       loadedFor = null;
       crawls = [];
       shops = [];
+      team = [];
       activeId = null;
+      if (window.HCCrawl && HCCrawl.syncRoleSwitch) HCCrawl.syncRoleSwitch($("role-switch"), "organizer", null);
       await HCCrawl.signOut();
       showView("login");
     }
@@ -435,6 +549,110 @@
       $("btn-out-note").onclick = signOut;
       $("btn-csv").onclick = downloadCsv;
       $("btn-refresh").onclick = function () { if (activeId) openCrawl(activeId); };
+
+      $("co-form").onsubmit = async function (ev) {
+        ev.preventDefault();
+        if (!activeId || busy) return;
+        showBox($("co-ok"), false);
+        showBox($("co-err"), false);
+        var email = $("co-email").value.trim();
+        var name = $("co-name").value.trim();
+        if (!email) {
+          $("co-err").textContent = "Email is required.";
+          showBox($("co-err"), true);
+          return;
+        }
+        var btn = $("co-add");
+        busy = true;
+        btn.disabled = true;
+        btn.textContent = "Adding…";
+        try {
+          var res = await sb.rpc("organizer_add_co_organizer", {
+            p_crawl_id: activeId,
+            p_email: email,
+            p_name: name || null
+          });
+          if (res.error) {
+            if (isDenied(res.error)) {
+              $("co-err").textContent = "Only an organizer of this crawl can add a co-organizer.";
+              showBox($("co-err"), true);
+              return;
+            }
+            throw res.error;
+          }
+          var row = res.data || {};
+          var savedEmail = row.email || email;
+          var message = row.status === "already_on_crawl"
+            ? (savedEmail + " is already on this crawl" + (row.role ? " as " + row.role : "") + ".")
+            : (savedEmail + " was added as a co-organizer.");
+          $("co-email").value = "";
+          $("co-name").value = "";
+          try {
+            await openCrawl(activeId);
+          } catch (reloadErr) {
+            $("co-err").textContent = "Saved, but the list could not refresh. " + (reloadErr.message || "Try Refresh.");
+            showBox($("co-err"), true);
+          }
+          showShare(savedEmail, message);
+          if (window.HC) HC.toast(row.status === "already_on_crawl" ? "Already on this crawl" : "Co-organizer added");
+        } catch (e) {
+          $("co-err").textContent = e.message || "Could not add that co-organizer.";
+          showBox($("co-err"), true);
+        } finally {
+          busy = false;
+          btn.disabled = false;
+          btn.textContent = "Add co-organizer";
+        }
+      };
+
+      $("co-card").onclick = async function (ev) {
+        var copyBtn = ev.target.closest ? ev.target.closest("#co-copy") : null;
+        if (copyBtn) {
+          var box = $("co-share");
+          var text = box ? box.value : "";
+          try {
+            if (navigator.clipboard && navigator.clipboard.writeText) await navigator.clipboard.writeText(text);
+            else throw new Error("copy");
+            if (window.HC) HC.toast("Copied");
+          } catch (e) {
+            if (box) {
+              box.focus();
+              box.select();
+            }
+            try { document.execCommand("copy"); if (window.HC) HC.toast("Copied"); } catch (err) {}
+          }
+          return;
+        }
+        var removeBtn = ev.target.closest ? ev.target.closest("[data-remove]") : null;
+        if (!removeBtn || busy || !activeId) return;
+        var id = removeBtn.getAttribute("data-remove");
+        var person = team.filter(function (row) { return row.organizer_id === id; })[0];
+        var label = person ? (person.name || person.email) : "this co-organizer";
+        if (!window.confirm("Remove " + label + " from this crawl? Nothing is emailed.")) return;
+        showBox($("co-err"), false);
+        busy = true;
+        try {
+          var res = await sb.rpc("organizer_remove_co_organizer", {
+            p_crawl_id: activeId,
+            p_organizer_id: id
+          });
+          if (res.error) {
+            if (isDenied(res.error)) {
+              $("co-err").textContent = res.error.message || "Only the crawl owner can remove a co-organizer.";
+              showBox($("co-err"), true);
+              return;
+            }
+            throw res.error;
+          }
+          await openCrawl(activeId);
+          if (window.HC) HC.toast("Co-organizer removed");
+        } catch (e) {
+          $("co-err").textContent = e.message || "Could not remove that co-organizer.";
+          showBox($("co-err"), true);
+        } finally {
+          busy = false;
+        }
+      };
 
       $("crawl-switch").onclick = function (ev) {
         var btn = ev.target.closest("[data-crawl]");

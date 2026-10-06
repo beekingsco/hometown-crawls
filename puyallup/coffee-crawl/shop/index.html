@@ -25,6 +25,15 @@
     .checklist li.done .mark { background: var(--soft); border-color: var(--green); }
     .checklist a { color: var(--green); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
     button.card { text-align: left; width: 100%; }
+    .dash-head { display: flex; gap: .75rem; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+    .role-switch { display: inline-flex; border: 1px solid var(--line-strong); border-radius: var(--radius-pill); overflow: hidden; background: #fff; }
+    .role-switch a { padding: .45rem .9rem; font-weight: 600; font-size: .85rem; color: var(--ink-soft); text-decoration: none; }
+    .role-switch a[aria-selected="true"] { background: var(--green); color: #fff; }
+    @media (max-width: 640px) {
+      .dash-head { align-items: stretch; }
+      .role-switch { display: flex; width: 100%; }
+      .role-switch a { flex: 1; text-align: center; }
+    }
     @media print {
       body * { visibility: hidden; }
       #qr-print, #qr-print * { visibility: visible; }
@@ -62,9 +71,12 @@
       </section>
 
       <section id="view-app" class="stack hidden">
-        <div class="row" style="justify-content:space-between">
+        <div class="dash-head">
           <p class="small muted" id="who"></p>
-          <button class="btn btn-ghost" type="button" id="btn-out">Sign out</button>
+          <div class="row">
+            <div id="role-switch" class="hidden"></div>
+            <button class="btn btn-ghost" type="button" id="btn-out">Sign out</button>
+          </div>
         </div>
         <div id="listing-switch"></div>
 
@@ -136,7 +148,7 @@
   <script src="/assets/site.js?v=2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-  <script src="/assets/crawl.js"></script>
+  <script src="/assets/crawl.js?v=3"></script>
   <script>
   (function () {
     var IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"];
@@ -333,20 +345,26 @@
       try {
         var linkRes = await sb.rpc("hc_link_account");
         if (linkRes.error) throw linkRes.error;
+        if (window.HCCrawl && HCCrawl.claimOrganizer) await HCCrawl.claimOrganizer(sb);
+        var roles = window.HCCrawl && HCCrawl.dashboardRoles
+          ? await HCCrawl.dashboardRoles(sb)
+          : { organizer: false, host: false, listings: [], hostError: null };
+        if (window.HCCrawl && HCCrawl.landOnPreferredDashboard && HCCrawl.landOnPreferredDashboard("shop", roles)) return;
         var link = linkRes.data || {};
         var email = session.user.email || link.email || "";
-        if (!link.eligible && !(Number(link.listings) > 0)) {
+        if (roles.hostError) throw roles.hostError;
+        listings = roles.listings || [];
+        if (!link.eligible && !listings.length) {
           note("<h2>Check the magic link</h2><p class=\"mt-1\">Use the magic link sent to the email you signed up with. If this persists, contact <a href=\"mailto:hello@hometowncrawls.com\">hello@hometowncrawls.com</a>.</p>");
           return;
         }
-        var listRes = await sb.rpc("shop_my_listings");
-        if (listRes.error) throw listRes.error;
-        listings = listRes.data || [];
         if (!listings.length) {
           note('<h2>No listing yet</h2><p class="mt-1">No shop listing is tied to this email yet. The listing appears automatically after the signup form is submitted with this same email.</p><p class="mt-2"><a class="btn btn-primary" href="/puyallup/coffee-crawl">Sign up your shop</a></p>');
           return;
         }
         $("who").textContent = email ? ("Signed in as " + email) : "Signed in";
+        if (window.HCCrawl && HCCrawl.syncRoleSwitch) HCCrawl.syncRoleSwitch($("role-switch"), "shop", roles);
+        if (window.HCCrawl && HCCrawl.rememberDashboardView) HCCrawl.rememberDashboardView("shop");
         showView("app");
         selectListing(listings[0].listing_id);
       } catch (e) {
@@ -363,6 +381,7 @@
       loadedFor = null;
       current = null;
       listings = [];
+      if (window.HCCrawl && HCCrawl.syncRoleSwitch) HCCrawl.syncRoleSwitch($("role-switch"), "shop", null);
       await HCCrawl.signOut();
       showView("login");
     }
