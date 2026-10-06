@@ -1,6 +1,10 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "proxy": {
+    "entrypoint": "proxy.js",
+    "matcher": ["/", "/(.*)"]
+  },
   "rewrites": [
     {
       "source": "/puyallup/coffee-crawl",
@@ -34,6 +38,21 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=86400"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "sandbox\\.hometowncrawls\\.com"
+        }
+      ],
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
         }
       ]
     }
@@ -81,11 +100,23 @@
     },
     {
       "source": "/puyallup",
+      "missing": [
+        {
+          "type": "host",
+          "value": "sandbox\\.hometowncrawls\\.com"
+        }
+      ],
       "destination": "/puyallup/coffee-crawl",
       "permanent": false
     },
     {
       "source": "/puyallup/",
+      "missing": [
+        {
+          "type": "host",
+          "value": "sandbox\\.hometowncrawls\\.com"
+        }
+      ],
       "destination": "/puyallup/coffee-crawl",
       "permanent": false
     }
