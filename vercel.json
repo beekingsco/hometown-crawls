@@ -38,6 +38,12 @@
       ]
     }
   ],
+  "crons": [
+    {
+      "path": "/api/visit-photo-files",
+      "schedule": "15 8 * * *"
+    }
+  ],
   "redirects": [
     {
       "source": "/shops/join",

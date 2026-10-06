@@ -30,12 +30,34 @@
 -- photos. The older role column (owner / organizer / viewer) is not a photo
 -- gate: any non-chamber row on the event can moderate.
 --
--- Retention: public.purge_expired_checkin_selfies() deletes selfie objects
--- and clears paths 90 days after crawls.ends_at, unless the photo is still
--- approved, publicly opted in, and meets the crawl age bar (18+ coffee,
--- 21+ pub). Crawls with a null ends_at are skipped. pg_cron is scheduled
--- when the extension is available. If it is not, enable pg_cron and run
--- the schedule statements printed below.
+-- Retention: SQL never deletes storage.objects. Deleting those rows can
+-- leave the file bytes behind. public.enqueue_expired_visit_photo_files()
+-- (also named public.purge_expired_checkin_selfies()) inserts one
+-- public.photo_file_deletions row per object, then clears the path.
+-- Bytes are removed only by the Storage API.
+--
+-- Scheduler: Vercel Cron calls GET /api/visit-photo-files every day at
+-- 08:15 UTC (vercel.json, "15 8 * * *"). Set CRON_SECRET in Vercel.
+-- Vercel sends Authorization: Bearer <CRON_SECRET>. A missing or wrong
+-- secret returns 401 and deletes nothing. POST /api/visit-photo-files
+-- with the signed-in user's access token runs at once when a guest
+-- changes photo choices or a moderator hides, rejects, unpublishes, or
+-- deletes. Approve replaces the display JPEG through a Storage upload.
+--
+-- Failure: 401, 429, 5xx, or a network error increments attempts, stores
+-- last_error, clears claimed_at, and leaves deleted_at null. The route
+-- returns 500 so the cron run shows as failed. The next day's cron, and
+-- any later POST for that id, retries the same row. A pending row is
+-- never dropped, so a failed delete cannot become a silent orphan.
+-- HTTP 404, or HTTP 200 with an empty list, means the object is already
+-- gone: the row is marked deleted and is not retried. A claim older than
+-- 10 minutes is taken again, so a crashed run is retried too. If a stamp
+-- points at that path again, the row is closed and the live file stays.
+--
+-- pg_cron does not delete file bytes. When the extension exists it may
+-- still call public.release_all_queued_visit_photos() every 10 minutes.
+-- The Vercel route calls that status-only release as well, then enqueues
+-- the 90-day paths and the abandoned uploads, then deletes each object.
 --
 -- Pub crawls are crawls.type = 'pub' (see private.crawl_is_pub).
 --   * The age tick is 21+. Coffee stays 18+.
@@ -567,6 +589,12 @@ as $function$
   );
 $function$;
 
+-- Originals only. The guest can read their own folder. Staff can read any.
+-- A person or business organizer can read an eligible coffee original.
+-- Chamber kind fails can_moderate_visit_photos, so a chamber organizer
+-- gets no original for coffee or pub. owns_business is not a grant: a shop
+-- cannot read an original. Pub originals are staff-only (can_moderate is
+-- staff-only there, and crawl_is_pub is rejected again below).
 create or replace function private.can_read_checkin_selfie(p_name text)
 returns boolean
 language sql
@@ -587,33 +615,101 @@ as $function$
     );
 $function$;
 
+-- Queue of object paths whose bytes still need a Storage API delete.
+-- SQL inserts here and clears the stamp path in the same transaction.
+-- deleted_at stays null until the API delete succeeds or the object is
+-- already gone. A failed attempt must not delete the row.
+create table if not exists public.photo_file_deletions (
+  id uuid primary key default gen_random_uuid(),
+  bucket_id text not null,
+  object_path text not null,
+  stamp_id uuid,
+  reason text not null,
+  attempts integer not null default 0,
+  last_error text,
+  created_at timestamptz not null default now(),
+  claimed_at timestamptz,
+  deleted_at timestamptz,
+  constraint photo_file_deletions_bucket_check
+    check (bucket_id = any (array['checkin-selfies'::text, 'checkin-display'::text]))
+);
+
+create unique index if not exists photo_file_deletions_open_path
+  on public.photo_file_deletions (bucket_id, object_path)
+  where deleted_at is null;
+
+alter table public.photo_file_deletions enable row level security;
+
+revoke all on table public.photo_file_deletions from public, anon, authenticated;
+grant select, insert, update, delete on table public.photo_file_deletions to service_role;
+
+comment on table public.photo_file_deletions is
+  'Paths waiting for a Storage API delete. Pending rows (deleted_at is null) are retried. They are not removed when a delete fails.';
+
+create or replace function private.enqueue_photo_file_deletion(
+  p_bucket text,
+  p_path text,
+  p_stamp uuid,
+  p_reason text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path to ''
+as $function$
+declare
+  v_id uuid;
+  v_path text := btrim(coalesce(p_path, ''));
+begin
+  if v_path = '' then
+    return null;
+  end if;
+  if p_bucket not in ('checkin-selfies', 'checkin-display') then
+    raise exception 'Unknown bucket';
+  end if;
+
+  insert into public.photo_file_deletions (bucket_id, object_path, stamp_id, reason)
+  values (p_bucket, v_path, p_stamp, coalesce(nullif(btrim(p_reason), ''), 'unspecified'))
+  on conflict (bucket_id, object_path) where deleted_at is null
+  do nothing
+  returning id into v_id;
+
+  if v_id is null then
+    select d.id into v_id
+    from public.photo_file_deletions d
+    where d.bucket_id = p_bucket
+      and d.object_path = v_path
+      and d.deleted_at is null
+    limit 1;
+  end if;
+
+  return v_id;
+end;
+$function$;
+
+-- Stops the public site from linking the display copy, and records the
+-- path for a Storage API delete. Does not delete storage.objects.
 create or replace function private.unpublish_visit_photo(p_stamp uuid)
-returns void
+returns uuid
 language plpgsql
 security definer
 set search_path to ''
 as $function$
 declare
   v_path text;
+  v_id uuid;
 begin
   select s.public_display_path into v_path
   from public.stamps s
   where s.id = p_stamp;
 
-  if v_path is not null and btrim(v_path) <> '' then
-    begin
-      delete from storage.objects
-      where bucket_id = 'checkin-display'
-        and name = v_path;
-    exception
-      when others then
-        raise warning 'Could not delete display object %: %', v_path, sqlerrm;
-    end;
-  end if;
+  v_id := private.enqueue_photo_file_deletion('checkin-display', v_path, p_stamp, 'unpublish');
 
   update public.stamps
   set public_display_path = null
   where id = p_stamp;
+
+  return v_id;
 end;
 $function$;
 
@@ -629,6 +725,7 @@ revoke all on function private.validate_checkin(text, text, text, double precisi
 revoke all on function private.checkin_selfie_path_ok(text) from public;
 revoke all on function private.display_photo_path_ok(text) from public;
 revoke all on function private.can_read_checkin_selfie(text) from public;
+revoke all on function private.enqueue_photo_file_deletion(text, text, uuid, text) from public;
 revoke all on function private.unpublish_visit_photo(uuid) from public;
 
 grant execute on function private.is_hc_staff() to authenticated, service_role;
@@ -709,12 +806,13 @@ create policy checkin_display_update
     and private.display_photo_path_ok(name)
   );
 
+-- No SELECT policy on checkin-display. The bucket stays public, so a known
+-- public URL still loads an approved JPEG on the public site. Anon, chamber
+-- organizers, and shops cannot list or download display objects through
+-- the storage API. Originals stay on checkin-selfies under
+-- can_read_checkin_selfie (owner, staff, or a person/business coffee
+-- organizer). Chamber kind is not in that list for any crawl type.
 drop policy if exists checkin_display_select on storage.objects;
-create policy checkin_display_select
-  on storage.objects
-  for select
-  to anon, authenticated
-  using (bucket_id = 'checkin-display');
 
 create or replace function private.can_delete_display_photo(p_name text)
 returns boolean
@@ -768,17 +866,27 @@ declare
   v_meta jsonb;
   v_id uuid;
   v_expires timestamptz;
+  v_old record;
+  v_del uuid;
+  v_deletions uuid[] := array[]::uuid[];
 begin
   v_meta := private.validate_checkin(p_crawl, p_business, p_code, p_lat, p_lng);
 
-  delete from storage.objects o
-  using public.checkin_sessions s
-  where o.bucket_id = 'checkin-selfies'
-    and s.user_id = v_uid
-    and s.crawl_id = p_crawl
-    and s.business_id = p_business
-    and s.completed_at is null
-    and o.name = (s.user_id::text || '/' || s.id::text || '.jpg');
+  for v_old in
+    select s.id, (s.user_id::text || '/' || s.id::text || '.jpg') as object_path
+    from public.checkin_sessions s
+    where s.user_id = v_uid
+      and s.crawl_id = p_crawl
+      and s.business_id = p_business
+      and s.completed_at is null
+  loop
+    v_del := private.enqueue_photo_file_deletion(
+      'checkin-selfies', v_old.object_path, null, 'replaced_checkin'
+    );
+    if v_del is not null then
+      v_deletions := array_append(v_deletions, v_del);
+    end if;
+  end loop;
 
   delete from public.checkin_sessions s
   where s.user_id = v_uid
@@ -799,7 +907,8 @@ begin
     'shop_name', v_meta->>'shop_name',
     'expires_at', v_expires,
     'min_age', private.crawl_min_age(p_crawl),
-    'crawl_type', case when private.crawl_is_pub(p_crawl) then 'pub' else 'coffee' end
+    'crawl_type', case when private.crawl_is_pub(p_crawl) then 'pub' else 'coffee' end,
+    'file_deletions', to_jsonb(v_deletions)
   );
 end;
 $function$;
@@ -1000,6 +1109,8 @@ declare
   v_age boolean := coalesce(p_age, false);
   v_social boolean := coalesce(p_social, false);
   v_status text;
+  v_del uuid;
+  v_deletions uuid[] := array[]::uuid[];
 begin
   if v_uid is null then
     raise exception 'Not authenticated';
@@ -1015,7 +1126,10 @@ begin
   end if;
 
   if not (v_public and v_age) then
-    perform private.unpublish_visit_photo(p_stamp);
+    v_del := private.unpublish_visit_photo(p_stamp);
+    if v_del is not null then
+      v_deletions := array_append(v_deletions, v_del);
+    end if;
     v_status := 'staff_only';
     v_public := false;
   elsif v_row.moderation_status = 'approved'
@@ -1036,7 +1150,10 @@ begin
      and v_row.age_confirmed then
     v_status := 'rejected';
   else
-    perform private.unpublish_visit_photo(p_stamp);
+    v_del := private.unpublish_visit_photo(p_stamp);
+    if v_del is not null then
+      v_deletions := array_append(v_deletions, v_del);
+    end if;
     v_status := 'pending';
   end if;
 
@@ -1052,7 +1169,8 @@ begin
     'public_opt_in', (v_status <> 'staff_only') and v_public and v_age,
     'age_confirmed', v_age,
     'social_opt_in', v_social,
-    'moderation_status', v_status
+    'moderation_status', v_status,
+    'file_deletions', to_jsonb(v_deletions)
   );
 end;
 $function$;
@@ -1537,6 +1655,8 @@ declare
   v_action text := lower(btrim(coalesce(p_action, '')));
   v_expected text;
   v_placed text;
+  v_del uuid;
+  v_deletions uuid[] := array[]::uuid[];
 begin
   select * into v_row from public.stamps where id = p_stamp;
   if not found then
@@ -1571,22 +1691,38 @@ begin
     end if;
     v_placed := private.place_approved_visit_photo(p_stamp, v_expected);
   elsif v_action in ('hide', 'unpublish') then
-    perform private.unpublish_visit_photo(p_stamp);
+    v_del := private.unpublish_visit_photo(p_stamp);
+    if v_del is not null then
+      v_deletions := array_append(v_deletions, v_del);
+    end if;
     update public.stamps
     set moderation_status = 'hidden',
         decided_at = now()
     where id = p_stamp;
   elsif v_action = 'reject' then
-    perform private.unpublish_visit_photo(p_stamp);
+    v_del := private.unpublish_visit_photo(p_stamp);
+    if v_del is not null then
+      v_deletions := array_append(v_deletions, v_del);
+    end if;
     update public.stamps
     set moderation_status = 'rejected',
         decided_at = now()
     where id = p_stamp;
   elsif v_action = 'delete' then
-    perform private.unpublish_visit_photo(p_stamp);
+    v_del := private.unpublish_visit_photo(p_stamp);
+    if v_del is not null then
+      v_deletions := array_append(v_deletions, v_del);
+    end if;
+    v_del := private.enqueue_photo_file_deletion(
+      'checkin-selfies', v_row.selfie_path, p_stamp, 'moderation_delete'
+    );
+    if v_del is not null then
+      v_deletions := array_append(v_deletions, v_del);
+    end if;
     update public.stamps
     set moderation_status = 'deleted',
-        public_opt_in = false
+        public_opt_in = false,
+        selfie_path = null
     where id = p_stamp;
   elsif v_action = 'dismiss_reports' then
     update public.photo_reports
@@ -1600,7 +1736,8 @@ begin
   return jsonb_build_object(
     'stamp_id', p_stamp,
     'action', v_action,
-    'moderation_status', coalesce(v_placed, (select s.moderation_status from public.stamps s where s.id = p_stamp))
+    'moderation_status', coalesce(v_placed, (select s.moderation_status from public.stamps s where s.id = p_stamp)),
+    'file_deletions', to_jsonb(v_deletions)
   );
 end;
 $function$;
@@ -1690,10 +1827,11 @@ end;
 $function$;
 
 -- ---------------------------------------------------------------------------
--- Retention
+-- Retention. These functions enqueue paths. They do not delete bytes.
+-- /api/visit-photo-files calls the Storage API for each queued row.
 -- ---------------------------------------------------------------------------
 
-create or replace function public.purge_expired_checkin_selfies()
+create or replace function public.enqueue_expired_visit_photo_files()
 returns integer
 language plpgsql
 security definer
@@ -1716,19 +1854,14 @@ begin
         and s.public_display_path is not null
       )
   loop
-    begin
-      delete from storage.objects
-      where bucket_id = 'checkin-selfies'
-        and name = r.selfie_path;
-      if r.public_display_path is not null then
-        delete from storage.objects
-        where bucket_id = 'checkin-display'
-          and name = r.public_display_path;
-      end if;
-    exception
-      when others then
-        raise warning 'Could not delete selfie %: %', r.selfie_path, sqlerrm;
-    end;
+    perform private.enqueue_photo_file_deletion(
+      'checkin-selfies', r.selfie_path, r.id, 'retention'
+    );
+    if r.public_display_path is not null and btrim(r.public_display_path) <> '' then
+      perform private.enqueue_photo_file_deletion(
+        'checkin-display', r.public_display_path, r.id, 'retention'
+      );
+    end if;
 
     update public.stamps
     set selfie_path = null,
@@ -1737,17 +1870,16 @@ begin
     n := n + 1;
   end loop;
 
-  begin
-    delete from storage.objects o
-    using public.checkin_sessions s
-    where o.bucket_id = 'checkin-selfies'
-      and s.completed_at is null
+  for r in
+    select s.id, (s.user_id::text || '/' || s.id::text || '.jpg') as object_path
+    from public.checkin_sessions s
+    where s.completed_at is null
       and s.expires_at < now() - interval '2 days'
-      and o.name = (s.user_id::text || '/' || s.id::text || '.jpg');
-  exception
-    when others then
-      raise warning 'Could not delete abandoned selfies: %', sqlerrm;
-  end;
+  loop
+    perform private.enqueue_photo_file_deletion(
+      'checkin-selfies', r.object_path, null, 'abandoned_checkin'
+    );
+  end loop;
 
   delete from public.checkin_sessions
   where completed_at is null
@@ -1757,8 +1889,168 @@ begin
 end;
 $function$;
 
+create or replace function public.purge_expired_checkin_selfies()
+returns integer
+language sql
+security definer
+set search_path to ''
+as $function$
+  select public.enqueue_expired_visit_photo_files();
+$function$;
+
+comment on function public.enqueue_expired_visit_photo_files() is
+  'Queues selfie and display paths 90 days after crawls.ends_at unless the photo is still approved, opted in, and meets the age bar (18+ coffee, 21+ pub). Also queues abandoned check-in uploads after 2 days. Does not delete storage.objects. Bytes are removed by GET /api/visit-photo-files.';
+
 comment on function public.purge_expired_checkin_selfies() is
-  'Deletes selfie storage rows and paths 90 days after crawls.ends_at unless the photo is still approved, opted in, and meets the crawl age bar (18+ coffee, 21+ pub). Queued and unlisted photos are deleted with everything else that is not still public. Also drops abandoned check-in uploads after 2 days.';
+  'Same as enqueue_expired_visit_photo_files. Does not delete file bytes.';
+
+-- Closes a queued delete when a stamp is using that path again, so a
+-- re-approved display file is not removed. No Storage call happens here.
+create or replace function public.close_live_photo_file_deletions()
+returns integer
+language plpgsql
+security definer
+set search_path to ''
+as $function$
+declare
+  n integer;
+begin
+  if coalesce(auth.role(), '') <> 'service_role' then
+    raise exception 'Not authorized' using errcode = '42501';
+  end if;
+
+  update public.photo_file_deletions d
+  set deleted_at = now(),
+      claimed_at = null,
+      last_error = 'closed without delete: a stamp still uses this path'
+  where d.deleted_at is null
+    and exists (
+      select 1
+      from public.stamps live
+      where (d.bucket_id = 'checkin-selfies' and live.selfie_path = d.object_path)
+         or (d.bucket_id = 'checkin-display' and live.public_display_path = d.object_path)
+    );
+
+  get diagnostics n = row_count;
+  return n;
+end;
+$function$;
+
+-- p_actor null is the cron (every pending row). A user id only claims rows
+-- that person may flush: staff, the guest who owns the stamp or folder,
+-- or a person/business organizer of a non-pub crawl. Chamber and shops
+-- are not included. service_role only.
+create or replace function public.claim_photo_file_deletions(
+  p_ids uuid[] default null,
+  p_actor uuid default null,
+  p_limit integer default 40
+)
+returns table (
+  id uuid,
+  bucket_id text,
+  object_path text,
+  stamp_id uuid
+)
+language plpgsql
+security definer
+set search_path to ''
+as $function$
+declare
+  v_limit integer := greatest(1, least(coalesce(p_limit, 40), 100));
+begin
+  if coalesce(auth.role(), '') <> 'service_role' then
+    raise exception 'Not authorized' using errcode = '42501';
+  end if;
+
+  return query
+  with picked as materialized (
+    select d.id
+    from public.photo_file_deletions d
+    where d.deleted_at is null
+      and (d.claimed_at is null or d.claimed_at < now() - interval '10 minutes')
+      and (p_ids is null or d.id = any (p_ids))
+      and (
+        p_actor is null
+        or exists (
+          select 1
+          from public.profiles p
+          where p.id = p_actor
+            and p.role = 'staff'
+        )
+        or exists (
+          select 1
+          from public.stamps s
+          where s.id = d.stamp_id
+            and s.user_id = p_actor
+        )
+        or split_part(d.object_path, '/', 1) = p_actor::text
+        or exists (
+          select 1
+          from public.stamps s
+          join public.crawl_organizers co on co.crawl_id = s.crawl_id
+          join public.organizers o on o.id = co.organizer_id
+          where s.id = d.stamp_id
+            and o.user_id = p_actor
+            and co.kind in ('person', 'business')
+            and not private.crawl_is_pub(s.crawl_id)
+        )
+      )
+      and not exists (
+        select 1
+        from public.stamps live
+        where (d.bucket_id = 'checkin-selfies' and live.selfie_path = d.object_path)
+           or (d.bucket_id = 'checkin-display' and live.public_display_path = d.object_path)
+      )
+    order by d.created_at
+    limit v_limit
+    for update of d skip locked
+  )
+  update public.photo_file_deletions d
+  set claimed_at = now()
+  from picked
+  where d.id = picked.id
+  returning d.id, d.bucket_id, d.object_path, d.stamp_id;
+end;
+$function$;
+
+create or replace function public.complete_photo_file_deletion(p_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path to ''
+as $function$
+begin
+  if coalesce(auth.role(), '') <> 'service_role' then
+    raise exception 'Not authorized' using errcode = '42501';
+  end if;
+
+  update public.photo_file_deletions
+  set deleted_at = now(),
+      last_error = null
+  where id = p_id
+    and deleted_at is null;
+end;
+$function$;
+
+create or replace function public.fail_photo_file_deletion(p_id uuid, p_error text)
+returns void
+language plpgsql
+security definer
+set search_path to ''
+as $function$
+begin
+  if coalesce(auth.role(), '') <> 'service_role' then
+    raise exception 'Not authorized' using errcode = '42501';
+  end if;
+
+  update public.photo_file_deletions
+  set attempts = attempts + 1,
+      last_error = left(coalesce(nullif(btrim(p_error), ''), 'delete failed'), 500),
+      claimed_at = null
+  where id = p_id
+    and deleted_at is null;
+end;
+$function$;
 
 -- Staff controls for the publish cap and the public listing flag.
 -- A null cap means no throttle (coffee). Zero holds every new approval in queue.
@@ -1876,6 +2168,11 @@ revoke all on function public.moderate_visit_photo(uuid, text, text) from public
 revoke all on function public.shop_visit_photos(text) from public;
 revoke all on function public.shop_set_photo_hidden(uuid, boolean) from public;
 revoke all on function public.purge_expired_checkin_selfies() from public;
+revoke all on function public.enqueue_expired_visit_photo_files() from public;
+revoke all on function public.close_live_photo_file_deletions() from public;
+revoke all on function public.claim_photo_file_deletions(uuid[], uuid, integer) from public;
+revoke all on function public.complete_photo_file_deletion(uuid) from public;
+revoke all on function public.fail_photo_file_deletion(uuid, text) from public;
 revoke all on function public.staff_set_photo_publish_cap(text, integer) from public;
 revoke all on function public.staff_set_visit_photos_listed(text, boolean) from public;
 revoke all on function public.release_all_queued_visit_photos() from public;
@@ -1896,12 +2193,18 @@ grant execute on function public.moderate_visit_photo(uuid, text, text) to authe
 grant execute on function public.shop_visit_photos(text) to authenticated, service_role;
 grant execute on function public.shop_set_photo_hidden(uuid, boolean) to authenticated, service_role;
 grant execute on function public.purge_expired_checkin_selfies() to service_role;
+grant execute on function public.enqueue_expired_visit_photo_files() to service_role;
+grant execute on function public.close_live_photo_file_deletions() to service_role;
+grant execute on function public.claim_photo_file_deletions(uuid[], uuid, integer) to service_role;
+grant execute on function public.complete_photo_file_deletion(uuid) to service_role;
+grant execute on function public.fail_photo_file_deletion(uuid, text) to service_role;
 grant execute on function public.staff_set_photo_publish_cap(text, integer) to authenticated, service_role;
 grant execute on function public.staff_set_visit_photos_listed(text, boolean) to authenticated, service_role;
 grant execute on function public.release_all_queued_visit_photos() to service_role;
 
--- Schedule the daily purge when pg_cron is available. A failure here must
--- not roll back the rest of this migration.
+-- pg_cron only promotes queued photos (status). It does not delete files.
+-- Byte deletion is GET /api/visit-photo-files on the Vercel cron.
+-- A failure here must not roll back the rest of this migration.
 do $cron$
 declare
   v_schema text;
@@ -1910,7 +2213,7 @@ begin
     create extension if not exists pg_cron;
   exception
     when others then
-      raise notice 'pg_cron is not available (%). After enabling it, schedule both jobs: select cron.schedule(''purge-checkin-selfies'', ''15 8 * * *'', ''select public.purge_expired_checkin_selfies()''); select cron.schedule(''release-queued-visit-photos'', ''*/10 * * * *'', ''select public.release_all_queued_visit_photos()'');', sqlerrm;
+      raise notice 'pg_cron is not available (%). File bytes are deleted by GET /api/visit-photo-files (Vercel cron, 15 8 * * *, CRON_SECRET). Optional status release: select cron.schedule(''release-queued-visit-photos'', ''*/10 * * * *'', ''select public.release_all_queued_visit_photos()'');', sqlerrm;
       return;
   end;
 
@@ -1920,7 +2223,7 @@ begin
   where e.extname = 'pg_cron';
 
   if v_schema is null then
-    raise notice 'pg_cron extension was not created. Schedule both jobs once it is available: select cron.schedule(''purge-checkin-selfies'', ''15 8 * * *'', ''select public.purge_expired_checkin_selfies()''); select cron.schedule(''release-queued-visit-photos'', ''*/10 * * * *'', ''select public.release_all_queued_visit_photos()'');';
+    raise notice 'pg_cron extension was not created. File bytes are deleted by GET /api/visit-photo-files. Optional: select cron.schedule(''release-queued-visit-photos'', ''*/10 * * * *'', ''select public.release_all_queued_visit_photos()'');';
     return;
   end if;
 
@@ -1939,12 +2242,9 @@ begin
   end;
 
   execute format('select %I.schedule($1, $2, $3)', v_schema)
-    using 'purge-checkin-selfies', '15 8 * * *', 'select public.purge_expired_checkin_selfies()';
-
-  execute format('select %I.schedule($1, $2, $3)', v_schema)
     using 'release-queued-visit-photos', '*/10 * * * *', 'select public.release_all_queued_visit_photos()';
 exception
   when others then
-    raise notice 'Could not schedule selfie jobs (%). Run: select cron.schedule(''purge-checkin-selfies'', ''15 8 * * *'', ''select public.purge_expired_checkin_selfies()''); select cron.schedule(''release-queued-visit-photos'', ''*/10 * * * *'', ''select public.release_all_queued_visit_photos()'');', sqlerrm;
+    raise notice 'Could not schedule the photo release (%). File bytes are still deleted by GET /api/visit-photo-files. Optional: select cron.schedule(''release-queued-visit-photos'', ''*/10 * * * *'', ''select public.release_all_queued_visit_photos()'');', sqlerrm;
 end
 $cron$;

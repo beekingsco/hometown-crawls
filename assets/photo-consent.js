@@ -41,6 +41,7 @@
 
   var cameraLine = "Your selfie confirms your visit. Hometown Crawls staff can see it; it's only public if you check the box.";
   var cameraHelp = "Ask the barista for help / enable camera";
+  var coffeeCheckinNotice = "The 18+ tick is only for showing this photo publicly. Your stamp does not depend on that box or the public opt-in.";
 
   // Pub-only sentences for Chris.
   var pubCameraLine = "Your selfie confirms your visit. Hometown Crawls staff can see it. It is public only if you opt in and confirm you are 21 or older.";
@@ -63,7 +64,7 @@
       "<h3>Visit photos</h3>" +
       "<p>A live selfie confirms that you visited the shop. Hometown Crawls staff can see that photo. It is not shown to the shop or to the crawl organizer unless you opt in, confirm your age, and the photo is approved.</p>" +
       "<ul>" +
-      "<li>Coffee crawls ask you to confirm you are 18 or older before a photo can be public.</li>" +
+      "<li>Coffee crawls ask you to confirm you are 18 or older before a photo can be public. " + coffeeCheckinNotice + "</li>" +
       "<li>Pub crawls ask you to confirm you are 21 or older. Without that tick, a pub photo is not eligible for the public site.</li>" +
       "<li>The public opt-in box starts unchecked. Leaving it unchecked does not affect your stamp. The photo stays with you and Hometown Crawls staff.</li>" +
       "<li>Coffee photos that are opted in and 18+ are approved by a person or business organizer. If the only organizer is a chamber, Hometown Crawls staff approve them.</li>" +
@@ -87,6 +88,7 @@
     isPub: isPub,
     cameraLine: cameraLine,
     cameraHelp: cameraHelp,
+    coffeeCheckinNotice: coffeeCheckinNotice,
     pubCameraLine: pubCameraLine,
     pubCameraHelp: pubCameraHelp,
     pubJoinNotice: pubJoinNotice,

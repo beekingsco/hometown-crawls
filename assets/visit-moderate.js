@@ -65,6 +65,15 @@
           p_display_path: null
         });
         if (res.error) throw res.error;
+        if (window.HCVisitPhotoFiles) {
+          var flushed = await window.HCVisitPhotoFiles.flush(
+            state.sb,
+            window.HCVisitPhotoFiles.idsFrom(res.data)
+          );
+          if (!flushed.ok) {
+            state.error = flushed.error || "The photo is off the site. File removal will be retried.";
+          }
+        }
       }
       var next = state.index;
       await loadQueue();

@@ -83,6 +83,17 @@
         err.classList.add("show");
         return;
       }
+      if (window.HCVisitPhotoFiles) {
+        var flushed = await window.HCVisitPhotoFiles.flush(
+          sb,
+          window.HCVisitPhotoFiles.idsFrom(saved.data)
+        );
+        if (!flushed.ok) {
+          err.textContent = flushed.error || "The photo is off the site. File removal will be retried.";
+          err.classList.add("show");
+          return;
+        }
+      }
       ok.textContent = "Saved.";
       ok.classList.add("show");
       load(sb);

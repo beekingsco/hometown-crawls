@@ -76,7 +76,7 @@
       listEl.innerHTML = apps.slice().reverse().map((a, i) => {
         const when = a.created_at ? new Date(a.created_at).toLocaleString() : "—";
         const town = a.town || a.city || "";
-        const notes = a.notes || a.payout_notes || "";
+        const notes = a.notes || "";
         return `
           <div class="shop-row" style="${i === apps.length - 1 ? "" : ""}">
             <div class="shop-avatar">${esc((a.name || "?").slice(0, 2).toUpperCase())}</div>

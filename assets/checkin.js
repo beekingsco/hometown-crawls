@@ -352,8 +352,8 @@
     pending.client = client;
     root.querySelector(".hc-checkin-shop").textContent = (session.shop_name || "This shop") + " · " + (session.crawl_name || "");
     var notice = root.querySelector(".hc-checkin-notice");
-    notice.hidden = !pub;
-    notice.textContent = pub ? (c.pubCheckinNotice || "") : "";
+    notice.hidden = false;
+    notice.textContent = pub ? (c.pubCheckinNotice || "") : (c.coffeeCheckinNotice || "");
     root.querySelector(".hc-checkin-line").textContent = pub ? (c.pubCameraLine || c.cameraLine || "") : (c.cameraLine || "");
     root.querySelector(".hc-opt-public").checked = false;
     root.querySelector(".hc-opt-age").checked = false;
@@ -401,6 +401,12 @@
         throw new Error("Photo check-in isn’t turned on yet.");
       }
       throw new Error(plainError(started.error));
+    }
+
+    var prior = (started.data && started.data.file_deletions) || [];
+    if (window.HCVisitPhotoFiles && prior.length) {
+      // A failed call leaves the queue row. The daily cron retries those bytes.
+      window.HCVisitPhotoFiles.flush(client, prior).catch(function () {});
     }
 
     return new Promise(function (resolve, reject) {
