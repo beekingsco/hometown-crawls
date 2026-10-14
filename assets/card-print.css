@@ -3,7 +3,7 @@
 .card-toolbar h1 { font-family: Fraunces, Georgia, serif; }
 .card-toolbar .row { flex-wrap: wrap; }
 .card-sheet {
-  width: min(100% - 24px, 430px);
+  width: min(100% - 24px, 560px);
   margin: 14px auto;
 }
 .passport-card {
@@ -17,7 +17,6 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  aspect-ratio: 5.5 / 8.5;
 }
 .card-lights { width: 100%; height: 34px; display: block; }
 .card-print-page .passport-card h1,
@@ -137,44 +136,6 @@
 .card-line b { font-weight: 600; color: #243028; min-height: 1em; }
 .card-turnin, .card-turnin-list { margin: 6px 0 0; font-size: 0.68rem; line-height: 1.35; color: #1f4d36; }
 .card-turnin { font-weight: 700; }
-.card-fold {
-  border-top: 2px dashed #1f4d36;
-  margin: 10px 18% 4px;
-  height: 0;
-  position: relative;
-}
-.card-fold span {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  transform: translate(-50%, -50%);
-  background: #f8f2e7;
-  color: #1f4d36;
-  font-family: Outfit, system-ui, sans-serif;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  padding: 0 8px;
-}
-
-@media (min-width: 960px) {
-  .card-sheet {
-    width: min(100% - 32px, 980px);
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr);
-    align-items: stretch;
-    gap: 0;
-  }
-  .card-fold {
-    border-top: 0;
-    border-left: 2px dashed #1f4d36;
-    margin: 6% 0;
-    height: auto;
-    width: 0;
-    justify-self: center;
-  }
-}
 
 @media (max-width: 380px) {
   .stamp-spot { width: 36px; height: 36px; font-size: 12px; }
@@ -187,47 +148,33 @@
 }
 
 @media print {
-  @page { size: letter landscape; margin: 0; }
+  @page { size: letter portrait; margin: 0; }
   html, body, main, #card-sheets {
     margin: 0 !important;
     padding: 0 !important;
     background: #fff !important;
-    height: 8.5in;
+    height: 11in;
     overflow: hidden !important;
   }
   .site-header, .site-footer, .card-toolbar { display: none !important; }
   .card-sheet {
     box-sizing: border-box;
-    width: 11in;
-    height: 8.5in;
-    margin: 0;
-    padding: 0.28in 0.32in;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 0.2in minmax(0, 1fr);
-    align-items: stretch;
+    width: 8.5in;
+    height: 11in;
+    margin: 0 auto;
+    padding: 0.32in;
     overflow: hidden;
     break-after: avoid;
     page-break-after: avoid;
     break-inside: avoid;
   }
-  .card-fold {
-    border: 0;
-    margin: 0.12in 0;
-    height: auto;
-    width: 2px;
-    justify-self: center;
-    align-self: stretch;
-    background: repeating-linear-gradient(to bottom, #1f4d36 0 7px, transparent 7px 14px);
-  }
-  .card-fold span { display: none; }
   .passport-card {
-    aspect-ratio: auto;
-    height: 7.94in;
+    height: 10.36in;
     width: auto;
     min-height: 0;
     overflow: hidden;
-    border-width: 6px;
-    padding: 4px 6px 5px;
+    border-width: 7px;
+    padding: 6px 10px 8px;
     break-inside: avoid;
     page-break-inside: avoid;
   }

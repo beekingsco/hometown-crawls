@@ -40,10 +40,11 @@ test("paper signup copy, terms, and consent stay on the guest form", () => {
   assert.doesNotMatch(account, /signInAnonymously/);
 });
 
-test("printable card is one landscape page with a fold line", () => {
+test("printable card is one portrait page with stamps and the shop key", () => {
   assert.match(cardHtml, /id="card-sheets"/);
   assert.match(cardHtml, /id="card-print"/);
   assert.match(cardHtml, /Download &amp; print/);
+  assert.match(cardHtml, /one portrait letter page/);
   assert.doesNotMatch(cardHtml, /id="card-print-single"/);
   assert.match(cardJs, /Bring your finished card to a co-organizer shop \(e\.g\. Holiday Cafe, Anthem\)\./);
   assert.match(cardJs, /HOLIDAY EDITION/);
@@ -51,19 +52,17 @@ test("printable card is one landscape page with a fold line", () => {
   assert.match(cardJs, /USE THIS KEY TO FIND YOUR NEXT STOP/);
   assert.match(cardJs, /SIP/);
   assert.match(cardJs, /GOOD COFFEE \/ BRIGHTER DAYS/);
-  assert.match(cardJs, /LOCAL COFFEE \/ STRONGER TOGETHER/);
-  assert.match(cardJs, /card-fold/);
   assert.match(cardJs, /mascot\.png/);
   assert.doesNotMatch(cardJs, /wordmark-phone\.png/);
+  assert.doesNotMatch(cardJs, /card-fold/);
   assert.doesNotMatch(cardJs, /initials/i);
   const css = read("assets/card-print.css");
-  assert.match(css, /size: letter landscape/);
-  assert.match(css, /dashed #1f4d36/);
+  assert.match(css, /size: letter portrait/);
   assert.match(css, /#1f4d36/i);
   assert.match(css, /#f8f4ea/i);
   assert.match(css, /width: 20%/);
   assert.match(css, /var\(--stamp/);
-  assert.match(css, /height: 8\.5in/);
+  assert.match(css, /height: 11in/);
 });
 
 test("stamp numbers follow the alphabetical shop key", () => {

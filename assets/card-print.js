@@ -182,72 +182,58 @@
     return row;
   }
 
-  function face(kind, model) {
-    var card = el("article", "passport-card passport-" + kind);
-    card.append(lights());
-    if (kind === "front") {
-      card.append(el("h1", "card-crawl", model.crawlName || "Hometown crawl"));
-      var edition = subtitle(model.crawlName, model.startsAt, model.endsAt);
-      if (edition) card.append(el("p", "card-edition", edition));
-      card.append(tagline());
-      card.append(stampGrid(model.shops || []));
-      var foot = el("div", "card-foot");
-      foot.append(treeScene());
-      var center = el("div", "card-center");
-      var mascot = document.createElement("img");
-      mascot.className = "card-mascot";
-      mascot.src = "/assets/home/mascot.png";
-      mascot.alt = "";
-      center.append(mascot);
-      center.append(motto("GOOD COFFEE / BRIGHTER DAYS"));
-      foot.append(center);
-      foot.append(hollyScene());
-      card.append(foot);
-      return card;
-    }
-    card.append(el("h2", "card-back-title", "PARTICIPATING COFFEE SHOPS"));
-    card.append(el("p", "card-key-title", "USE THIS KEY TO FIND YOUR NEXT STOP"));
+  function face(model) {
+    var card = el("article", "passport-card");
     var shops = model.shops || [];
     var half = Math.ceil(shops.length / 2);
+    card.append(lights());
+    card.append(el("h1", "card-crawl", model.crawlName || "Hometown crawl"));
+    var edition = subtitle(model.crawlName, model.startsAt, model.endsAt);
+    if (edition) card.append(el("p", "card-edition", edition));
+    card.append(tagline());
+    card.append(stampGrid(shops));
+    card.append(el("h2", "card-back-title", "PARTICIPATING COFFEE SHOPS"));
+    card.append(el("p", "card-key-title", "USE THIS KEY TO FIND YOUR NEXT STOP"));
     var key = el("div", "shop-key");
     key.append(shopColumn(shops.slice(0, half), 1));
     key.append(el("div", "shop-rule"));
     key.append(shopColumn(shops.slice(half), half + 1));
     card.append(key);
     card.append(playerBlock(model));
-    var backFoot = el("div", "card-back-foot");
-    backFoot.append(hollyScene());
-    backFoot.append(motto("LOCAL COFFEE / STRONGER TOGETHER"));
-    backFoot.append(treeScene());
-    card.append(backFoot);
+    var foot = el("div", "card-foot");
+    foot.append(treeScene());
+    var center = el("div", "card-center");
+    var mascot = document.createElement("img");
+    mascot.className = "card-mascot";
+    mascot.src = "/assets/home/mascot.png";
+    mascot.alt = "";
+    center.append(mascot);
+    center.append(motto("GOOD COFFEE / BRIGHTER DAYS"));
+    foot.append(center);
+    foot.append(hollyScene());
+    card.append(foot);
     return card;
   }
 
   function scaleFor(count) {
     var shops = Math.max(0, count || 0);
-    var rows = Math.max(1, Math.ceil(shops / 5));
-    var lines = Math.max(1, Math.ceil(shops / 2));
-    var boxes = lines * 1.45;
-    var stamp = Math.min(0.48, Math.max(0.22, 5.2 / rows - 0.08));
-    var list = Math.min(8.5, Math.max(5.5, (4.8 * 72) / boxes / 1.15));
-    var tight = stamp < 0.36 || list < 7.25;
+    var rows = Math.max(1, Math.ceil((shops || 1) / 5));
+    var lines = Math.max(1, Math.ceil((shops || 1) / 2));
+    var stampIn = Math.min(0.62, Math.max(0.22, 3.15 / rows));
+    var lineIn = Math.min(0.18, Math.max(0.095, 3.15 / lines));
+    var tight = rows > 5 || lines > 12;
     return {
-      stamp: stamp.toFixed(3) + "in",
-      list: list.toFixed(2) + "pt",
-      deco: tight ? "0.48in" : "0.64in",
-      lights: tight ? "0.26in" : "0.32in",
-      rowGap: tight ? "1px" : "2px"
+      stamp: stampIn.toFixed(3) + "in",
+      list: (lineIn * 72 / 1.2).toFixed(2) + "pt",
+      deco: tight ? "0.55in" : "0.82in",
+      lights: tight ? "0.28in" : "0.4in",
+      rowGap: tight ? "1px" : "3px"
     };
   }
 
   function sheet(model) {
     var page = el("section", "card-sheet");
-    var fold = el("div", "card-fold");
-    fold.setAttribute("aria-hidden", "true");
-    fold.append(el("span", null, "Fold"));
-    page.append(face("front", model));
-    page.append(fold);
-    page.append(face("back", model));
+    page.append(face(model));
     var scale = scaleFor((model.shops || []).length);
     page.style.setProperty("--stamp", scale.stamp);
     page.style.setProperty("--list", scale.list);
