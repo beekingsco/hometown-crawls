@@ -35,7 +35,6 @@
           <span class="brand-mark" id="brand-mark">☕</span>
           HOMETOWN CRAWLS
         </a>
-        <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav-links" id="nav-toggle"><span></span></button>
         <nav class="nav-links" id="nav-links">
           ${link("puyallup/holiday-coffee-crawl", "Find a crawl")}
           ${link("map.html", "Map")}
@@ -46,6 +45,10 @@
           ${link("organize.html", "Organize")}
           ${link("puyallup/coffee-crawl", "Shops")}
         </nav>
+        <div class="nav-end">
+          <a class="btn btn-primary nav-login" id="nav-login" href="${base}account.html">Log in</a>
+          <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav-links" id="nav-toggle"><span></span></button>
+        </div>
       </div>`;
 
     // Optional logo.jpg
@@ -65,6 +68,38 @@
       const open = links.classList.toggle("open");
       toggle.setAttribute("aria-expanded", open ? "true" : "false");
     });
+    paintLogin(el);
+  }
+
+  function sessionUser() {
+    try {
+      const raw = localStorage.getItem("sb-tatwbjuwufeqynpufodq-auth-token");
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      const user = parsed.user || (parsed.currentSession && parsed.currentSession.user) || null;
+      if (!user || user.is_anonymous || !user.email) return null;
+      return user;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function paintLogin(el) {
+    const link = el.querySelector("#nav-login");
+    if (!link) return;
+    const user = sessionUser();
+    const href = (window.HC && window.HC.base ? window.HC.base : "") + "account.html";
+    link.setAttribute("href", href);
+    if (!user) {
+      link.dataset.signed = "0";
+      link.innerHTML = "Log in";
+      link.setAttribute("aria-label", "Log in");
+      return;
+    }
+    const letter = String(user.email).trim().charAt(0).toUpperCase() || "Me";
+    link.dataset.signed = "1";
+    link.innerHTML = '<span class="nav-login-mark" aria-hidden="true">' + letter + '</span><span class="nav-login-words">My account</span>';
+    link.setAttribute("aria-label", "My account");
   }
 
   function injectFooter() {

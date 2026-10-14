@@ -30,7 +30,7 @@
     <div class="wrap-narrow page-hero">
       <p class="eyebrow">Account</p>
       <h1>Your passport home</h1>
-      <p>Email magic link or continue anonymously. No Google / Apple SSO.</p>
+      <p>Sign in with an email magic link. Stamps and prize entries stay on that account.</p>
     </div>
     <div class="wrap stack" id="account-app">
       <div class="demo-banner hidden" id="demo-banner" role="status">
@@ -40,6 +40,7 @@
       <div class="role-tabs hidden" id="role-tabs" role="tablist" aria-label="Account sections">
         <button type="button" id="tab-guest" role="tab" aria-controls="panel-guest" aria-selected="true">Guest</button>
         <button type="button" id="tab-store" role="tab" aria-controls="panel-store" aria-selected="false" class="hidden">Store</button>
+        <button type="button" id="tab-organizer" role="tab" aria-controls="panel-organizer" aria-selected="false" class="hidden">Organizer</button>
       </div>
 
       <div id="panel-guest" role="tabpanel" aria-labelledby="tab-guest">
@@ -50,11 +51,11 @@
           <label class="field"><span>Email</span>
             <input class="input" type="email" id="auth-email" placeholder="you@example.com" autocomplete="email" />
           </label>
-          <div class="row">
+          <label class="check"><input type="checkbox" id="contact-consent" /> I agree that participating stores and organizers can access my info to contact me about prizes and future offers.</label>
+          <div class="row mt-2">
             <button class="btn btn-primary" type="button" id="btn-magic">Send magic link</button>
-            <button class="btn btn-ghost" type="button" id="btn-anon">Continue anonymously</button>
           </div>
-          <p class="form-note">We’ll email a one-time sign-in link. No password required.</p>
+          <p class="form-note">We’ll email a one-time sign-in link. No password required. You can unsubscribe from offers later.</p>
         </div>
         <div id="auth-signed-in" class="hidden">
           <div class="row">
@@ -65,6 +66,41 @@
         <div class="form-success mt-2" id="auth-msg"></div>
         <div class="form-error mt-2" id="auth-err"></div>
       </div>
+
+      <div class="card" id="entries-card">
+        <p class="eyebrow">Prize drawing</p>
+        <h3 id="entries-line">Entries</h3>
+        <p class="muted small mt-1" id="entries-detail"></p>
+        <div class="progress mt-2" aria-hidden="true"><span id="entries-bar"></span></div>
+        <ul class="small mt-2" id="entries-ways"></ul>
+      </div>
+
+      <div class="card" id="bonus-card">
+        <h3>Shop bonus</h3>
+        <p class="muted small mt-1" id="bonus-copy">After you stamp a shop, an optional follow, tag, or review can add entries.</p>
+        <a class="btn btn-soft mt-2 hidden" id="bonus-link" target="_blank" rel="noopener noreferrer">Open the shop page</a>
+        <label class="field mt-2"><span>Post link, if you have one</span>
+          <input class="input" id="bonus-proof" placeholder="https://" />
+        </label>
+        <button class="btn btn-primary" type="button" id="bonus-confirm">I did this</button>
+        <p class="form-success mt-2" id="bonus-ok" role="status"></p>
+      </div>
+
+      <form class="card" id="guest-photo-form">
+        <h3>Photo from the crawl</h3>
+        <p class="muted small mt-1">Optional, including after a stamp. It does not change the stamp. PNG, JPG, or WebP, up to 5 MB.</p>
+        <label class="field mt-2"><span>Photo</span>
+          <input class="input" id="guest-photo-file" type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" />
+        </label>
+        <label class="field"><span>Shop, if you want</span>
+          <input class="input" id="guest-photo-shop" maxlength="80" placeholder="Shop name" />
+        </label>
+        <label class="check"><input type="checkbox" id="guest-photo-consent" required /> I give Hometown Crawls permission to show this photo on its website and social pages.</label>
+        <button class="btn btn-primary mt-2" type="submit">Upload photo</button>
+        <p class="form-success mt-2" id="guest-photo-ok" role="status"></p>
+        <p class="form-error mt-2" id="guest-photo-err" role="alert"></p>
+        <div class="photo-grid mt-2" id="my-photos"></div>
+      </form>
 
       <div class="card">
         <h3>Claim a stamp</h3>
@@ -176,7 +212,9 @@
             <h3>Post-stamp coupon</h3>
             <span class="pill pill-wait" data-demo-pill>DEMO DATA</span>
           </div>
-          <p class="muted small mt-1">Guests see this reward after they stamp your shop. Issued and redeemed counts below are a sample until live redemptions are connected.</p>
+          <p class="muted small mt-1">Off until you turn it on. Guests see this reward after they stamp your shop. Issued and redeemed counts below are a sample until live redemptions are connected.</p>
+          <label class="check mt-2"><input type="checkbox" id="coupon-enabled" /> Turn on the post-stamp reward</label>
+          <div id="coupon-fields" class="hidden">
           <label class="field mt-2"><span>Reward</span>
             <input class="input" id="coupon-reward" maxlength="140" placeholder="$1 off next drink" required />
           </label>
@@ -193,6 +231,73 @@
           </div>
           <p class="form-success mt-2" id="coupon-ok" role="status"></p>
           <p class="form-error mt-2" id="coupon-err" role="alert"></p>
+          </div>
+        </form>
+
+        <div class="card">
+          <div class="row" style="justify-content:space-between">
+            <h3>Counter code</h3>
+            <span class="pill pill-wait hidden" data-demo-pill>DEMO DATA</span>
+          </div>
+          <p class="code-big" id="store-code-big">ANTHEMCO</p>
+          <p class="muted small" id="code-note">The live counter code is ANTHEMCO until you generate a new per-crawl code.</p>
+          <div class="row mt-2">
+            <button class="btn btn-soft" type="button" id="btn-rotate-code">New code</button>
+            <button class="btn btn-ghost" type="button" id="btn-print-sign">Print counter sign</button>
+          </div>
+        </div>
+
+        <form class="card" id="listing-form">
+          <div class="row" style="justify-content:space-between">
+            <h3>Public listing</h3>
+            <span class="pill pill-wait hidden" data-demo-pill>DEMO DATA</span>
+          </div>
+          <p class="muted small mt-1">Same details as the shop page: header, photos, hours, and how guests find you. Stamp image and logo also feed the passport.</p>
+          <label class="field mt-2"><span>Header / shop name</span>
+            <input class="input" id="list-name" maxlength="200" />
+          </label>
+          <label class="field"><span>Stamp label</span>
+            <input class="input" id="list-stamp-label" maxlength="40" placeholder="Short name on the passport" />
+          </label>
+          <label class="field"><span>Address</span>
+            <input class="input" id="list-address" maxlength="300" />
+          </label>
+          <label class="field"><span>Phone</span>
+            <input class="input" id="list-phone" maxlength="40" />
+          </label>
+          <label class="field"><span>Hours</span>
+            <textarea class="input" id="list-hours" maxlength="500"></textarea>
+          </label>
+          <label class="field"><span>Description</span>
+            <textarea class="input" id="list-description" maxlength="600"></textarea>
+          </label>
+          <label class="field"><span>Website</span>
+            <input class="input" id="list-website" maxlength="300" placeholder="https://" />
+          </label>
+          <label class="field"><span>Instagram</span>
+            <input class="input" id="list-instagram" maxlength="100" placeholder="@yourshop" />
+          </label>
+          <div class="stamp-art-grid mt-2">
+            <div>
+              <p class="eyebrow">Cover</p>
+              <div class="crop-frame mt-1"><img id="preview-cover" alt="" class="hidden" /><span class="small muted" id="empty-cover">Square looks best</span></div>
+              <input class="input mt-1" id="file-cover" type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" />
+            </div>
+            <div>
+              <p class="eyebrow">Logo</p>
+              <div class="crop-frame mt-1"><img id="preview-logo" alt="" class="hidden" /><span class="small muted" id="empty-logo">Used if there is no stamp image</span></div>
+              <input class="input mt-1" id="file-list-logo" type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" />
+            </div>
+          </div>
+          <p class="eyebrow mt-2">Stamp image</p>
+          <div class="crop-frame mt-1"><img id="preview-stamp" alt="" class="hidden" /><span class="small muted" id="empty-stamp">Square PNG, JPG, or WebP, 2 MB</span></div>
+          <input class="input mt-1" id="file-list-stamp" type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" />
+          <p class="eyebrow mt-2">Gallery</p>
+          <div id="list-gallery" class="mt-1"></div>
+          <input class="input mt-1" id="file-gallery" type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" />
+          <button class="btn btn-primary mt-2" type="submit">Save listing</button>
+          <p class="form-success mt-2" id="list-ok" role="status"></p>
+          <p class="form-error mt-2" id="list-err" role="alert"></p>
         </form>
 
         <div class="card">
@@ -221,6 +326,63 @@
           <p class="muted small mt-2 hidden" id="guests-empty">No consented guests to show.</p>
         </div>
       </div>
+
+      <div id="panel-organizer" class="stack hidden" role="tabpanel" aria-labelledby="tab-organizer" hidden>
+        <div class="card">
+          <p class="eyebrow">Organizer</p>
+          <p id="org-who"></p>
+          <p class="demo-banner hidden" id="org-invite-banner"></p>
+          <label class="field mt-2"><span>Crawl</span>
+            <select class="input" id="org-crawl"></select>
+          </label>
+        </div>
+        <form class="card" id="org-details">
+          <h3>Title and dates</h3>
+          <label class="field mt-2"><span>Title</span>
+            <input class="input" id="org-title" maxlength="120" required />
+          </label>
+          <label class="field"><span>Starts</span>
+            <input class="input" id="org-start" type="date" required />
+          </label>
+          <label class="field"><span>Ends</span>
+            <input class="input" id="org-end" type="date" required />
+          </label>
+          <button class="btn btn-primary" type="submit">Save crawl</button>
+          <p class="form-success mt-2" id="org-ok" role="status"></p>
+          <p class="form-error mt-2" id="org-err" role="alert"></p>
+        </form>
+        <div class="card">
+          <h3>Stores</h3>
+          <div class="stat-grid mt-2">
+            <article class="card"><p class="eyebrow">Stores</p><p class="stat-value" id="org-total-stores">—</p></article>
+            <article class="card"><p class="eyebrow">Paid</p><p class="stat-value" id="org-total-paid">—</p></article>
+            <article class="card"><p class="eyebrow">Unpaid</p><p class="stat-value" id="org-total-unpaid">—</p></article>
+            <article class="card"><p class="eyebrow">Scans</p><p class="stat-value" id="org-total-scans">—</p></article>
+          </div>
+          <div class="stack mt-2" id="org-stores"></div>
+        </div>
+        <div class="card">
+          <h3>Guest photos</h3>
+          <p class="muted small mt-1">Approve or hide. Only approved photos show on the crawl page.</p>
+          <div class="stack mt-2" id="org-photos"></div>
+        </div>
+        <div class="card">
+          <div class="row" style="justify-content:space-between">
+            <h3>Team</h3>
+            <button class="btn btn-soft" type="button" id="btn-org-csv">Download consented guests</button>
+          </div>
+          <p class="muted small mt-1">Owners, organizers, co-organizers, and contributors see this tab. A contributor does not need a store. Chris Miller stays the owner of this crawl.</p>
+          <div class="stack mt-2" id="co-list"></div>
+          <form class="mt-2" id="co-invite-form">
+            <label class="field"><span>Invite a co-organizer by email</span>
+              <input class="input" id="co-email" type="email" placeholder="name@shop.com" />
+            </label>
+            <button class="btn btn-primary" type="submit">Create invite link</button>
+            <p class="form-success mt-2" id="co-ok" role="status"></p>
+            <p class="form-error mt-2" id="co-err" role="alert"></p>
+          </form>
+        </div>
+      </div>
     </div>
 
   </main>
@@ -233,6 +395,9 @@
   <script src="assets/crawl.js"></script>
   <script src="assets/store-demo.js"></script>
   <script src="assets/stamp-art.js"></script>
+  <script src="assets/store-listing.js"></script>
+  <script src="assets/organizer-panel.js"></script>
+  <script src="assets/guest-hub.js"></script>
   <script>
     function show(el, on) { el.classList.toggle("show", !!on); el.style.display = on ? "block" : "none"; }
     async function refreshAuth() {
@@ -240,11 +405,17 @@
       const status = document.getElementById("auth-status");
       const out = document.getElementById("auth-signed-out");
       const inn = document.getElementById("auth-signed-in");
-      if (s) {
-        const email = s.user.email || (s.user.is_anonymous ? "Anonymous session" : s.user.id.slice(0, 8));
-        status.textContent = "Signed in · " + email;
+      const signedIn = s && s.user && !s.user.is_anonymous && s.user.email;
+      if (signedIn) {
+        status.textContent = "Signed in · " + s.user.email;
         out.classList.add("hidden");
         inn.classList.remove("hidden");
+        try {
+          if (sessionStorage.getItem("hc-contact-consent") === "1" && new URLSearchParams(location.search).get("demo") !== "1") {
+            const saved = await HCCrawl.client().rpc("record_guest_consent");
+            if (!saved.error) sessionStorage.removeItem("hc-contact-consent");
+          }
+        } catch (e) {}
       } else {
         status.textContent = "Not signed in";
         out.classList.remove("hidden");
@@ -286,23 +457,14 @@
       document.getElementById("btn-magic").onclick = async () => {
         show(msg, false); show(err, false);
         const email = document.getElementById("auth-email").value.trim();
+        const consent = document.getElementById("contact-consent");
         if (!email) { err.textContent = "Enter your email."; show(err, true); return; }
+        if (!consent || !consent.checked) { err.textContent = "Check the box so stores and organizers can contact you about prizes and offers."; show(err, true); return; }
+        try { sessionStorage.setItem("hc-contact-consent", "1"); } catch (e) {}
         try {
           await HCCrawl.magicLink(email);
           msg.textContent = "Check your email for the magic link.";
           show(msg, true);
-        } catch (e) { err.textContent = e.message || String(e); show(err, true); }
-      };
-      document.getElementById("btn-anon").onclick = async () => {
-        show(msg, false); show(err, false);
-        try {
-          await HCCrawl.ensureAuth();
-          const s = await HCCrawl.getSession();
-          if (!s) throw new Error("Anonymous sign-in is not enabled on this project yet. Use email magic link.");
-          msg.textContent = "Anonymous session ready.";
-          show(msg, true);
-          await refreshAuth();
-          await loadPassportUI(shops);
         } catch (e) { err.textContent = e.message || String(e); show(err, true); }
       };
       document.getElementById("btn-signout").onclick = async () => {

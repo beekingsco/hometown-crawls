@@ -33,12 +33,33 @@ window.__HC_ENV__ = {
       shopScans: 64,
       firstTime: 27
     },
+    sampleStamps: 5,
+    bonus: {
+      kind: "follow",
+      label: "Follow @anthemcoffee on Instagram",
+      url: "https://www.instagram.com/anthemcoffee",
+      entries: 2
+    },
     coupon: {
+      enabled: false,
       reward: "$1 off next drink",
       expiryDays: 30,
       issued: 64,
       redeemed: 11
     },
+    listing: {
+      address: "210 W Pioneer Ave, Puyallup, WA 98371",
+      phone: "2539882492",
+      hours: "",
+      description: "",
+      website: "",
+      instagram: ""
+    },
+    dates: { start: "2026-11-01", end: "2026-12-31", label: "Nov 1 – Dec 31, 2026" },
+    gamePath: "/play",
+    gameHost: "hometowncrawls.com/play",
+    crawlUrl: "https://www.hometowncrawls.com/puyallup/holiday-coffee-crawl",
+    codeAlphabet: "ABCDEFGHJKLMNPQRSTUVWXYZ23456789",
     /* Consented guests only. Rows without consentedAt are never shown or exported. */
     guests: [
       {
@@ -68,6 +89,42 @@ window.__HC_ENV__ = {
         crawlsJoined: "Puyallup Holiday Coffee Crawl",
         stamps: 2,
         consentedAt: "2026-10-11T21:18:00Z"
+      }
+    ]
+  },
+  /* Sample organizer view for ?demo=1. Bryan organizes puy-coffee and can
+     switch crawls. Figures are labeled DEMO DATA. */
+  DEMO_ORGANIZER: {
+    label: "DEMO DATA",
+    person: {
+      name: "Bryan Reynolds",
+      email: "bryan@myanthemcoffee.com",
+      role: "organizer"
+    },
+    crawls: [
+      {
+        id: "puy-coffee",
+        title: "Puyallup Holiday Coffee Crawl",
+        city: "Puyallup",
+        starts: "2026-11-01",
+        ends: "2026-12-31",
+        stores: [
+          { name: "Anthem Coffee & Tea", code: "ANTHEMCO", paid: true, scans: 64 },
+          { name: "Pioneer Pour House", code: "KNWD7H", paid: true, scans: 51 },
+          { name: "Meridian Coffee Bar", code: "R4ST9M", paid: true, scans: 47 },
+          { name: "Main Street Roasters", code: "H7CWLP", paid: false, scans: 0 }
+        ]
+      },
+      {
+        id: "puy-summer-demo",
+        title: "Puyallup Summer Sip",
+        city: "Puyallup",
+        starts: "2027-06-01",
+        ends: "2027-08-31",
+        stores: [
+          { name: "Anthem Coffee & Tea", code: "ANTHEMCO", paid: true, scans: 12 },
+          { name: "Valley Tea Room", code: "B6NDQK", paid: false, scans: 0 }
+        ]
       }
     ]
   }

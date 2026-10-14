@@ -31,18 +31,16 @@
     return sb;
   }
 
+  function demoMode() {
+    return new URLSearchParams(location.search).get("demo") === "1";
+  }
+
   async function ensureAuth() {
     const c = client();
     if (!c) throw new Error("Supabase not loaded");
     const { data } = await c.auth.getSession();
     session = data.session;
-    if (session) return session;
-    // Prefer anonymous when enabled; fall back to requiring magic link
-    const { data: anon, error } = await c.auth.signInAnonymously();
-    if (!error && anon?.session) {
-      session = anon.session;
-      return session;
-    }
+    if (session && session.user && !session.user.is_anonymous && session.user.email) return session;
     return null;
   }
 
@@ -83,6 +81,7 @@
       type: "coffee",
       logo_url: row.logo_url || "",
       stamp_image_url: row.stamp_image_url || "",
+      stamp_label: row.stamp_label || "",
       photo_urls: photos
     };
   }
@@ -94,8 +93,13 @@
     if (!c) return { shops: [], error: "no-client" };
     const { data, error } = await c.rpc("get_public_crawl_shops", { p_crawl: crawlId });
     if (error) return { shops: [], error: error.message };
+    const seen = new Set();
     const list = (data || [])
-      .filter((row) => row && row.business_id)
+      .filter((row) => {
+        if (!row || !row.business_id || seen.has(row.business_id)) return false;
+        seen.add(row.business_id);
+        return true;
+      })
       .map(mapPaidShop)
       .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
     return { shops: list, error: null };
@@ -142,6 +146,7 @@
   }
 
   async function joinCrawl(crawlId) {
+    if (demoMode()) throw new Error("Demo mode only shows sample data. It does not join a crawl.");
     const c = client();
     if (!c) throw new Error("Supabase not loaded");
     let s = await getSession();
@@ -212,6 +217,7 @@
   }
 
   async function claimStamp({ crawl, business, code, lat, lng }) {
+    if (demoMode()) throw new Error("Demo mode only shows sample data. It does not stamp.");
     const c = client();
     if (!c) throw new Error("Supabase not loaded");
     let s = await getSession();
@@ -270,13 +276,38 @@
     }
   }
 
+  function stampLabel(name, custom) {
+    const customText = String(custom || "").trim();
+    if (customText) return customText.slice(0, 40);
+    let words = String(name || "").replace(/[’']/g, "'").split(/\s+/).filter(Boolean);
+    const article = /^(the|a|an)$/i;
+    while (words.length > 1 && article.test(words[0].replace(/[^A-Za-z]/g, ""))) words.shift();
+    words = words.filter((word, index) => index === 0 || !/^homemade$/i.test(word.replace(/[^A-Za-z]/g, "")));
+    const category = /^(bakery|cafe|café|coffee|espresso|expresso|bar|shop|shops)$/i;
+    while (words.length > 2 && category.test(words[words.length - 1].replace(/[^A-Za-z]/g, ""))) words.pop();
+    if (words.length > 3) words = words.slice(0, 3);
+    words = words.map((word) => (word.toLowerCase() === "cream" ? "Cream" : word));
+    return words.join(" ") || "Shop";
+  }
+
+  function demoStampLabel(businessId) {
+    try {
+      if (!demoMode()) return "";
+      const all = JSON.parse(localStorage.getItem("hc-stamp-labels") || "null");
+      const value = all && all[businessId];
+      return typeof value === "string" ? value : "";
+    } catch (e) {
+      return "";
+    }
+  }
+
   function renderStamps(container, shops, stamps, justId) {
     if (!container) return;
     const stamped = new Set((stamps || []).map((s) => s.business_id));
     container.innerHTML = `<div class="row" style="gap:0.65rem">${shops
       .map((s) => {
         const got = stamped.has(s.id);
-        const label = (s.name || "").split(" ")[0] || "Shop";
+        const label = stampLabel(s.name, s.stamp_label || demoStampLabel(s.id));
         const local = demoStampArt(s.id);
         const stampSrc = (local && local.stamp) || s.stamp_image_url || "";
         const logoSrc = (local && local.logo) || s.logo_url || "";
@@ -419,6 +450,8 @@
     getPosition,
     renderShopList,
     renderStamps,
+    stampLabel,
+    demoMode,
     initMap,
     escapeHtml,
     claimOrganizer,

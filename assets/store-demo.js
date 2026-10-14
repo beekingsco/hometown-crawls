@@ -1,8 +1,9 @@
-/* Store tab: event stats, post-stamp coupon, consented guest export.
-   Live totals need a database function that is not required for the demo.
-   ?demo=1, or an empty live result, shows DEMO_STORE from assets/config.js. */
+/* Store tab helpers: stats, optional coupon, consented guest export, demo code.
+   ?demo=1 shows DEMO_STORE / DEMO_ORGANIZER from assets/config.js.
+   The coupon is off until the shop turns it on. */
 (function () {
   var COUPON_KEY = "hc-coupon-anthemco";
+  var CODE_KEY = "hc-code-anthemco";
 
   function env() {
     return window.__HC_ENV__ || {};
@@ -32,6 +33,21 @@
     return (n % 1 === 0 ? String(n) : n.toFixed(1)) + "%";
   }
 
+  function alphabet() {
+    return (fixture() && fixture().codeAlphabet) || "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  }
+
+  function randomStoreCode(len) {
+    var chars = alphabet();
+    var n = Math.min(8, Math.max(6, Number(len) || 8));
+    var out = "";
+    var bytes = new Uint8Array(n);
+    if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(bytes);
+    else for (var i = 0; i < n; i++) bytes[i] = Math.floor(Math.random() * 256);
+    for (var j = 0; j < n; j++) out += chars[bytes[j] % chars.length];
+    return out;
+  }
+
   function fmtWhen(iso) {
     if (!iso) return "";
     var date = new Date(iso);
@@ -55,6 +71,7 @@
 
   function loadCoupon(base) {
     var coupon = {
+      enabled: false,
       reward: (base && base.reward) || "",
       expiryDays: (base && base.expiryDays) || 30,
       issued: base && base.issued != null ? base.issued : 0,
@@ -62,8 +79,9 @@
     };
     try {
       var saved = JSON.parse(localStorage.getItem(COUPON_KEY) || "null");
-      if (saved && typeof saved.reward === "string" && saved.reward.trim()) {
-        coupon.reward = saved.reward.trim();
+      if (saved && typeof saved === "object") {
+        coupon.enabled = saved.enabled === true;
+        if (typeof saved.reward === "string" && saved.reward.trim()) coupon.reward = saved.reward.trim();
         var days = Number(saved.expiryDays);
         if (days >= 1 && days <= 365) coupon.expiryDays = Math.round(days);
       }
@@ -71,10 +89,22 @@
     return coupon;
   }
 
-  function saveCoupon(reward, expiryDays) {
-    var payload = { reward: String(reward || "").trim(), expiryDays: Number(expiryDays) };
-    localStorage.setItem(COUPON_KEY, JSON.stringify(payload));
-    return payload;
+  function saveCoupon(coupon) {
+    localStorage.setItem(COUPON_KEY, JSON.stringify({
+      enabled: coupon.enabled === true,
+      reward: String(coupon.reward || "").trim(),
+      expiryDays: Number(coupon.expiryDays) || 30
+    }));
+  }
+
+  function currentCode(demo) {
+    var live = (demo && demo.shop && demo.shop.storeCode) || "ANTHEMCO";
+    if (!demoRequested()) return live;
+    try {
+      var saved = localStorage.getItem(CODE_KEY);
+      if (saved && /^[A-Z2-9]{6,8}$/.test(saved)) return saved;
+    } catch (e) {}
+    return live;
   }
 
   function csvCell(value) {
@@ -95,14 +125,14 @@
         csvCell(row.crawlsJoined),
         csvCell(row.stamps),
         csvCell(row.consentedAt),
-        csvCell("DEMO DATA")
+        csvCell(demoRequested() ? "DEMO DATA" : "")
       ].join(","));
     });
     var blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
     var a = document.createElement("a");
     var day = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
     a.href = URL.createObjectURL(blob);
-    a.download = (storeCode || "shop") + "-guests-" + day + ".csv";
+    a.download = (storeCode || "guests") + "-guests-" + day + ".csv";
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -128,17 +158,24 @@
     var shop = demo.shop || {};
     var name = document.getElementById("store-name");
     var code = document.getElementById("store-code");
+    var big = document.getElementById("store-code-big");
     var crawl = document.getElementById("store-crawl");
+    var shown = currentCode(demo);
     if (name) name.textContent = shop.name || "Your shop";
-    if (code) code.textContent = shop.storeCode || "";
-    if (crawl) crawl.textContent = shop.crawlName || "";
+    if (code) code.textContent = shown;
+    if (big) big.textContent = shown;
+    if (crawl) crawl.textContent = (shop.crawlName || "") + (demo.dates ? " · " + demo.dates.label : "");
   }
 
   function fillCoupon(coupon, sample) {
+    var toggle = document.getElementById("coupon-enabled");
+    var fields = document.getElementById("coupon-fields");
     var reward = document.getElementById("coupon-reward");
     var days = document.getElementById("coupon-days");
     var issued = document.getElementById("coupon-issued");
     var redeemed = document.getElementById("coupon-redeemed");
+    if (toggle) toggle.checked = coupon.enabled === true;
+    if (fields) fields.classList.toggle("hidden", coupon.enabled !== true);
     if (reward && document.activeElement !== reward) reward.value = coupon.reward;
     if (days && document.activeElement !== days) days.value = String(coupon.expiryDays);
     if (issued) issued.textContent = String(coupon.issued);
@@ -148,16 +185,17 @@
     var guestNote = document.getElementById("guest-reward-note");
     var guestCard = document.getElementById("guest-reward");
     var shop = (fixture() && fixture().shop) || {};
+    var showGuest = coupon.enabled === true && !!coupon.reward;
     if (guestText) guestText.textContent = coupon.reward;
     if (guestMeta) {
-      guestMeta.textContent = shop.name + " · " + shop.storeCode + " · show within " + coupon.expiryDays + " days of your stamp";
+      guestMeta.textContent = (shop.name || "This shop") + " · show within " + coupon.expiryDays + " days of your stamp";
     }
     if (guestNote) {
       guestNote.textContent = sample
-        ? "DEMO DATA. This is the card a guest sees after they stamp this shop."
+        ? "DEMO DATA. Guests see this only after the shop turns the reward on and they stamp."
         : "Unlocked because you stamped this shop.";
     }
-    if (guestCard) guestCard.classList.toggle("hidden", !coupon.reward);
+    if (guestCard) guestCard.classList.toggle("hidden", !showGuest);
   }
 
   function guestTableRow(row, label) {
@@ -188,6 +226,15 @@
     if (empty) empty.classList.toggle("hidden", rows.length > 0);
   }
 
+  function showRoleTabs(which) {
+    var tabs = document.getElementById("role-tabs");
+    if (tabs) tabs.classList.remove("hidden");
+    which.forEach(function (name) {
+      var btn = document.getElementById("tab-" + name);
+      if (btn) btn.classList.remove("hidden");
+    });
+  }
+
   function showSample(demo) {
     var banner = document.getElementById("demo-banner");
     if (banner) banner.classList.remove("hidden");
@@ -198,45 +245,53 @@
     fillStats(demo);
     fillCoupon(loadCoupon(demo.coupon), true);
     fillGuests(demo);
-    var tabs = document.getElementById("role-tabs");
-    var storeTab = document.getElementById("tab-store");
-    if (tabs) tabs.classList.remove("hidden");
-    if (storeTab) storeTab.classList.remove("hidden");
+    showRoleTabs(["guest", "store", "organizer"]);
+    var note = document.getElementById("code-note");
+    if (note) {
+      note.textContent = "DEMO DATA. The live counter code stays ANTHEMCO until the per-crawl code migration runs after today's demo.";
+    }
   }
 
   function selectTab(name) {
-    var store = name === "store";
-    var guestPanel = document.getElementById("panel-guest");
-    var storePanel = document.getElementById("panel-store");
-    var guestTab = document.getElementById("tab-guest");
-    var storeTab = document.getElementById("tab-store");
-    if (!guestPanel || !storePanel) return;
-    guestPanel.classList.toggle("hidden", store);
-    guestPanel.hidden = store;
-    storePanel.classList.toggle("hidden", !store);
-    storePanel.hidden = !store;
-    if (guestTab) guestTab.setAttribute("aria-selected", store ? "false" : "true");
-    if (storeTab) {
-      storeTab.classList.remove("hidden");
-      storeTab.setAttribute("aria-selected", store ? "true" : "false");
-    }
+    if (name !== "guest" && name !== "store" && name !== "organizer") name = "guest";
+    ["guest", "store", "organizer"].forEach(function (tab) {
+      var panel = document.getElementById("panel-" + tab);
+      var btn = document.getElementById("tab-" + tab);
+      var on = tab === name;
+      if (panel) {
+        panel.classList.toggle("hidden", !on);
+        panel.hidden = !on;
+      }
+      if (btn) btn.setAttribute("aria-selected", on ? "true" : "false");
+    });
     var tabs = document.getElementById("role-tabs");
     if (tabs) tabs.classList.remove("hidden");
     var url = new URL(location.href);
-    url.searchParams.set("tab", store ? "store" : "guest");
+    url.searchParams.set("tab", name);
     if (demoRequested()) url.searchParams.set("demo", "1");
     history.replaceState({}, "", url.pathname + "?" + url.searchParams.toString());
   }
 
   function bind(demo) {
-    var guestTab = document.getElementById("tab-guest");
-    var storeTab = document.getElementById("tab-store");
-    if (guestTab) guestTab.onclick = function () { selectTab("guest"); };
-    if (storeTab) storeTab.onclick = function () { selectTab("store"); };
+    ["guest", "store", "organizer"].forEach(function (name) {
+      var btn = document.getElementById("tab-" + name);
+      if (btn) btn.onclick = function () { selectTab(name); };
+    });
+    var toggle = document.getElementById("coupon-enabled");
+    if (toggle) {
+      toggle.onchange = function () {
+        var coupon = loadCoupon(demo.coupon);
+        coupon.enabled = toggle.checked === true;
+        saveCoupon(coupon);
+        fillCoupon(coupon, demoRequested());
+      };
+    }
     var form = document.getElementById("coupon-form");
     if (form) {
       form.onsubmit = function (ev) {
         ev.preventDefault();
+        var coupon = loadCoupon(demo.coupon);
+        if (!coupon.enabled) return;
         var reward = document.getElementById("coupon-reward").value.trim();
         var days = Number(document.getElementById("coupon-days").value);
         var err = document.getElementById("coupon-err");
@@ -251,12 +306,12 @@
           if (err) { err.textContent = "Expiry needs to be between 1 and 365 days."; err.classList.add("show"); }
           return;
         }
-        saveCoupon(reward, days);
-        var coupon = loadCoupon(demo.coupon);
         coupon.reward = reward;
         coupon.expiryDays = Math.round(days);
-        fillCoupon(coupon, true);
-        if (ok) { ok.textContent = "Reward saved on this browser. Open the Guest tab to see the unlocked card."; ok.classList.add("show"); }
+        coupon.enabled = true;
+        saveCoupon(coupon);
+        fillCoupon(loadCoupon(demo.coupon), demoRequested());
+        if (ok) { ok.textContent = "Reward saved on this browser. Guests see it after they stamp."; ok.classList.add("show"); }
         if (window.HC) HC.toast("Reward saved");
       };
     }
@@ -265,8 +320,66 @@
     var csv = document.getElementById("btn-guest-csv");
     if (csv) {
       csv.onclick = function () {
-        downloadGuests(demo.guests, demo.shop && demo.shop.storeCode);
+        downloadGuests(demo.guests, currentCode(demo));
         if (window.HC) HC.toast("Guest CSV downloaded");
+      };
+    }
+    var rotate = document.getElementById("btn-rotate-code");
+    if (rotate) {
+      rotate.onclick = async function () {
+        if (demoRequested()) {
+          var previewOk = window.confirm("Generate a new preview code? The live counter code ANTHEMCO is not changed. Guests at the shop still use ANTHEMCO until the database update after today's demo.");
+          if (!previewOk) return;
+          var next = randomStoreCode(8);
+          try { localStorage.setItem(CODE_KEY, next); } catch (e) {}
+          fillShop(demo);
+          var note = document.getElementById("code-note");
+          if (note) note.textContent = "DEMO DATA preview code " + next + ". Live code is still ANTHEMCO.";
+          if (window.HC) HC.toast("Preview code updated");
+          return;
+        }
+        var noteLive = document.getElementById("code-note");
+        if (!window.HCCrawl || !HCCrawl.client) {
+          if (noteLive) noteLive.textContent = "Sign in as the store owner to generate a code.";
+          return;
+        }
+        var session = await HCCrawl.getSession();
+        if (!session || !session.user || session.user.is_anonymous || !session.user.email) {
+          if (noteLive) noteLive.textContent = "Sign in as the store owner to generate a code.";
+          return;
+        }
+        var liveOk = window.confirm("Generate a new counter code for this crawl? Guests will need the new code. The old code stops working once this save succeeds.");
+        if (!liveOk) return;
+        try {
+          var listings = await HCCrawl.client().rpc("shop_my_listings");
+          if (listings.error) throw listings.error;
+          var row = (listings.data || [])[0];
+          if (!row) throw new Error("No listing is linked to this account.");
+          var rotated = await HCCrawl.client().rpc("shop_rotate_store_code", { p_listing: row.listing_id });
+          if (rotated.error) throw rotated.error;
+          var codeEl = document.getElementById("store-code");
+          var big = document.getElementById("store-code-big");
+          if (codeEl) codeEl.textContent = rotated.data;
+          if (big) big.textContent = rotated.data;
+          if (noteLive) noteLive.textContent = "New code saved for this crawl. Print a fresh counter sign.";
+          if (window.HC) HC.toast("Counter code updated");
+        } catch (e) {
+          var message = (e && e.message) || "Could not generate a code.";
+          if (/shop_rotate_store_code|schema cache|crawl_shop_codes/i.test(message)) {
+            message = "New codes save after the database update is applied.";
+          }
+          if (noteLive) noteLive.textContent = message;
+        }
+      };
+    }
+    var printBtn = document.getElementById("btn-print-sign");
+    if (printBtn) {
+      printBtn.onclick = function () {
+        var code = demoRequested() ? currentCode(demo) : ((document.getElementById("store-code-big") || {}).textContent || "");
+        var shop = (demo.shop && demo.shop.businessId) || "anthem";
+        var href = "/puyallup/coffee-crawl/shop/sign?code=" + encodeURIComponent(code) + "&shop=" + encodeURIComponent(shop);
+        if (demoRequested()) href += "&demo=1";
+        window.open(href, "_blank", "noopener");
       };
     }
   }
@@ -286,20 +399,23 @@
   async function refreshGuest() {
     var demo = fixture();
     if (!demo) return;
-    var card = document.getElementById("guest-reward");
-    if (!card) return;
+    var coupon = loadCoupon(demo.coupon);
+    if (!coupon.enabled) {
+      var card = document.getElementById("guest-reward");
+      if (card) card.classList.add("hidden");
+      return;
+    }
     if (demoRequested()) {
-      fillCoupon(loadCoupon(demo.coupon), true);
-      card.classList.remove("hidden");
+      fillCoupon(coupon, true);
       return;
     }
     var stamped = await guestHasShopStamp(demo.shop.businessId, demo.shop.crawlId);
     if (!stamped) {
-      card.classList.add("hidden");
+      var hidden = document.getElementById("guest-reward");
+      if (hidden) hidden.classList.add("hidden");
       return;
     }
-    fillCoupon(loadCoupon(demo.coupon), false);
-    card.classList.remove("hidden");
+    fillCoupon(coupon, false);
   }
 
   document.addEventListener("DOMContentLoaded", function () {
@@ -309,7 +425,8 @@
     if (demoRequested()) {
       showSample(demo);
       var want = new URLSearchParams(location.search).get("tab");
-      selectTab(want === "guest" ? "guest" : "store");
+      if (want !== "guest" && want !== "store" && want !== "organizer") want = "store";
+      selectTab(want);
       return;
     }
     refreshGuest();
@@ -320,6 +437,9 @@
     consentedGuests: consentedGuests,
     downloadGuests: downloadGuests,
     refreshGuest: refreshGuest,
-    selectTab: selectTab
+    selectTab: selectTab,
+    randomStoreCode: randomStoreCode,
+    loadCoupon: loadCoupon,
+    esc: esc
   };
 })();

@@ -277,9 +277,8 @@
 
     function shopActions(s) {
       var paidBtn = s.is_paid ? "Unmark" : "Mark paid";
-      var mapBtn = s.is_approved ? "Hide" : "Show on map";
       return '<button class="btn btn-soft" type="button" data-act="paid" data-id="' + esc(s.listing_id) + '">' + paidBtn + "</button>" +
-        '<button class="btn btn-ghost" type="button" data-act="approve" data-id="' + esc(s.listing_id) + '">' + mapBtn + "</button>";
+        '<label class="check"><input type="checkbox" data-act="visible" data-id="' + esc(s.listing_id) + '"' + (s.is_visible ? " checked" : "") + "> Show on the passport</label>";
     }
     function renderShops() {
       var body = $("shop-rows");
@@ -710,9 +709,13 @@
         }
         busy = true;
         try {
+          var visible = act === "visible" ? btn.checked === true : null;
           var res = act === "paid"
             ? await sb.rpc("organizer_set_paid", { p_listing: id, p_paid: !shop.is_paid, p_amount_cents: null })
-            : await sb.rpc("organizer_set_approved", { p_listing: id, p_approved: !shop.is_approved });
+            : await sb.rpc("organizer_set_shop_visible", { p_listing: id, p_visible: visible });
+          if (res.error && act === "visible" && /schema cache|organizer_set_shop_visible/i.test(res.error.message || "")) {
+            res = await sb.rpc("organizer_set_approved", { p_listing: id, p_approved: visible });
+          }
           if (res.error) {
             if (isDenied(res.error)) {
               note("<h2>You're not authorized</h2><p class=\"mt-1\">This sign-in can't change shops on that crawl.</p>");

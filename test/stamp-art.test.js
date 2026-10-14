@@ -86,7 +86,7 @@ test("render falls back from stamp image to logo to a text label", () => {
   assert.match(el.innerHTML, /https:\/\/cdn\.example\/stamp\.png/);
   assert.doesNotMatch(el.innerHTML, /cdn\.example\/logo\.png/);
   assert.match(el.innerHTML, /https:\/\/cdn\.example\/woods-logo\.png/);
-  assert.match(el.innerHTML, /class="stamp-label">Lick</);
+  assert.match(el.innerHTML, /class="stamp-label">Lick Ice Cream</);
   assert.match(el.innerHTML, /stamp-art/);
 
   sandbox.location.search = "";
