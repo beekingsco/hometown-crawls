@@ -32,7 +32,18 @@
       <h1>Your passport home</h1>
       <p>Email magic link or continue anonymously. No Google / Apple SSO.</p>
     </div>
-    <div class="wrap-narrow stack">
+    <div class="wrap stack" id="account-app">
+      <div class="demo-banner hidden" id="demo-banner" role="status">
+        <span class="pill pill-wait">DEMO DATA</span>
+        <p><strong>DEMO DATA.</strong> Sample numbers for <strong>Anthem Coffee &amp; Tea</strong>, store code ANTHEMCO. This is not live crawl data. Guests who have not agreed to be contacted are left out.</p>
+      </div>
+      <div class="role-tabs hidden" id="role-tabs" role="tablist" aria-label="Account sections">
+        <button type="button" id="tab-guest" role="tab" aria-controls="panel-guest" aria-selected="true">Guest</button>
+        <button type="button" id="tab-store" role="tab" aria-controls="panel-store" aria-selected="false" class="hidden">Store</button>
+      </div>
+
+      <div id="panel-guest" role="tabpanel" aria-labelledby="tab-guest">
+        <div class="stack" style="max-width:720px">
       <div class="card auth-panel">
         <div class="auth-status" id="auth-status">Checking session…</div>
         <div id="auth-signed-out">
@@ -78,6 +89,92 @@
         <div id="reader" class="mt-2"></div>
         <p class="form-note">The camera stays off until you choose Start camera. Video stays on your device.</p>
       </div>
+
+      <div class="card coupon-ticket hidden" id="guest-reward">
+        <div class="row" style="justify-content:space-between">
+          <p class="eyebrow">Shop reward</p>
+          <span class="pill pill-ok">Unlocked</span>
+        </div>
+        <h3 id="guest-reward-text" class="mt-1"></h3>
+        <p class="muted mt-1" id="guest-reward-meta"></p>
+        <p class="small mt-1" id="guest-reward-note"></p>
+      </div>
+        </div>
+      </div>
+
+      <div id="panel-store" class="stack hidden" role="tabpanel" aria-labelledby="tab-store" hidden>
+        <div class="card">
+          <p class="eyebrow">Store</p>
+          <div class="row" style="justify-content:space-between">
+            <h2 id="store-name">Anthem Coffee &amp; Tea</h2>
+            <span class="pill pill-ok" id="store-code">ANTHEMCO</span>
+          </div>
+          <p class="muted small" id="store-crawl">Puyallup Holiday Coffee Crawl</p>
+        </div>
+
+        <div>
+          <div class="row" style="justify-content:space-between">
+            <h3>This crawl</h3>
+            <span class="pill pill-wait" data-demo-pill>DEMO DATA</span>
+          </div>
+          <div class="stat-grid mt-2">
+            <article class="card"><p class="eyebrow">Total players</p><p class="stat-value" id="stat-players">—</p><p class="small muted">People who joined this crawl.</p></article>
+            <article class="card"><p class="eyebrow">Total scans</p><p class="stat-value" id="stat-scans">—</p><p class="small muted">Stamps at every shop on the crawl.</p></article>
+            <article class="card"><p class="eyebrow">Scans at this shop</p><p class="stat-value" id="stat-shop-scans">—</p><p class="small muted">Stamps collected at your counter.</p></article>
+            <article class="card"><p class="eyebrow">Share of scans</p><p class="stat-value" id="stat-share">—</p><p class="small muted">Your stamps divided by all stamps.</p></article>
+            <article class="card"><p class="eyebrow">First-time visitors</p><p class="stat-value" id="stat-first">—</p><p class="small muted">Players whose first stamp was here.</p></article>
+          </div>
+        </div>
+
+        <form class="card" id="coupon-form">
+          <div class="row" style="justify-content:space-between">
+            <h3>Post-stamp coupon</h3>
+            <span class="pill pill-wait" data-demo-pill>DEMO DATA</span>
+          </div>
+          <p class="muted small mt-1">Guests see this reward after they stamp your shop. Issued and redeemed counts below are a sample until live redemptions are connected.</p>
+          <label class="field mt-2"><span>Reward</span>
+            <input class="input" id="coupon-reward" maxlength="140" placeholder="$1 off next drink" required />
+          </label>
+          <label class="field"><span>Expires after (days)</span>
+            <input class="input" id="coupon-days" type="number" min="1" max="365" inputmode="numeric" required />
+          </label>
+          <div class="row">
+            <button class="btn btn-primary" type="submit">Save reward</button>
+            <button class="btn btn-ghost" type="button" id="btn-preview-guest">See the guest card</button>
+          </div>
+          <div class="grid mt-2">
+            <div class="card" style="box-shadow:none"><p class="eyebrow">Issued</p><p class="stat-value" id="coupon-issued">—</p></div>
+            <div class="card" style="box-shadow:none"><p class="eyebrow">Redeemed</p><p class="stat-value" id="coupon-redeemed">—</p></div>
+          </div>
+          <p class="form-success mt-2" id="coupon-ok" role="status"></p>
+          <p class="form-error mt-2" id="coupon-err" role="alert"></p>
+        </form>
+
+        <div class="card">
+          <div class="row" style="justify-content:space-between">
+            <div>
+              <h3>Guests who agreed to be contacted</h3>
+              <p class="muted small mt-1">Name, email, crawls joined, stamp count, and when they agreed. Everyone else stays off this list.</p>
+            </div>
+            <button class="btn btn-soft" type="button" id="btn-guest-csv">Download CSV</button>
+          </div>
+          <div class="table-wrap mt-2">
+            <table class="data">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Crawls joined</th>
+                  <th>Stamps</th>
+                  <th>Consented</th>
+                </tr>
+              </thead>
+              <tbody id="guest-rows"></tbody>
+            </table>
+          </div>
+          <p class="muted small mt-2 hidden" id="guests-empty">No consented guests to show.</p>
+        </div>
+      </div>
     </div>
 
   </main>
@@ -88,6 +185,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="assets/crawl.js"></script>
+  <script src="assets/store-demo.js"></script>
   <script>
     function show(el, on) { el.classList.toggle("show", !!on); el.style.display = on ? "block" : "none"; }
     async function refreshAuth() {
@@ -176,6 +274,7 @@
           HC.toast("Stamp claimed");
           document.getElementById("stamp-code").value = "";
           await loadPassportUI(shops);
+          if (window.HCStoreDemo) HCStoreDemo.refreshGuest();
         } catch (e) { err.textContent = e.message || String(e); show(err, true); }
       };
 
@@ -227,6 +326,7 @@
                   }
                   HC.toast("Stamp claimed");
                   await loadPassportUI(shops);
+                  if (window.HCStoreDemo) HCStoreDemo.refreshGuest();
                   await stopCamera();
                 } catch (e) { HC.toast(e.message || "Stamp failed"); }
               }

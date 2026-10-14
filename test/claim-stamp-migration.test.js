@@ -20,8 +20,8 @@ test("claim_stamp migration keeps the live signature and pins search_path", () =
   assert.match(sql, /set search_path to 'public'/i);
 });
 
-test("claim_stamp migration enforces one stamp, codes, and the 150 m radius", () => {
-  assert.match(sql, /c_radius_m constant double precision := 150/);
+test("claim_stamp migration enforces one stamp, codes, and the 50 m radius", () => {
+  assert.match(sql, /c_radius_m constant double precision := 50/);
   assert.match(sql, /raise exception 'Already stamped'/);
   assert.match(sql, /raise exception 'Location required'/);
   assert.match(sql, /raise exception 'You need to be at the shop'/);

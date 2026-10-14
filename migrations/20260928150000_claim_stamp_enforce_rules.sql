@@ -9,7 +9,7 @@
 --   * One stamp per person per shop per crawl. A repeat claim does not
 --     update or refresh the existing row; it raises 'Already stamped'.
 --   * Player lat/lng is required ('Location required').
---   * If the shop has a pin, distance must be within 150 m
+--   * If the shop has a pin, distance must be within 50 m
 --     ('You need to be at the shop'). Shops with no coordinates are
 --     allowed: there is no pin to measure against.
 --   * A shop is claimable when it has an active membership on the crawl
@@ -31,8 +31,8 @@ security definer
 set search_path to 'public'
 as $function$
 declare
-  -- Single radius for every crawl. "Over 150 m" is refused.
-  c_radius_m constant double precision := 150;
+  -- Single radius for every crawl. "Over 50 m" is refused.
+  c_radius_m constant double precision := 50;
   v_uid uuid := auth.uid();
   v_biz jsonb;
   v_listing jsonb;
@@ -122,7 +122,7 @@ begin
 
   -- Prefer the listing pin (what the public map shows). Fall back to the
   -- business pin. If neither source has both coordinates, allow the claim:
-  -- a shop that has not been geocoded has no point to measure 150 m from.
+  -- a shop that has not been geocoded has no point to measure 50 m from.
   if v_listing is not null
      and nullif(v_listing->>'lat', '') is not null
      and nullif(v_listing->>'lng', '') is not null then
