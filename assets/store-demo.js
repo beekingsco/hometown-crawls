@@ -237,7 +237,13 @@
 
   function showSample(demo) {
     var banner = document.getElementById("demo-banner");
-    if (banner) banner.classList.remove("hidden");
+    if (banner) {
+      banner.innerHTML = '<span class="pill pill-wait">DEMO DATA</span><p><strong>DEMO DATA.</strong> Sample numbers for <strong>' +
+        esc((demo.shop && demo.shop.name) || "Anthem Coffee & Tea") + "</strong>, store code " +
+        esc((demo.shop && demo.shop.storeCode) || "ANTHEMCO") +
+        ". This is not live crawl data. Guests who have not agreed to be contacted are left out.</p>";
+      banner.classList.remove("hidden");
+    }
     document.querySelectorAll("[data-demo-pill]").forEach(function (el) {
       el.classList.remove("hidden");
     });
