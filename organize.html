@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Organize a Hometown Coffee Crawl · Hometown Crawls</title>
-  <meta name="theme-color" content="#1f3a24" />
-  <meta name="description" content="Apply to organize a hometown crawl. Send your application to hello@hometowncrawls.com." />
+  <title>Start a crawl · Hometown Crawls</title>
+  <meta name="theme-color" content="#f8f2e7" />
+  <meta name="description" content="Start a hometown crawl for your town. Guests get a free passport, stores get a counter sign, and you run the trail." />
   <link rel="canonical" href="https://www.hometowncrawls.com/organize" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Hometown Crawls" />
-  <meta property="og:title" content="Organize a Hometown Coffee Crawl · Hometown Crawls" />
-  <meta property="og:description" content="Apply to organize a hometown crawl. Send your application to hello@hometowncrawls.com." />
+  <meta property="og:title" content="Start a crawl · Hometown Crawls" />
+  <meta property="og:description" content="Start a hometown crawl for your town. Guests get a free passport, stores get a counter sign, and you run the trail." />
   <meta property="og:url" content="https://www.hometowncrawls.com/organize" />
   <meta property="og:image" content="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=70" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Organize a Hometown Coffee Crawl · Hometown Crawls" />
-  <meta name="twitter:description" content="Apply to organize a hometown crawl. Send your application to hello@hometowncrawls.com." />
+  <meta name="twitter:title" content="Start a crawl · Hometown Crawls" />
+  <meta name="twitter:description" content="Start a hometown crawl for your town. Guests get a free passport, stores get a counter sign, and you run the trail." />
   <meta name="keywords" content="organize coffee crawl, chamber organizer, hometown crawl" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -26,50 +26,37 @@
   <header class="site-header" id="site-header"></header>
   <main>
 
-    <div class="wrap-narrow page-hero">
-      <p class="eyebrow">Organize</p>
-      <h1>Apply to organize a crawl</h1>
-      <p>Tell us who you are and which town you have in mind. Send my application opens an email to <a href="mailto:hello@hometowncrawls.com">hello@hometowncrawls.com</a> with what you wrote.</p>
+    <div class="wrap start-hero">
+      <div>
+        <p class="eyebrow">For organizers</p>
+        <h1>Start a crawl</h1>
+        <p class="lead">Pick a town, invite the shops you already know, and give neighbors a free passport. You keep the guest list and the dates. We set up the page, the stamps, and the counter signs.</p>
+        <p class="muted">Send my application opens an email to <a href="mailto:hello@hometowncrawls.com">hello@hometowncrawls.com</a> with what you wrote.</p>
+      </div>
+      <img class="start-mascot" src="/assets/home/mascot.png" alt="Hometown Crawls coffee cup mascot" width="640" height="640" />
     </div>
 
-    <div class="wrap-narrow">
-      <div class="section-head" style="margin-bottom:1rem">
-        <p class="eyebrow">How onboarding works</p>
-        <h2>Four simple steps</h2>
+    <div class="wrap">
+      <div class="start-points">
+        <article>
+          <p class="eyebrow">Guests</p>
+          <h3>A passport they can finish</h3>
+          <p>They sign in with email, visit shops, and watch grey stamps turn to color. A full passport enters the prize drawing.</p>
+        </article>
+        <article>
+          <p class="eyebrow">Stores</p>
+          <h3>A sign for the counter</h3>
+          <p>Each shop gets a code, a QR, and a printable “Join our Hometown Crawl” sign. Their stamp stays grey until a guest visits.</p>
+        </article>
+        <article>
+          <p class="eyebrow">You</p>
+          <h3>One place to run it</h3>
+          <p>Set the title and dates, see who has paid, and invite a co-organizer. The Organizer tab is waiting after you sign in.</p>
+        </article>
       </div>
-      <div class="grid-4 mb-2" style="grid-template-columns:repeat(4,1fr)">
-        <div class="card">
-          <div class="step-num">1</div>
-          <h3>Apply</h3>
-          <p class="muted small">Tell us who you are and which city you want to launch.</p>
-        </div>
-        <div class="card">
-          <div class="step-num">2</div>
-          <h3>Create crawl</h3>
-          <p class="muted small">We spin up your coffee trail page and passport.</p>
-        </div>
-        <div class="card">
-          <div class="step-num">3</div>
-          <h3>Invite shops</h3>
-          <p class="muted small">Share your seat link. Shops claim QR + counter codes.</p>
-        </div>
-        <div class="card">
-          <div class="step-num">4</div>
-          <h3>Send it</h3>
-          <p class="muted small">Your email app opens with the application addressed to hello@hometowncrawls.com.</p>
-        </div>
-      </div>
-      <style>
-        @media (max-width: 900px) {
-          .grid-4.mb-2 { grid-template-columns: repeat(2, 1fr) !important; }
-        }
-        @media (max-width: 520px) {
-          .grid-4.mb-2 { grid-template-columns: 1fr !important; }
-        }
-      </style>
 
-      <form class="card" id="organize-form">
-        <h3>Apply to organize</h3>
+      <form class="card" id="organize-form" style="max-width:640px">
+        <h3>Tell us about your town</h3>
         <p class="muted small mt-1 mb-2">We'll open an email to hello@hometowncrawls.com with your application.</p>
         <label class="field"><span>Your name</span>
           <input class="input" name="name" required placeholder="Alex Rivera" />

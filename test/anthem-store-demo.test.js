@@ -16,7 +16,10 @@ test("Anthem demo is one config and opens without a migration", () => {
   assert.match(configJs, /reward: "\$1 off next drink"/);
   assert.match(configJs, /expiryDays: 30/);
   assert.match(configJs, /privacy@hometowncrawls\.com/);
-  assert.match(account, /DEMO DATA/);
+  assert.match(account, /id="demo-banner"[^>]*><\/div>/);
+  assert.doesNotMatch(account, /id="demo-banner"[\s\S]{0,200}ANTHEMCO/);
+  assert.match(demoJs, /banner\.innerHTML/);
+  assert.match(demoJs, /if \(demoRequested\(\)\)/);
   assert.match(account, /Total players/);
   assert.match(account, /Total scans/);
   assert.match(account, /Scans at this shop/);

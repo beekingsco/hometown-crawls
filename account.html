@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Your Passport Account &amp; Stamp · Hometown Crawls</title>
-  <meta name="theme-color" content="#1f3a24" />
+  <meta name="theme-color" content="#f8f2e7" />
   <meta name="description" content="Sign in with an email magic link to manage your Hometown Crawls digital stamp passport, join trails, and claim stamps — no Google/Apple SSO, no app download." />
   <link rel="canonical" href="https://www.hometowncrawls.com/account" />
   <meta property="og:type" content="website" />
@@ -30,13 +30,10 @@
     <div class="wrap-narrow page-hero">
       <p class="eyebrow">Account</p>
       <h1>Your passport home</h1>
-      <p>Sign in with an email magic link. Stamps and prize entries stay on that account.</p>
+      <p>Sign in with an email magic link. Your stamps start grey and fill in with color after each visit. Prize entries stay on that account.</p>
     </div>
     <div class="wrap stack" id="account-app">
-      <div class="demo-banner hidden" id="demo-banner" role="status">
-        <span class="pill pill-wait">DEMO DATA</span>
-        <p><strong>DEMO DATA.</strong> Sample numbers for <strong>Anthem Coffee &amp; Tea</strong>, store code ANTHEMCO. This is not live crawl data. Guests who have not agreed to be contacted are left out.</p>
-      </div>
+      <div class="demo-banner hidden" id="demo-banner" role="status"></div>
       <div class="role-tabs hidden" id="role-tabs" role="tablist" aria-label="Account sections">
         <button type="button" id="tab-guest" role="tab" aria-controls="panel-guest" aria-selected="true">Guest</button>
         <button type="button" id="tab-store" role="tab" aria-controls="panel-store" aria-selected="false" class="hidden">Store</button>
@@ -146,6 +143,7 @@
             <span class="pill pill-ok" id="store-code">ANTHEMCO</span>
           </div>
           <p class="muted small" id="store-crawl">Puyallup Holiday Coffee Crawl</p>
+          <p class="muted small mt-1">Update your listing, print the counter sign, and see guests who agreed to be contacted.</p>
         </div>
 
         <form class="card" id="stamp-art-form">
@@ -196,7 +194,7 @@
         <div>
           <div class="row" style="justify-content:space-between">
             <h3>This crawl</h3>
-            <span class="pill pill-wait" data-demo-pill>DEMO DATA</span>
+            <span class="pill pill-wait hidden" data-demo-pill>DEMO DATA</span>
           </div>
           <div class="stat-grid mt-2">
             <article class="card"><p class="eyebrow">Total players</p><p class="stat-value" id="stat-players">—</p><p class="small muted">People who joined this crawl.</p></article>
@@ -210,7 +208,7 @@
         <form class="card" id="coupon-form">
           <div class="row" style="justify-content:space-between">
             <h3>Post-stamp coupon</h3>
-            <span class="pill pill-wait" data-demo-pill>DEMO DATA</span>
+            <span class="pill pill-wait hidden" data-demo-pill>DEMO DATA</span>
           </div>
           <p class="muted small mt-1">Off until you turn it on. Guests see this reward after they stamp your shop. Issued and redeemed counts below are a sample until live redemptions are connected.</p>
           <label class="check mt-2"><input type="checkbox" id="coupon-enabled" /> Turn on the post-stamp reward</label>
@@ -331,6 +329,7 @@
         <div class="card">
           <p class="eyebrow">Organizer</p>
           <p id="org-who"></p>
+          <p class="muted small">Set the title and dates, mark stores paid or hidden, and invite someone to help. <a href="/organize">Start another crawl</a>.</p>
           <p class="demo-banner hidden" id="org-invite-banner"></p>
           <label class="field mt-2"><span>Crawl</span>
             <select class="input" id="org-crawl"></select>
