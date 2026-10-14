@@ -165,7 +165,7 @@
     const p = document.createElement("p");
     p.className = "home-empty";
     const link = document.createElement("a");
-    link.href = EMPTY_HREF;
+    link.setAttribute("href", EMPTY_HREF);
     link.textContent = EMPTY_LINK;
     p.append(EMPTY_LEAD, link);
     container.replaceChildren(p);
@@ -195,8 +195,9 @@
     const body = document.createElement("div");
     body.className = "home-card-body";
     const title = document.createElement("h3");
+    const href = crawlHref(crawl.id);
     const nameLink = document.createElement("a");
-    nameLink.href = crawlHref(crawl.id);
+    nameLink.setAttribute("href", href);
     nameLink.textContent = crawl.name || "Crawl";
     title.append(nameLink);
     const town = document.createElement("p");
@@ -210,7 +211,7 @@
     dates.textContent = formatDates(crawl);
     const more = document.createElement("a");
     more.className = "home-text-link";
-    more.href = nameLink.href;
+    more.setAttribute("href", href);
     more.textContent = "View crawl";
     body.append(title, town, dates, more);
     article.append(body);

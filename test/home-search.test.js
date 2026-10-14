@@ -18,6 +18,7 @@ const documentStub = {
       children: [],
       href: "",
       textContent: "",
+      setAttribute(name, value) { this[name] = value; },
       append(...nodes) { this.children.push(...nodes); },
       replaceChildren(...nodes) { this.children = nodes.slice(); }
     };
