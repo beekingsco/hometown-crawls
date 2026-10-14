@@ -151,14 +151,14 @@
         </form>
 
         <div class="card">
-          <div class="row" style="justify-content:space-between">
+          <div class="row record-toolbar" style="justify-content:space-between">
             <div>
               <h3>Guests who agreed to be contacted</h3>
               <p class="muted small mt-1">Name, email, crawls joined, stamp count, and when they agreed. Everyone else stays off this list.</p>
             </div>
             <button class="btn btn-soft" type="button" id="btn-guest-csv">Download CSV</button>
           </div>
-          <div class="table-wrap mt-2">
+          <div class="table-wrap guest-table-wrap mt-2">
             <table class="data">
               <thead>
                 <tr>
@@ -172,6 +172,7 @@
               <tbody id="guest-rows"></tbody>
             </table>
           </div>
+          <div class="record-cards mt-2" id="guest-cards"></div>
           <p class="muted small mt-2 hidden" id="guests-empty">No consented guests to show.</p>
         </div>
       </div>

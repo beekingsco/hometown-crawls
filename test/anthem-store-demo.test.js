@@ -28,7 +28,14 @@ test("Anthem demo is one config and opens without a migration", () => {
   assert.match(account, /id="coupon-redeemed"/);
   assert.match(account, /id="btn-guest-csv"/);
   assert.match(account, /id="guest-reward"/);
+  assert.match(account, /id="guest-cards"/);
+  assert.match(account, /guest-table-wrap/);
   assert.match(account, /assets\/store-demo\.js/);
+  assert.match(demoJs, /id="guest-cards"|getElementById\("guest-cards"\)/);
+  assert.match(demoJs, /record-name/);
+  assert.match(demoJs, /record-email/);
+  assert.match(fs.readFileSync(path.join(root, "assets/site.css"), "utf8"), /max-width: 639px/);
+  assert.match(fs.readFileSync(path.join(root, "puyallup/coffee-crawl/organizer/index.html"), "utf8"), /id="shop-cards"/);
   assert.match(demoJs, /get\("demo"\) === "1"/);
   assert.match(demoJs, /consentedAt && row\.email && row\.name/);
   assert.match(demoJs, /DEMO DATA/);

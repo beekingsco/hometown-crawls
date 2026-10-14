@@ -160,16 +160,30 @@
     if (guestCard) guestCard.classList.toggle("hidden", !coupon.reward);
   }
 
+  function guestTableRow(row, label) {
+    return "<tr><td><b>" + esc(row.name) + '</b> <span class="pill pill-wait">' + esc(label) + "</span></td><td>" +
+      esc(row.email) + "</td><td>" + esc(row.crawlsJoined) + "</td><td>" + esc(row.stamps) + "</td><td>" +
+      esc(fmtWhen(row.consentedAt)) + "</td></tr>";
+  }
+
+  function guestCard(row, label) {
+    return '<article class="record-card"><b class="record-name">' + esc(row.name) + "</b>" +
+      '<p class="record-email">' + esc(row.email) + "</p>" +
+      '<div class="record-chips">' +
+      '<span class="chip">' + esc(String(row.stamps)) + " stamps</span>" +
+      '<span class="chip">' + esc(row.crawlsJoined) + "</span>" +
+      '<span class="chip">' + esc(fmtWhen(row.consentedAt)) + "</span>" +
+      (label ? '<span class="chip">' + esc(label) + "</span>" : "") +
+      "</div></article>";
+  }
+
   function fillGuests(demo) {
-    var body = document.getElementById("guest-rows");
-    if (!body) return;
     var rows = consentedGuests(demo.guests);
     var label = demo.label || "DEMO DATA";
-    body.innerHTML = rows.map(function (row) {
-      return "<tr><td><b>" + esc(row.name) + '</b> <span class="pill pill-wait">' + esc(label) + "</span></td><td>" +
-        esc(row.email) + "</td><td>" + esc(row.crawlsJoined) + "</td><td>" + esc(row.stamps) + "</td><td>" +
-        esc(fmtWhen(row.consentedAt)) + "</td></tr>";
-    }).join("");
+    var body = document.getElementById("guest-rows");
+    var cards = document.getElementById("guest-cards");
+    if (body) body.innerHTML = rows.map(function (row) { return guestTableRow(row, label); }).join("");
+    if (cards) cards.innerHTML = rows.map(function (row) { return guestCard(row, label); }).join("");
     var empty = document.getElementById("guests-empty");
     if (empty) empty.classList.toggle("hidden", rows.length > 0);
   }

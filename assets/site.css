@@ -652,6 +652,64 @@ textarea.input { min-height: 100px; resize: vertical; }
   border-radius: 18px;
 }
 .table-wrap { overflow-x: auto; }
+.record-cards { display: none; }
+.record-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper);
+  padding: 0.85rem 0.95rem;
+  min-width: 0;
+  overflow: hidden;
+}
+.record-name {
+  display: block;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.record-email {
+  margin: 0.15rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.record-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.55rem;
+  min-width: 0;
+}
+.chip {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  background: var(--soft);
+  color: var(--green);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.record-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.7rem;
+}
+.record-actions .btn { min-height: 44px; max-width: 100%; }
+@media (max-width: 639px) {
+  .guest-table-wrap,
+  .shop-table-wrap { display: none; }
+  .record-cards { display: grid; gap: 0.65rem; min-width: 0; }
+  .record-toolbar { flex-direction: column; align-items: stretch; }
+  .record-toolbar .btn { min-height: 44px; width: 100%; }
+  .record-actions .btn { white-space: normal; }
+}
 table.data {
   width: 100%;
   border-collapse: collapse;
