@@ -72,33 +72,6 @@
         <ul class="small mt-2" id="entries-ways"></ul>
       </div>
 
-      <div class="card" id="bonus-card">
-        <h3>Shop bonus</h3>
-        <p class="muted small mt-1" id="bonus-copy">After you stamp a shop, an optional follow, tag, or review can add entries.</p>
-        <a class="btn btn-soft mt-2 hidden" id="bonus-link" target="_blank" rel="noopener noreferrer">Open the shop page</a>
-        <label class="field mt-2"><span>Post link, if you have one</span>
-          <input class="input" id="bonus-proof" placeholder="https://" />
-        </label>
-        <button class="btn btn-primary" type="button" id="bonus-confirm">I did this</button>
-        <p class="form-success mt-2" id="bonus-ok" role="status"></p>
-      </div>
-
-      <form class="card" id="guest-photo-form">
-        <h3>Photo from the crawl</h3>
-        <p class="muted small mt-1">Optional, including after a stamp. It does not change the stamp. PNG, JPG, or WebP, up to 5 MB.</p>
-        <label class="field mt-2"><span>Photo</span>
-          <input class="input" id="guest-photo-file" type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" />
-        </label>
-        <label class="field"><span>Shop, if you want</span>
-          <input class="input" id="guest-photo-shop" maxlength="80" placeholder="Shop name" />
-        </label>
-        <label class="check"><input type="checkbox" id="guest-photo-consent" required /> I give Hometown Crawls permission to show this photo on its website and social pages.</label>
-        <button class="btn btn-primary mt-2" type="submit">Upload photo</button>
-        <p class="form-success mt-2" id="guest-photo-ok" role="status"></p>
-        <p class="form-error mt-2" id="guest-photo-err" role="alert"></p>
-        <div class="photo-grid mt-2" id="my-photos"></div>
-      </form>
-
       <div class="card">
         <h3>Claim a stamp</h3>
         <p class="muted small mt-1">Have a counter code or QR secret? Enter it here.</p>
@@ -121,6 +94,39 @@
         </div>
         <div id="reader" class="mt-2"></div>
         <p class="form-note">The camera stays off until you choose Start camera. Video stays on your device.</p>
+      </div>
+
+      <div class="guest-extras">
+        <h2>Extras</h2>
+        <p class="muted small">Optional. These do not change a stamp.</p>
+
+      <div class="card hidden" id="bonus-card" hidden>
+        <h3>Shop bonus</h3>
+        <p class="muted small mt-1" id="bonus-copy">After you stamp a shop, an optional follow, tag, or review can add entries.</p>
+        <a class="btn btn-soft mt-2 hidden" id="bonus-link" target="_blank" rel="noopener noreferrer">Open the shop page</a>
+        <label class="field mt-2"><span>Link to your post or review (optional)</span>
+          <input class="input" id="bonus-proof" placeholder="https://instagram.com/p/..." inputmode="url" />
+          <span class="form-note">Paste the link so the shop can confirm it.</span>
+        </label>
+        <button class="btn btn-primary" type="button" id="bonus-confirm">I did this</button>
+        <p class="form-success mt-2" id="bonus-ok" role="status"></p>
+      </div>
+
+      <form class="card" id="guest-photo-form">
+        <h3>Photo from the crawl</h3>
+        <p class="muted small mt-1">Optional, including after a stamp. It does not change the stamp. PNG, JPG, or WebP, up to 5 MB.</p>
+        <label class="field mt-2"><span>Photo</span>
+          <input class="input" id="guest-photo-file" type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" />
+        </label>
+        <label class="field"><span>Shop, if you want</span>
+          <input class="input" id="guest-photo-shop" maxlength="80" placeholder="Shop name" />
+        </label>
+        <label class="check"><input type="checkbox" id="guest-photo-consent" required /> I give Hometown Crawls permission to show this photo on its website and social pages.</label>
+        <button class="btn btn-primary mt-2" type="submit">Upload photo</button>
+        <p class="form-success mt-2" id="guest-photo-ok" role="status"></p>
+        <p class="form-error mt-2" id="guest-photo-err" role="alert"></p>
+        <div class="photo-grid mt-2" id="my-photos"></div>
+      </form>
       </div>
 
       <div class="card coupon-ticket hidden" id="guest-reward">
@@ -469,6 +475,7 @@
       document.getElementById("btn-signout").onclick = async () => {
         await HCCrawl.signOut();
         await refreshAuth();
+        if (window.HCGuest && HCGuest.refreshBonus) HCGuest.refreshBonus();
         HC.toast("Signed out");
       };
       document.addEventListener("hc-stamp-art-changed", () => loadPassportUI(shops));
@@ -484,6 +491,7 @@
           HC.toast("Stamp claimed");
           document.getElementById("stamp-code").value = "";
           await loadPassportUI(shops, business);
+          if (window.HCGuest && HCGuest.refreshBonus) HCGuest.refreshBonus();
           if (window.HCStoreDemo) HCStoreDemo.refreshGuest();
         } catch (e) { err.textContent = e.message || String(e); show(err, true); }
       };

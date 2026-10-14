@@ -86,24 +86,78 @@
     }
   }
 
-  function paintBonus() {
+  var shownActionId = "";
+
+  function hideBonus() {
     var card = document.getElementById("bonus-card");
     if (!card) return;
-    var store = window.__HC_ENV__ && window.__HC_ENV__.DEMO_STORE;
-    var bonus = (store && store.bonus) || {
-      label: "Follow the shop on Instagram",
-      url: "https://instagram.com",
-      entries: 2
-    };
+    card.classList.add("hidden");
+    card.hidden = true;
+    shownActionId = "";
+  }
+
+  function instagramHandle(bonus, shop) {
+    var fromShop = shop && shop.instagram ? String(shop.instagram).replace(/^@/, "").trim() : "";
+    if (fromShop) return fromShop;
+    var label = String((bonus && bonus.label) || "");
+    var at = label.match(/@([A-Za-z0-9._]+)/);
+    if (at) return at[1];
+    var url = String((bonus && bonus.url) || "");
+    var path = url.match(/instagram\.com\/(?!p\/|reel\/|stories\/)([A-Za-z0-9._]+)/i);
+    return path ? path[1] : "";
+  }
+
+  function bonusButtonText(bonus, shop) {
+    var handle = instagramHandle(bonus, shop);
+    if (handle) return "Open @" + handle + " on Instagram";
+    return "Open the shop page";
+  }
+
+  function showBonus(bonus, shop) {
+    var card = document.getElementById("bonus-card");
+    if (!card || !bonus) return;
+    shownActionId = bonus.id || "";
     var copy = document.getElementById("bonus-copy");
-    if (copy) copy.textContent = bonus.label + " · " + bonus.entries + " entries. Optional, and it does not change the stamp.";
+    if (copy) {
+      copy.textContent = bonus.label + (bonus.entries ? " · " + bonus.entries + " entries." : "") + " Optional, and it does not change the stamp.";
+    }
     var link = document.getElementById("bonus-link");
     if (link) {
-      link.href = bonus.url;
-      link.textContent = "Open the shop page";
-      link.classList.remove("hidden");
+      link.href = bonus.url || "#";
+      link.textContent = bonusButtonText(bonus, shop);
+      link.classList.toggle("hidden", !bonus.url);
     }
-    if (bonusState()) note("bonus-ok", null, "Recorded on this browser. A store can approve it after the database update.", "");
+    card.classList.remove("hidden");
+    card.hidden = false;
+  }
+
+  async function refreshBonus() {
+    hideBonus();
+    if (demoOn() || !window.HCCrawl || !HCCrawl.getSession || !HCCrawl.client || !HCCrawl.myStamps) return;
+    var session = await HCCrawl.getSession();
+    if (!session || !session.user || session.user.is_anonymous || !session.user.email) return;
+    var stamps = await HCCrawl.myStamps("puy-coffee");
+    var stamped = {};
+    (stamps || []).forEach(function (row) { if (row && row.business_id) stamped[row.business_id] = true; });
+    if (!Object.keys(stamped).length) return;
+    var client = HCCrawl.client();
+    var actions = await client.from("bonus_actions").select("id, listing_id, kind, label, url, entries").eq("active", true).eq("crawl_id", "puy-coffee");
+    if (actions.error || !actions.data || !actions.data.length) return;
+    var shops = await client.rpc("get_public_crawl_shops", { p_crawl: "puy-coffee" });
+    if (shops.error || !Array.isArray(shops.data)) return;
+    var match = null;
+    var shop = null;
+    actions.data.some(function (action) {
+      var found = shops.data.find(function (row) {
+        return row && row.listing_id === action.listing_id && stamped[row.business_id];
+      });
+      if (!found) return false;
+      match = action;
+      shop = found;
+      return true;
+    });
+    if (!match) return;
+    showBonus(match, shop);
   }
 
   function fileError(file) {
@@ -292,7 +346,7 @@
     var store = window.__HC_ENV__ && window.__HC_ENV__.DEMO_STORE;
     var stamped = demoOn() ? ((store && store.sampleStamps) || 5) : 0;
     paintEntries(15, stamped);
-    paintBonus();
+    refreshBonus();
     paintMine();
     paintGallery();
     paintModeration();
@@ -367,12 +421,11 @@
             return;
           }
           var client = HCCrawl.client();
-          var actions = await client.from("bonus_actions").select("id").eq("active", true).limit(1);
-          var action = actions.data && actions.data[0];
-          if (actions.error || !action) {
+          if (!shownActionId) {
             if (okBox) { okBox.textContent = "Shop bonuses save after the database update is applied."; okBox.classList.add("show"); }
             return;
           }
+          var action = { id: shownActionId };
           var proof = (document.getElementById("bonus-proof") || {}).value || "";
           var saved = await client.rpc("guest_submit_bonus", { p_action: action.id, p_proof: proof });
           if (saved.error) {
@@ -384,4 +437,6 @@
       };
     }
   });
+
+  window.HCGuest = { refreshBonus: refreshBonus };
 })();

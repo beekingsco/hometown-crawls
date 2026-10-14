@@ -205,6 +205,9 @@ body:not(.home-page) .start-points article {
   padding: 1rem 1.05rem;
 }
 body:not(.home-page) .start-points h3 { font-size: 1.2rem; margin: 0.2rem 0 0.35rem; }
+body:not(.home-page) .guest-extras { display: grid; gap: 0.75rem; margin-top: 0.35rem; }
+body:not(.home-page) .guest-extras > h2 { font-size: 1.15rem; margin: 0; }
+body:not(.home-page) .guest-extras .card h3 { font-size: 1.05rem; }
 body:not(.home-page) .start-points p { color: var(--muted); font-size: 0.95rem; }
 
 @media (min-width: 800px) {

@@ -128,6 +128,15 @@ test("demo never stamps, joins, or uploads, and claim_stamp has no bypass", () =
 test("guest entries, bonus actions, and photo consent are present", () => {
   assert.match(account, /id="entries-card"/);
   assert.match(account, /id="bonus-confirm"/);
+  assert.match(account, /Link to your post or review \(optional\)/);
+  assert.match(account, /Paste the link so the shop can confirm it\./);
+  assert.match(account, /https:\/\/instagram\.com\/p\/\.\.\./);
+  const guestPanel = account.slice(account.indexOf('id="panel-guest"'), account.indexOf('id="panel-store"'));
+  assert.ok(guestPanel.indexOf(">Claim a stamp<") < guestPanel.indexOf(">Scan QR<"));
+  assert.ok(guestPanel.indexOf(">Scan QR<") < guestPanel.indexOf(">Shop bonus<"));
+  assert.ok(guestPanel.indexOf(">Shop bonus<") < guestPanel.indexOf(">Photo from the crawl<"));
+  assert.match(guest, /Open @" \+ handle \+ " on Instagram/);
+  assert.match(guest, /card\.hidden = true/);
   assert.match(account, /I give Hometown Crawls permission to show this photo/);
   assert.match(guest, /1 entry for each stop/);
   assert.match(guest, /guest_submit_bonus/);
