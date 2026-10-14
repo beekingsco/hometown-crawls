@@ -383,6 +383,7 @@
           lat: s.lat,
           lng: s.lng,
           logo_url: s.logo_url || "",
+          stamp_image_url: s.stamp_image_url || "",
           photo_urls: photos
         };
       });
@@ -423,14 +424,14 @@
       }).join("");
     }
 
-    function renderStamps(stamps) {
+    function renderStamps(stamps, justId) {
       var box = $("stamp-grid");
       var playable = mapForMap(shops);
       if (!playable.length) {
         box.innerHTML = '<p class="muted">Your stamp grid will fill in once shops are announced.</p>';
         return;
       }
-      HCCrawl.renderStamps(box, playable, stamps || []);
+      HCCrawl.renderStamps(box, playable, stamps || [], justId || "");
     }
 
     function renderShopSelect() {
@@ -469,13 +470,13 @@
       return rpc.data || [];
     }
 
-    async function refreshStamps() {
+    async function refreshStamps(justId) {
       var session = await HCCrawl.getSession();
       if (session) {
         try { await HCCrawl.client().rpc("hc_link_account"); } catch (e) {}
       }
       var stamps = session ? await HCCrawl.myStamps(CRAWL) : [];
-      renderStamps(stamps);
+      renderStamps(stamps, justId || "");
     }
 
     function showMagic() {
@@ -535,7 +536,7 @@
           cleanClaimParams();
           $("claim-prompt").classList.add("hidden");
           if (window.HC) HC.toast("Stamp claimed");
-          await refreshStamps();
+          await refreshStamps(pending.shop);
         } catch (e) {
           if (needsSignIn(e)) {
             showMagic();
@@ -575,7 +576,7 @@
           $("passport-ok").textContent = "Stamp claimed.";
           showBox($("passport-ok"), true);
           if (window.HC) HC.toast("Stamp claimed");
-          await refreshStamps();
+          await refreshStamps(business);
         } catch (e) {
           if (needsSignIn(e)) showMagic();
           $("passport-err").textContent = e.message || "Could not claim that stamp.";

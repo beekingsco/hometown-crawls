@@ -82,6 +82,7 @@
       lng: row.lng,
       type: "coffee",
       logo_url: row.logo_url || "",
+      stamp_image_url: row.stamp_image_url || "",
       photo_urls: photos
     };
   }
@@ -258,17 +259,33 @@
       .join("");
   }
 
-  function renderStamps(container, shops, stamps) {
+  function demoStampArt(businessId) {
+    try {
+      if (new URLSearchParams(location.search).get("demo") !== "1") return null;
+      const all = JSON.parse(localStorage.getItem("hc-stamp-art") || "null");
+      const row = all && all[businessId];
+      return row && typeof row === "object" ? row : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function renderStamps(container, shops, stamps, justId) {
     if (!container) return;
     const stamped = new Set((stamps || []).map((s) => s.business_id));
     container.innerHTML = `<div class="row" style="gap:0.65rem">${shops
       .map((s) => {
         const got = stamped.has(s.id);
-        const label = (s.name || "").split(" ")[0];
-        const photos = Array.isArray(s.photo_urls) ? s.photo_urls : [];
-        const stampSrc = s.logo_url || photos[0] || "";
-        const inner = stampSrc && got ? `<img src="${escapeHtml(stampSrc)}" alt="">` : escapeHtml(label);
-        return `<div class="stamp ${got ? "got" : ""}" title="${escapeHtml(s.name)}">${inner}</div>`;
+        const label = (s.name || "").split(" ")[0] || "Shop";
+        const local = demoStampArt(s.id);
+        const stampSrc = (local && local.stamp) || s.stamp_image_url || "";
+        const logoSrc = (local && local.logo) || s.logo_url || "";
+        const art = stampSrc || logoSrc;
+        const inner = art
+          ? `<img class="stamp-art" src="${escapeHtml(art)}" alt="">`
+          : `<span class="stamp-label">${escapeHtml(label)}</span>`;
+        const just = got && justId && s.id === justId ? " just" : "";
+        return `<div class="stamp ${got ? "got" : ""}${just}" title="${escapeHtml(s.name)}">${inner}</div>`;
       })
       .join("")}</div>
       <p class="muted small mt-2">${stamped.size} / ${shops.length} stamped</p>`;

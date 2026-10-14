@@ -112,6 +112,51 @@
           <p class="muted small" id="store-crawl">Puyallup Holiday Coffee Crawl</p>
         </div>
 
+        <form class="card" id="stamp-art-form">
+          <div class="row" style="justify-content:space-between">
+            <h3>Passport stamp</h3>
+            <span class="pill pill-wait hidden" data-demo-pill>DEMO DATA</span>
+          </div>
+          <p class="muted small mt-1">Upload a square stamp image, or a logo if you don't have one. PNG, JPG, or WebP, up to 2 MB. The center of the picture is kept as a square, then drawn in a circle. Guests see it grey and faded until they stamp your shop, then in full color.</p>
+          <label class="field hidden" id="stamp-listing-field"><span>Location</span>
+            <select class="input" id="stamp-listing"></select>
+          </label>
+          <div class="stamp-art-grid mt-2">
+            <div>
+              <p class="eyebrow">Square crop</p>
+              <div class="crop-frame mt-1" id="stamp-crop">
+                <img id="stamp-crop-img" alt="" class="hidden" />
+                <span class="small muted" id="stamp-crop-empty">Center of the photo stays</span>
+              </div>
+              <label class="field mt-2"><span>Stamp image</span>
+                <input class="input" id="file-stamp" type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" />
+              </label>
+              <label class="field"><span>Logo, used only when there is no stamp image</span>
+                <input class="input" id="file-logo" type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" />
+              </label>
+              <div class="row">
+                <button class="btn btn-ghost" type="button" id="btn-clear-stamp">Remove stamp image</button>
+                <button class="btn btn-ghost" type="button" id="btn-clear-logo">Remove logo</button>
+              </div>
+            </div>
+            <div>
+              <p class="eyebrow">On the passport</p>
+              <div class="row mt-1">
+                <div>
+                  <div class="stamp" id="sample-open" title="Before a guest stamps"></div>
+                  <p class="small muted">Not yet</p>
+                </div>
+                <div>
+                  <div class="stamp got" id="sample-got" title="After a guest stamps"></div>
+                  <p class="small muted">Stamped</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="form-success mt-2" id="stamp-art-ok" role="status"></p>
+          <p class="form-error mt-2" id="stamp-art-err" role="alert"></p>
+        </form>
+
         <div>
           <div class="row" style="justify-content:space-between">
             <h3>This crawl</h3>
@@ -187,6 +232,7 @@
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="assets/crawl.js"></script>
   <script src="assets/store-demo.js"></script>
+  <script src="assets/stamp-art.js"></script>
   <script>
     function show(el, on) { el.classList.toggle("show", !!on); el.style.display = on ? "block" : "none"; }
     async function refreshAuth() {
@@ -206,7 +252,7 @@
       }
       return s;
     }
-    async function loadPassportUI(shops) {
+    async function loadPassportUI(shops, justId) {
       const sel = document.getElementById("stamp-shop");
       const stampBtn = document.getElementById("btn-stamp");
       if (!shops.length) {
@@ -220,7 +266,7 @@
       if (stampBtn) stampBtn.disabled = false;
       sel.innerHTML = shops.map(s => `<option value="${s.id}">${HCCrawl.escapeHtml(s.name)}</option>`).join("");
       const stamps = await HCCrawl.myStamps("puy-coffee");
-      HCCrawl.renderStamps(document.getElementById("passport-stamps"), shops, stamps);
+      HCCrawl.renderStamps(document.getElementById("passport-stamps"), shops, stamps, justId || "");
     }
     document.addEventListener("DOMContentLoaded", async () => {
       const msg = document.getElementById("auth-msg");
@@ -264,17 +310,19 @@
         await refreshAuth();
         HC.toast("Signed out");
       };
+      document.addEventListener("hc-stamp-art-changed", () => loadPassportUI(shops));
       document.getElementById("btn-stamp").onclick = async () => {
         show(msg, false); show(err, false);
+        const business = document.getElementById("stamp-shop").value;
         try {
           await HCCrawl.claimStamp({
             crawl: "puy-coffee",
-            business: document.getElementById("stamp-shop").value,
+            business: business,
             code: document.getElementById("stamp-code").value.trim()
           });
           HC.toast("Stamp claimed");
           document.getElementById("stamp-code").value = "";
-          await loadPassportUI(shops);
+          await loadPassportUI(shops, business);
           if (window.HCStoreDemo) HCStoreDemo.refreshGuest();
         } catch (e) { err.textContent = e.message || String(e); show(err, true); }
       };
@@ -302,31 +350,34 @@
             async (txt) => {
                 const raw = String(txt);
                 const path = raw.match(/stamp\/([^/]+)\/([^/]+)\/([^/?#]+)/i);
+                let stampedBusiness = document.getElementById("stamp-shop").value;
                 const shopParam = raw.match(/(?:shop|business)=([^&#]+)/i);
                 const codeParam = raw.match(/(?:^|[?&])code=([^&#]+)/i);
                 try {
                   if (path) {
+                    stampedBusiness = decodeURIComponent(path[2]);
                     await HCCrawl.claimStamp({
                       crawl: decodeURIComponent(path[1]),
-                      business: decodeURIComponent(path[2]),
+                      business: stampedBusiness,
                       code: decodeURIComponent(path[3])
                     });
                   } else if (shopParam && codeParam) {
+                    stampedBusiness = decodeURIComponent(shopParam[1]);
                     await HCCrawl.claimStamp({
                       crawl: "puy-coffee",
-                      business: decodeURIComponent(shopParam[1]),
+                      business: stampedBusiness,
                       code: decodeURIComponent(codeParam[1])
                     });
                   } else {
                     // treat whole payload as code for selected shop
                     await HCCrawl.claimStamp({
                       crawl: "puy-coffee",
-                      business: document.getElementById("stamp-shop").value,
+                      business: stampedBusiness,
                       code: String(txt).trim()
                     });
                   }
                   HC.toast("Stamp claimed");
-                  await loadPassportUI(shops);
+                  await loadPassportUI(shops, stampedBusiness);
                   if (window.HCStoreDemo) HCStoreDemo.refreshGuest();
                   await stopCamera();
                 } catch (e) { HC.toast(e.message || "Stamp failed"); }
