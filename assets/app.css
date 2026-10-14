@@ -1,27 +1,26 @@
 /* App pages share Atlas's homepage palette. Homepage files stay untouched.
    Tokens apply only when the body is not the homepage. */
 body:not(.home-page) {
-  --bg: #fbf6ed;
-  --cream: #fbf6ed;
-  --paper: #fffcf6;
+  --bg: #f8f2e7;
+  --cream: #f8f2e7;
+  --paper: #fffaf1;
   --ink: #302119;
   --ink-soft: #302119;
   --muted: #75685b;
-  --green: #d74616;
-  --green-deep: #b9360c;
-  --green-mid: #d74616;
-  --soft: #f9e5d3;
-  --line: #e5d9c7;
-  --line-strong: #e5d9c7;
-  --gold-soft: #f9e5d3;
-  --gold-ink: #9b3c1c;
+  --green: #ad4424;
+  --green-deep: #91351c;
+  --green-mid: #ad4424;
+  --soft: #f4e2d1;
+  --line: #d8cbb8;
+  --line-strong: #d8cbb8;
+  --gold-soft: #f4e2d1;
+  --gold-ink: #91351c;
   --shadow: none;
   --shadow-sm: none;
   --radius: 9px;
   --radius-sm: 5px;
   --radius-pill: 5px;
-  --header-h: 88px;
-  --script: "Lobster", Georgia, serif;
+  --header-h: 84px;
   background: var(--bg);
   color: var(--ink);
 }
@@ -34,23 +33,18 @@ body:not(.home-page) .eyebrow { color: var(--muted); letter-spacing: 0.16em; }
 body:not(.home-page) a:hover { color: var(--green); }
 
 body:not(.home-page) .site-header {
-  background: rgba(251, 246, 237, 0.98);
+  background: rgba(248, 242, 231, 0.98);
   backdrop-filter: none;
   border-bottom: 1px solid var(--line);
 }
 body:not(.home-page) .wordmark {
   display: block;
-  width: max-content;
-  color: var(--ink);
-  font-family: var(--script);
-  font-weight: 400;
-  font-size: 30px;
-  line-height: 0.82;
-  letter-spacing: -0.04em;
-  transform: rotate(-4deg);
-  padding: 6px 8px 6px 0;
+  width: 210px;
+  flex: 0 0 auto;
+  line-height: 0;
+  padding: 0;
 }
-body:not(.home-page) .wordmark span { display: block; padding-left: 24px; }
+body:not(.home-page) .wordmark img { width: 100%; height: auto; display: block; }
 body:not(.home-page) .nav-links a {
   font-size: 14px;
   font-weight: 500;
@@ -113,7 +107,7 @@ body:not(.home-page) textarea.input {
   border-color: var(--line);
   background: var(--paper);
 }
-body:not(.home-page) .input:focus { border-color: var(--green); box-shadow: 0 0 0 3px #d7461622; }
+body:not(.home-page) .input:focus { border-color: var(--green); box-shadow: 0 0 0 3px #ad442422; }
 
 body:not(.home-page) .role-tabs {
   width: 100%;
@@ -129,14 +123,14 @@ body:not(.home-page) .role-tabs button[aria-selected="true"] {
 }
 
 body:not(.home-page) .stamp {
-  border-color: #e5d9c7;
+  border-color: #d8cbb8;
   background: var(--paper);
   color: var(--muted);
 }
 body:not(.home-page) .stamp.got {
   border: 3px solid var(--green);
   color: var(--green);
-  background: #f9e5d3;
+  background: #f4e2d1;
 }
 body:not(.home-page) .stamp img.stamp-art { filter: grayscale(1); opacity: 0.4; }
 body:not(.home-page) .stamp.got img.stamp-art { filter: none; opacity: 1; }
@@ -145,7 +139,7 @@ body:not(.home-page) .map-frame,
 body:not(.home-page) .hc-photo { background: #efe5d5; border-color: var(--line); border-radius: 9px; }
 body:not(.home-page) .hc-hero {
   background:
-    radial-gradient(520px 280px at 88% 10%, #f4e0bf, transparent 68%),
+    radial-gradient(520px 280px at 88% 10%, #f4e2d1, transparent 68%),
     var(--bg);
   border-bottom: 1px solid var(--line);
 }
@@ -154,18 +148,9 @@ body:not(.home-page) .hc-stamp {
   border-radius: 5px;
   box-shadow: none;
 }
-body:not(.home-page) .hc-mascot {
-  position: absolute;
-  width: 92px;
-  height: 92px;
-  left: 10px;
-  top: 10px;
-  object-fit: contain;
-  pointer-events: none;
-}
 body:not(.home-page) .pc-hero {
   background:
-    radial-gradient(520px 280px at 88% 10%, #f4e0bf, transparent 68%),
+    radial-gradient(520px 280px at 88% 10%, #f4e2d1, transparent 68%),
     var(--bg);
   border-bottom: 1px solid var(--line);
 }
@@ -173,23 +158,27 @@ body:not(.home-page) .crop-frame {
   border-color: var(--line);
   border-radius: 9px;
   background:
-    linear-gradient(to right, transparent 33%, rgba(215, 70, 22, 0.16) 33%, rgba(215, 70, 22, 0.16) 34%, transparent 34%, transparent 66%, rgba(215, 70, 22, 0.16) 66%, rgba(215, 70, 22, 0.16) 67%, transparent 67%),
-    linear-gradient(to bottom, transparent 33%, rgba(215, 70, 22, 0.16) 33%, rgba(215, 70, 22, 0.16) 34%, transparent 34%, transparent 66%, rgba(215, 70, 22, 0.16) 66%, rgba(215, 70, 22, 0.16) 67%, transparent 67%),
+    linear-gradient(to right, transparent 33%, rgba(173, 68, 36, 0.16) 33%, rgba(173, 68, 36, 0.16) 34%, transparent 34%, transparent 66%, rgba(173, 68, 36, 0.16) 66%, rgba(173, 68, 36, 0.16) 67%, transparent 67%),
+    linear-gradient(to bottom, transparent 33%, rgba(173, 68, 36, 0.16) 33%, rgba(173, 68, 36, 0.16) 34%, transparent 34%, transparent 66%, rgba(173, 68, 36, 0.16) 66%, rgba(173, 68, 36, 0.16) 67%, transparent 67%),
     var(--paper);
 }
 body:not(.home-page) .footer-col h4 { color: #cbbba8; }
 body:not(.home-page) .nav { gap: 0.5rem; }
 body:not(.home-page) .wordmark { flex-shrink: 0; }
 body:not(.home-page) .role-tabs button[role="tab"] { flex: 1; text-align: center; }
-body:not(.home-page) .nav-login-mark { background: #f9e5d3; color: #9b3c1c; }
+body:not(.home-page) .nav-login-mark { background: #f4e2d1; color: #91351c; }
 
 body:not(.home-page) .site-footer {
   background: #302119;
-  color: #fbf6ed;
+  color: #f8f2e7;
 }
-body:not(.home-page) .site-footer a { color: #fbf6ed; }
+body:not(.home-page) .site-footer a { color: #f8f2e7; }
 body:not(.home-page) .site-footer a:hover { color: #f1a179; opacity: 1; }
-body:not(.home-page) .footer-wordmark { color: #fbf6ed; margin-bottom: 0.7rem; }
+body:not(.home-page) .footer-wordmark {
+  width: 196px;
+  margin-bottom: 0.7rem;
+  filter: brightness(0) invert(94%) sepia(14%) saturate(330%);
+}
 body:not(.home-page) .toast { background: #302119; border-radius: 5px; }
 
 body:not(.home-page) .start-hero {
@@ -223,8 +212,7 @@ body:not(.home-page) .start-points p { color: var(--muted); font-size: 0.95rem; 
   body:not(.home-page) .start-points { grid-template-columns: repeat(3, 1fr); }
 }
 @media (max-width: 420px) {
-  body:not(.home-page) { --header-h: 76px; }
-  body:not(.home-page) .wordmark { font-size: 24px; }
-  body:not(.home-page) .wordmark span { padding-left: 16px; }
+  body:not(.home-page) { --header-h: 72px; }
+  body:not(.home-page) .wordmark { width: 148px; }
   body:not(.home-page) .nav-login { padding: 8px 12px; font-size: 13px; }
 }

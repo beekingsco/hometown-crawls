@@ -7,9 +7,9 @@
   <meta name="robots" content="noindex" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Lobster&family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    :root { --cream: #fbf6ed; --paper: #fffcf6; --ink: #302119; --orange: #d74616; --muted: #75685b; --line: #e5d9c7; }
+    :root { --cream: #f8f2e7; --paper: #fffaf1; --ink: #302119; --orange: #ad4424; --muted: #75685b; --line: #d8cbb8; }
     * { box-sizing: border-box; }
     body { margin: 0; background: #efe5d5; color: var(--ink); font-family: Outfit, sans-serif; }
     .toolbar { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; padding: 1rem; }
@@ -28,15 +28,8 @@
       align-items: center;
       text-align: center;
     }
-    .wordmark {
-      font-family: Lobster, Georgia, serif;
-      font-size: 2.4rem;
-      line-height: 0.82;
-      letter-spacing: -0.04em;
-      transform: rotate(-4deg);
-      margin: 0 0 1.1rem;
-    }
-    .wordmark span { display: block; padding-left: 1.4rem; }
+    .wordmark { width: 220px; margin: 0 0 1.1rem; }
+    .wordmark img { width: 100%; height: auto; display: block; }
     h1 { font-family: Fraunces, serif; font-size: 2.6rem; line-height: 1.05; letter-spacing: -0.045em; margin: 0.2rem 0 0.4rem; }
     .crawl { font-size: 1.25rem; font-weight: 650; margin: 0; color: var(--orange); }
     .dates { margin: 0.25rem 0 0.8rem; color: var(--muted); }
@@ -50,7 +43,7 @@
       .sheet { min-height: 0; padding: 1.4rem 1rem 1.6rem; }
       h1 { font-size: 2rem; }
       .code { font-size: 2rem; letter-spacing: 0.06em; }
-      .wordmark { font-size: 2rem; }
+      .wordmark { width: 180px; }
     }
     @media print {
       body { background: #fff; }
@@ -66,7 +59,7 @@
     <a class="btn" id="back" href="/account?tab=store">Back to the store tab</a>
   </div>
   <article class="sheet" id="sheet">
-    <p class="wordmark" aria-label="Hometown Crawls">Hometown<span>Crawls</span></p>
+    <p class="wordmark"><img src="/assets/home/wordmark-phone.png" alt="Hometown Crawls" width="2048" height="768" /></p>
     <p class="crawl" id="crawl-name">Puyallup Holiday Coffee Crawl</p>
     <h1>Join our Hometown Crawl</h1>
     <p class="dates">Nov 1 – Dec 31, 2026</p>

@@ -30,7 +30,7 @@
     if (!el) return;
     el.innerHTML = `
       <div class="wrap nav">
-        <a class="wordmark" href="${base}index.html" aria-label="Hometown Crawls home">Hometown<span>Crawls</span></a>
+        <a class="wordmark" href="${base}index.html" aria-label="Hometown Crawls home"><img src="/assets/home/wordmark-phone.png" alt="Hometown Crawls" width="2048" height="768" /></a>
         <nav class="nav-links" id="nav-links">
           ${link("puyallup/holiday-coffee-crawl", "Find a crawl")}
           ${link("map.html", "Map")}
@@ -91,8 +91,8 @@
       <div class="wrap">
         <div class="footer-grid">
           <div>
-            <a class="wordmark footer-wordmark" href="${base}index.html" aria-label="Hometown Crawls home">Hometown<span>Crawls</span></a>
-            <p class="small" style="opacity:.75;max-width:32ch">Coffee, food and pub crawls. A digital passport for your local stops.</p>
+            <a class="wordmark footer-wordmark" href="${base}index.html" aria-label="Hometown Crawls home"><img src="/assets/home/wordmark-phone.png" alt="Hometown Crawls" width="2048" height="768" /></a>
+            <p class="small" style="opacity:.75;max-width:32ch">Coffee, pubs, restaurants, gift shops, and more.</p>
           </div>
           <div class="footer-col">
             <h4>Explore</h4>
@@ -157,7 +157,7 @@
     if (!document.body.classList.contains("home-page")) {
       const fonts = document.createElement("link");
       fonts.rel = "stylesheet";
-      fonts.href = "https://fonts.googleapis.com/css2?family=Lobster&family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap";
+      fonts.href = "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap";
       document.head.appendChild(fonts);
       const appCss = document.createElement("link");
       appCss.rel = "stylesheet";
