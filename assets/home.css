@@ -419,3 +419,51 @@
   .home-hero .home-button { padding-inline: 15px; gap: 15px; }
   .home-editorial-grid h3 { font-size: 17px; }
 }
+
+.home-search { max-width: 720px; }
+.home-search .home-kicker { display: block; }
+.home-search-row { display: flex; flex-direction: column; gap: 12px; }
+.home-search-row input {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--home-line);
+  border-radius: 6px;
+  background: var(--home-paper);
+  color: var(--home-ink);
+  padding: 12px 14px;
+  font-size: 16px;
+}
+.home-search-row input::placeholder { color: #8d7d6c; }
+.home-search .home-button { width: 100%; gap: 0; min-height: 48px; }
+.home-search .home-button:disabled { opacity: .7; transform: none; }
+.home-new { padding-top: 4px; padding-bottom: 58px; }
+.home-results, .home-new-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.home-crawl-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--home-paper);
+  border: 1px solid var(--home-line);
+  border-radius: 6px;
+  overflow: hidden;
+  min-width: 0;
+}
+.home-card-photo { position: relative; aspect-ratio: 1.5 / 1; background: #e6d8c1; }
+.home-card-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.home-card-photo .home-tag { position: absolute; top: 12px; left: 12px; }
+.home-card-body { padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.home-crawl-card h3 { font-size: 24px; letter-spacing: -.04em; line-height: 1.15; margin: 0; }
+.home-crawl-card h3 a:hover { color: var(--home-orange); }
+.home-crawl-meta { margin: 0; font-size: 13px; color: var(--home-muted); }
+.home-crawl-card .home-event-dates { margin: 0; }
+.home-crawl-card .home-text-link { margin-top: 8px; width: fit-content; }
+.home-empty { margin: 4px 0 0; font-size: 16px; line-height: 1.5; }
+.home-empty a { color: var(--home-orange); text-decoration: underline; text-underline-offset: 3px; }
+@media (min-width: 640px) {
+  .home-search-row { flex-direction: row; align-items: stretch; }
+  .home-search-row input { flex: 1; }
+  .home-search .home-button { width: auto; padding-inline: 22px; }
+}
+@media (min-width: 700px) {
+  .home-new-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .home-crawl-card h3 { font-size: 22px; }
+}
