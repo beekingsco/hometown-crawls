@@ -3,30 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Puyallup Holiday Coffee Crawl · Hometown Crawls</title>
-  <meta name="theme-color" content="#1f3a24" />
-  <meta name="description" content="Join the Puyallup Holiday Coffee Crawl with a free digital stamp passport — no app download. Shop entry is $49.99 for the 2026 holiday season, one-time." />
+  <title>Hometown Crawls · Coffee, Food &amp; Pub Crawls</title>
+  <meta name="theme-color" content="#f7f1e7" />
+  <meta name="description" content="Explore local coffee, food and pub crawls with Hometown Crawls. Find the Puyallup Holiday Coffee Crawl and get a free digital passport. No app download." />
   <link rel="canonical" href="https://www.hometowncrawls.com/" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Hometown Crawls" />
-  <meta property="og:title" content="Puyallup Holiday Coffee Crawl · Hometown Crawls" />
-  <meta property="og:description" content="Join the Puyallup Holiday Coffee Crawl with a free digital stamp passport — no app download. Shop entry is $49.99 for the 2026 holiday season, one-time." />
+  <meta property="og:title" content="Hometown Crawls · Coffee, Food &amp; Pub Crawls" />
+  <meta property="og:description" content="Explore local coffee, food and pub crawls with Hometown Crawls. Find the Puyallup Holiday Coffee Crawl and get a free digital passport. No app download." />
   <meta property="og:url" content="https://www.hometowncrawls.com/" />
   <meta property="og:image" content="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=70" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Puyallup Holiday Coffee Crawl · Hometown Crawls" />
-  <meta name="twitter:description" content="Join the Puyallup Holiday Coffee Crawl with a free digital stamp passport — no app download. Shop entry is $49.99 for the 2026 holiday season, one-time." />
+  <meta name="twitter:title" content="Hometown Crawls · Coffee, Food &amp; Pub Crawls" />
+  <meta name="twitter:description" content="Explore local coffee, food and pub crawls with Hometown Crawls. Find the Puyallup Holiday Coffee Crawl and get a free digital passport. No app download." />
   <meta name="twitter:image" content="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=70" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Lobster&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/site.css" />
+  <link rel="stylesheet" href="assets/home.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <style>
-    @media (max-width: 800px) {
-      .map-teaser-grid { grid-template-columns: 1fr !important; }
-    }
-  </style>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -37,7 +33,7 @@
         "name": "Hometown Crawls",
         "url": "https://www.hometowncrawls.com/",
         "email": "hello@hometowncrawls.com",
-        "description": "Digital stamp passports for hometown coffee crawls — no app download. Shop entry for the Puyallup Holiday Coffee Crawl is $49.99 for the 2026 holiday season, one-time.",
+        "description": "Digital stamp passports for local coffee, food and pub crawls. No app download.",
         "areaServed": { "@type": "City", "name": "Puyallup", "containedInPlace": { "@type": "State", "name": "Washington" } }
       },
       {
@@ -45,7 +41,7 @@
         "@id": "https://www.hometowncrawls.com/#website",
         "url": "https://www.hometowncrawls.com/",
         "name": "Hometown Crawls",
-        "description": "Collect stamps. Support locals. The Puyallup Holiday Coffee Crawl uses a digital passport — no app download.",
+        "description": "Find local crawls and explore participating businesses with a digital passport.",
         "publisher": { "@id": "https://www.hometowncrawls.com/#organization" },
         "inLanguage": "en-US"
       }
@@ -53,199 +49,113 @@
   }
   </script>
 </head>
-<body>
-  <header class="site-header" id="site-header"></header>
-  <main>
-
-    <div class="wrap">
-      <section class="hero">
-        <div class="hero-inner">
-          <p class="eyebrow">Coffee · Your town</p>
-          <h1>Collect stamps.<br />Support locals.</h1>
-          <p>Join the Puyallup Holiday Coffee Crawl, visit independent shops, and stamp your way through the season — no app download required.</p>
-          <div class="row">
-            <a class="btn btn-primary btn-lg" href="/puyallup/holiday-coffee-crawl">Start trekking</a>
-            <a class="btn btn-ghost btn-lg" href="map.html" style="border-color:rgba(255,253,248,.35);color:#fff">View the map</a>
-          </div>
-        </div>
-      </section>
+<body class="home-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="home-header">
+    <div class="home-wrap home-nav">
+      <a class="home-wordmark" href="/" aria-label="Hometown Crawls home">Hometown<span>Crawls</span></a>
+      <button class="home-menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="home-navigation"><span></span><span></span></button>
+      <nav class="home-navigation" id="home-navigation" aria-label="Main navigation">
+        <a href="#crawls">Explore crawls</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="#businesses">For businesses</a>
+        <a class="home-account" href="/account.html">Log in <svg class="home-arrow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></a>
+      </nav>
     </div>
+  </header>
 
-    <section class="section">
-      <div class="wrap">
-        <div class="section-head">
-          <p class="eyebrow">How it works</p>
-          <h2>Four simple steps to a full passport</h2>
-          <p>Designed for real sidewalks and real shops — scan a QR or type the counter code.</p>
+  <main id="main">
+    <section class="home-hero" aria-labelledby="home-heading">
+      <div class="home-wrap home-hero-grid">
+        <div class="home-hero-copy">
+          <p class="home-kicker"><span class="home-kicker-line" aria-hidden="true"></span> Coffee. Food. Pubs.</p>
+          <h1 id="home-heading">Find your next<br /><span>local stop.</span></h1>
+          <p class="home-lead">Explore local spots with a free digital crawl passport, right on your phone.</p>
+          <a class="home-button" href="#crawls">Explore crawls <svg class="home-arrow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></a>
+          <p class="home-hero-note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg> No app download needed</p>
         </div>
-        <div class="grid-4">
-          <div class="card">
-            <div class="step-num">1</div>
-            <h3>Find a crawl</h3>
-            <p class="muted small">Open the Puyallup Holiday Coffee Crawl, November 1 through December 31, 2026.</p>
-          </div>
-          <div class="card">
-            <div class="step-num">2</div>
-            <h3>Join a passport</h3>
-            <p class="muted small">Sign in with your email. Your passport is saved to your account, so you can open it on any device.</p>
-          </div>
-          <div class="card">
-            <div class="step-num">3</div>
-            <h3>Stamp at shops</h3>
-            <p class="muted small">Scan the shop QR or enter the tent-card code at the counter.</p>
-          </div>
-          <div class="card">
-            <div class="step-num">4</div>
-            <h3>Finish for a prize</h3>
-            <p class="muted small">Complete the trail and claim your prize while supplies last.</p>
-          </div>
+        <div class="home-hero-art" aria-hidden="true">
+          <div class="home-art-circle"></div>
+          <img class="home-mascot" src="/assets/home/mascot.png" alt="" width="640" height="640" fetchpriority="high" />
         </div>
       </div>
     </section>
 
-    <section class="section" style="padding-top:0">
-      <div class="wrap">
-        <div class="section-head">
-          <p class="eyebrow">Featured trails</p>
-          <h2>Start trekking</h2>
-          <p>Independent stops. One passport. Your pace.</p>
+    <section class="home-section home-crawls" id="crawls" aria-labelledby="crawls-heading">
+      <div class="home-wrap">
+        <div class="home-section-heading">
+          <div><p class="home-kicker">Find a crawl</p><h2 id="crawls-heading">What's happening locally</h2></div>
+          <span class="home-location"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg> Puyallup, Washington</span>
         </div>
-        <div class="grid" style="grid-template-columns:minmax(240px,420px)">
-          <a class="card trail-card" href="/puyallup/holiday-coffee-crawl">
-            <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=70" alt="Latte on a café counter" />
-            <div class="trail-body">
-              <div class="row">
-                <span class="pill pill-wait">Holiday</span>
-                <span class="pill pill-ok">Nov 1 – Dec 31, 2026</span>
-              </div>
-              <h3>Puyallup Holiday Coffee Crawl</h3>
-              <p class="muted small">November 1 through December 31, 2026. Crawl your way through the coffee shops of Puyallup.</p>
-            </div>
-          </a>
+        <article class="home-featured">
+          <a class="home-featured-photo" href="/puyallup/holiday-coffee-crawl" tabindex="-1" aria-hidden="true"><img src="/assets/home/coffee.jpg" alt="" width="1000" height="667" loading="lazy" /><span class="home-photo-label">THE HOLIDAY EDITION</span></a>
+          <div class="home-featured-content">
+            <div class="home-event-meta"><span class="home-tag">Coffee crawl</span><span>Free digital passport</span></div>
+            <h3><a href="/puyallup/holiday-coffee-crawl">Puyallup Holiday<br />Coffee Crawl</a></h3>
+            <p class="home-event-dates">November 1 – December 31, 2026</p>
+            <p class="home-event-description">Visit participating coffee shops around Puyallup and collect a digital stamp at each stop.</p>
+            <div class="home-event-actions"><a class="home-button" href="/puyallup/holiday-coffee-crawl">View the crawl <svg class="home-arrow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></a><a class="home-text-link" href="/map.html">See the map <svg class="home-arrow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></a></div>
+          </div>
+        </article>
+        <div class="home-more-crawls">
+          <p>More ways to explore</p>
+          <div class="home-category"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3v6m3-6v6m3-6v6M5 7h6v3a3 3 0 0 1-6 0V7Zm3 6v8m11-18v18m0-18c-3 3-4 7 0 8"/></svg><strong>Food crawls</strong><span>Not announced yet</span></div>
+          <div class="home-category"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 3-1 7 2 11h8l2-11-1-7H7Zm-1 7h12M7 6h10"/></svg><strong>Pub crawls</strong><span>Not announced yet</span></div>
         </div>
       </div>
     </section>
 
-    <section class="section" style="padding-top:0">
-      <div class="wrap">
-        <div class="card" style="padding:0;overflow:hidden">
-          <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:0" class="map-teaser-grid">
-            <div class="map-frame" style="border:0;border-radius:0;min-height:280px">
-              <div id="home-map" class="leaflet-map"></div>
-            </div>
-            <div style="padding:1.75rem 1.5rem">
-              <p class="eyebrow">Map</p>
-              <h2 style="margin:.4rem 0 .75rem">See every stop</h2>
-              <p class="muted">Pins for each paid shop on the Puyallup Holiday Coffee Crawl. Plan your route before you leave the house.</p>
-              <div id="home-shops-empty" class="hidden mt-2">
-                <h3>Shops announced soon</h3>
-                <p class="muted mt-1">The map is centered on downtown Puyallup. Pins will show up as coffee shops join.</p>
-              </div>
-              <div class="row mt-2">
-                <a class="btn btn-primary" href="map.html">Open full map</a>
-                <a class="btn btn-ghost" href="/puyallup/holiday-coffee-crawl">Trail details</a>
-              </div>
-            </div>
-          </div>
+    <section class="home-section home-how" id="how-it-works" aria-labelledby="how-heading">
+      <div class="home-wrap">
+        <div class="home-section-heading"><div><h2 id="how-heading">Three steps to a full passport</h2></div><a class="home-text-link" href="/guides/how-a-hometown-coffee-crawl-works.html">The full guide <svg class="home-arrow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></a></div>
+        <ol class="home-steps">
+          <li><span class="home-step-number">01</span><div><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="12" y="5" width="24" height="38" rx="4"/><path d="M19 10h10M21 37h6m-8-14 4 4 8-9"/></svg><h3>Get your passport</h3><p>Choose a crawl and sign in with your email. Your free passport is saved to your account.</p></div></li>
+          <li><span class="home-step-number">02</span><div><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 20v22h32V20M5 20l5-13h28l5 13M5 20c0 7 9 7 9 0 0 7 10 7 10 0 0 7 10 7 10 0 0 7 9 7 9 0H5Zm14 22V30h10v12"/></svg><h3>Visit local spots</h3><p>Use the crawl map to find participating shops. Stop in during their opening hours.</p></div></li>
+          <li><span class="home-step-number">03</span><div><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="18" stroke-dasharray="3 4"/><circle cx="24" cy="24" r="12"/><path d="m18 24 4 4 9-10"/></svg><h3>Collect your stamps</h3><p>Scan the shop's QR code or enter its counter code. One visit, one stamp.</p></div></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="home-section home-benefits" aria-labelledby="benefits-heading">
+      <div class="home-wrap">
+        <div class="home-section-heading"><h2 id="benefits-heading">Made for your whole community.</h2></div>
+        <div class="home-benefits-grid">
+          <article><p class="home-kicker">Guests</p><h3>Make a day of exploring.</h3><p>Find a new favorite, visit local spots with friends, and collect stamps as you go.</p></article>
+          <article><p class="home-kicker">Stores</p><h3>Meet your next regular.</h3><p>Give first-time visitors a reason to stop in, invite them back, and build your customer list with their permission.</p></article>
+          <article><p class="home-kicker">Organizers</p><h3>Bring local businesses together.</h3><p>Create a shared crawl, help shops get ready, and give your community one place to explore.</p></article>
         </div>
       </div>
     </section>
 
-    <section class="section" style="padding-top:0">
-      <div class="wrap">
-        <div class="section-head">
-          <p class="eyebrow">Guides</p>
-          <h2>How hometown crawls work</h2>
-          <p>Short reads for crawlers, shops, and chamber organizers.</p>
-        </div>
-        <div class="grid">
-          <a class="card" href="guides/how-a-hometown-coffee-crawl-works.html">
-            <p class="eyebrow">For crawlers</p>
-            <h3 style="margin:.4rem 0">How a hometown coffee crawl works</h3>
-            <p class="muted small">Passports, QR stamps, counter codes, and finishing for a prize — without downloading an app.</p>
-            <span class="btn btn-soft mt-2" style="pointer-events:none">Read the guide</span>
-          </a>
-          <a class="card" href="guides/for-chamber-organizers.html">
-            <p class="eyebrow">For organizers</p>
-            <h3 style="margin:.4rem 0">For chamber &amp; hometown organizers</h3>
-            <p class="muted small">Apply to launch a trail and invite shops. Send your application to hello@hometowncrawls.com.</p>
-            <span class="btn btn-soft mt-2" style="pointer-events:none">Read the guide</span>
-          </a>
+    <section class="home-section home-map-section" aria-labelledby="map-heading">
+      <div class="home-wrap home-map-grid">
+        <div class="home-map-copy"><p class="home-kicker">The local map</p><h2 id="map-heading">Plan your stops.</h2><p>Find the participating shops on the Puyallup Holiday Coffee Crawl.</p><p id="home-shops-status" class="home-map-status" role="status">Loading participating shops…</p><a class="home-text-link" href="/map.html">Open the full map <svg class="home-arrow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></a></div>
+        <div class="home-map-frame"><div id="home-map" aria-label="Map of participating Puyallup coffee shops"></div><p class="home-map-fallback hidden" id="home-map-fallback">The interactive map isn't available right now. <a href="/map.html">Try the full map</a>.</p></div>
+      </div>
+    </section>
+
+    <section class="home-section home-businesses" id="businesses" aria-labelledby="business-heading">
+      <div class="home-wrap">
+        <div class="home-section-heading"><div><p class="home-kicker">For local businesses &amp; organizers</p><h2 id="business-heading">Be part of a hometown crawl.</h2></div></div>
+        <div class="home-business-grid">
+          <article><span class="home-business-label">For Puyallup coffee shops</span><h3>Join the holiday crawl.</h3><p>Get your shop on the map with a QR code and counter code for visiting crawlers.</p><p class="home-price">$49.99 <span>one-time · 2026 holiday season</span></p><a class="home-button" href="/puyallup/coffee-crawl">Join as a shop <svg class="home-arrow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></a></article>
+          <article><span class="home-business-label">For community organizers</span><h3>Organize a local crawl.</h3><p>Have a town or a group of local businesses in mind? Send us an application to get started.</p><a class="home-button home-button-outline" href="/organize.html">Apply to organize <svg class="home-arrow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></a><a class="home-organizer-guide" href="/guides/for-chamber-organizers.html">Read the organizer guide</a></article>
         </div>
       </div>
     </section>
 
-    <section class="section" style="padding-top:0">
-      <div class="wrap grid">
-        <a class="card" href="rules.html">
-          <p class="eyebrow">Rules</p>
-          <h3 style="margin:.4rem 0">Play fair, stamp honest</h3>
-          <p class="muted small">One stamp per shop, visit in person, and keep it kind for staff and neighbors.</p>
-          <span class="btn btn-soft mt-2" style="pointer-events:none">Read the rules</span>
-        </a>
-        <a class="card" href="prizes.html">
-          <p class="eyebrow">Prizes</p>
-          <h3 style="margin:.4rem 0">Finish the trail, claim a prize</h3>
-          <p class="muted small">Completer prizes for full passports — while supplies last each season.</p>
-          <span class="btn btn-soft mt-2" style="pointer-events:none">See prizes</span>
-        </a>
-        <a class="card" href="faqs.html">
-          <p class="eyebrow">FAQs</p>
-          <h3 style="margin:.4rem 0">Quick answers</h3>
-          <p class="muted small">Do I need an app? How do stamps work? What if the QR won’t scan?</p>
-          <span class="btn btn-soft mt-2" style="pointer-events:none">Browse FAQs</span>
-        </a>
-      </div>
-    </section>
-
-    <section class="section" style="padding-top:0">
-      <div class="wrap stack" style="gap:1rem">
-        <div class="cta-band cta-split">
-          <div>
-            <p class="eyebrow" style="color:rgba(255,253,248,.7)">For organizers</p>
-            <h2 style="margin:.35rem 0 .5rem">Apply to organize a crawl</h2>
-            <p>Tell us which town you have in mind. Send your application to hello@hometowncrawls.com.</p>
-          </div>
-          <div class="row">
-            <a class="btn btn-primary" href="organize.html">Organize a crawl</a>
-          </div>
-        </div>
-        <div class="cta-band cta-split" style="background:var(--paper);color:var(--ink);border:1px solid var(--line)">
-          <div>
-            <p class="eyebrow">For shops</p>
-            <h2 style="margin:.35rem 0 .5rem;color:var(--ink)">Claim your seat on the trail</h2>
-            <p style="color:var(--muted)">Join the Puyallup Holiday Coffee Crawl. $49.99 for the 2026 holiday season, one-time. You get a QR, a counter code, and local visitors.</p>
-          </div>
-          <div class="row">
-            <a class="btn btn-primary" href="/puyallup/coffee-crawl">Join as a shop</a>
-          </div>
-        </div>
-      </div>
-    </section>
-
+    <section class="home-help" aria-label="Crawl information"><div class="home-wrap"><p>A few helpful details</p><a href="/faqs.html">FAQs <svg class="home-arrow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></a><a href="/rules.html">Crawl rules <svg class="home-arrow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></a><a href="/prizes.html">Prize updates <svg class="home-arrow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></a></div></section>
   </main>
-  <footer class="site-footer" id="site-footer"></footer>
+
+  <footer class="home-footer">
+    <div class="home-wrap home-footer-top"><a class="home-wordmark" href="/" aria-label="Hometown Crawls home">Hometown<span>Crawls</span></a><p>Coffee, food &amp; pub crawls.<br />A digital passport for your local stops.</p><a href="mailto:hello@hometowncrawls.com">hello@hometowncrawls.com <svg class="home-arrow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></a></div>
+    <div class="home-wrap home-footer-bottom"><span>© 2026 Hometown Crawls</span><nav aria-label="Footer navigation"><a href="/account.html">Account</a><a href="/puyallup/holiday-coffee-crawl/rules">Official rules</a><a href="/privacy">Privacy</a></nav></div>
+  </footer>
   <script src="assets/config.js"></script>
   <script src="assets/site.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/crawl.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", async () => {
-      const el = document.getElementById("home-map");
-      let shops = [];
-      try {
-        const res = await HCCrawl.loadShops("puy-coffee");
-        shops = res.shops || [];
-        if (res.error) console.warn(res.error);
-      } catch (e) {
-        shops = [];
-        console.warn(e);
-      }
-      const empty = document.getElementById("home-shops-empty");
-      if (empty) empty.classList.toggle("hidden", shops.length > 0);
-      HCCrawl.initMap(el, shops, { lat: 47.191, lng: -122.293 });
-    });
-  </script>
+  <script src="assets/home.js"></script>
 </body>
 </html>
