@@ -53,11 +53,11 @@ test("copy uses paid locations, golden rules, three steps, and 50 meters", () =>
   assert.doesNotMatch(holiday, /20\+/);
   assert.doesNotMatch(coffee, /20\+/);
   assert.match(holiday, /Golden Rules of a Crawl/);
-  assert.equal((read("index.html").match(/<h2>Three steps to a full passport<\/h2>/g) || []).length, 1);
+  assert.equal((read("index.html").match(/<h2[^>]*>Three steps to a full passport<\/h2>/g) || []).length, 1);
   assert.doesNotMatch(read("index.html"), /Four simple steps/);
-  assert.match(read("index.html"), /Sign in with your email and join the crawl\./);
-  assert.match(read("index.html"), /Visit shops and scan or enter the code to stamp your passport\./);
-  assert.match(read("index.html"), /Fill your passport to enter the prize drawing\./);
+  assert.match(holiday, /Sign in with your email and join the crawl\./);
+  assert.match(holiday, /Visit shops and scan or enter the code to stamp your passport\./);
+  assert.match(holiday, /Fill your passport to enter the prize drawing\./);
   for (const rel of ["index.html", "puyallup/holiday-coffee-crawl/index.html", "rules.html", "faqs.html", "organize.html"]) {
     assert.doesNotMatch(read(rel), /A few plain rules/);
   }

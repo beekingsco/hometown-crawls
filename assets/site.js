@@ -28,39 +28,21 @@
   function injectHeader() {
     const el = document.getElementById("site-header");
     if (!el) return;
-    const logoImg = base + "logo.jpg";
     el.innerHTML = `
       <div class="wrap nav">
-        <a class="brand" href="${base}index.html">
-          <span class="brand-mark" id="brand-mark">☕</span>
-          HOMETOWN CRAWLS
-        </a>
+        <a class="wordmark" href="${base}index.html" aria-label="Hometown Crawls home">Hometown<span>Crawls</span></a>
         <nav class="nav-links" id="nav-links">
           ${link("puyallup/holiday-coffee-crawl", "Find a crawl")}
           ${link("map.html", "Map")}
-          ${link("prizes.html", "Prizes")}
           ${link("rules.html", "Rules")}
           ${link("faqs.html", "FAQs")}
-          ${link("account.html", "Account")}
-          ${link("organize.html", "Organize")}
-          ${link("puyallup/coffee-crawl", "Shops")}
+          ${link("organize.html", "Start a crawl")}
         </nav>
         <div class="nav-end">
-          <a class="btn btn-primary nav-login" id="nav-login" href="${base}account.html">Log in</a>
+          <a class="nav-login" id="nav-login" href="${base}account.html">Log in</a>
           <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav-links" id="nav-toggle"><span></span></button>
         </div>
       </div>`;
-
-    // Optional logo.jpg
-    const mark = el.querySelector("#brand-mark");
-    const img = new Image();
-    img.onload = () => {
-      mark.innerHTML = "";
-      mark.appendChild(img);
-    };
-    img.onerror = () => {};
-    img.alt = "Hometown Crawls";
-    img.src = logoImg;
 
     const toggle = el.querySelector("#nav-toggle");
     const links = el.querySelector("#nav-links");
@@ -109,8 +91,8 @@
       <div class="wrap">
         <div class="footer-grid">
           <div>
-            <div class="footer-brand">Hometown Crawls</div>
-            <p class="small" style="opacity:.75;max-width:32ch">Collect stamps. Support locals. No app download — just your phone and a passport.</p>
+            <a class="wordmark footer-wordmark" href="${base}index.html" aria-label="Hometown Crawls home">Hometown<span>Crawls</span></a>
+            <p class="small" style="opacity:.75;max-width:32ch">Coffee, food and pub crawls. A digital passport for your local stops.</p>
           </div>
           <div class="footer-col">
             <h4>Explore</h4>
@@ -124,7 +106,7 @@
           </div>
           <div class="footer-col">
             <h4>Partners</h4>
-            <a href="${base}organize.html">Organize a crawl</a>
+            <a href="${base}organize.html">Start a crawl</a>
             <a href="${base}puyallup/coffee-crawl">Join as a shop</a>
             <a href="${base}faqs.html">FAQs</a>
             <a href="${base}account.html">Account</a>
@@ -171,6 +153,16 @@
       icon.rel = "icon";
       icon.href = "/favicon.ico";
       document.head.appendChild(icon);
+    }
+    if (!document.body.classList.contains("home-page")) {
+      const fonts = document.createElement("link");
+      fonts.rel = "stylesheet";
+      fonts.href = "https://fonts.googleapis.com/css2?family=Lobster&family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap";
+      document.head.appendChild(fonts);
+      const appCss = document.createElement("link");
+      appCss.rel = "stylesheet";
+      appCss.href = "/assets/app.css";
+      document.head.appendChild(appCss);
     }
     injectHeader();
     injectFooter();
