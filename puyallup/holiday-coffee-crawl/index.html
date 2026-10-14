@@ -528,6 +528,9 @@
 
       showClaimPrompt();
       await refreshStamps();
+      HCCrawl.watchSession(function (_session, event) {
+        if (event === "INITIAL_SESSION" || event === "SIGNED_IN") refreshStamps();
+      });
 
       $("btn-join").onclick = async function () {
         document.getElementById("passport").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -617,8 +620,10 @@
         if (!email) return;
         try {
           var sb = HCCrawl.client();
-          var redirectTo = location.origin + location.pathname;
-          var res = await sb.auth.signInWithOtp({ email: email, options: { emailRedirectTo: redirectTo } });
+          var res = await sb.auth.signInWithOtp({
+            email: email,
+            options: { emailRedirectTo: window.location.origin + window.location.pathname + window.location.search }
+          });
           if (res.error) throw res.error;
           $("passport-ok").textContent = "Check your email for the sign-in link. It brings you back to this page.";
           showBox($("passport-ok"), true);

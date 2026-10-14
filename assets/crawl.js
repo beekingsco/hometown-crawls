@@ -52,13 +52,30 @@
     return session;
   }
 
+  function authRedirect() {
+    return location.origin + location.pathname + location.search;
+  }
+
+  function watchSession(fn) {
+    const c = client();
+    if (!c || typeof fn !== "function") return function () {};
+    const { data } = c.auth.onAuthStateChange(function (event, next) {
+      session = next;
+      if (event === "INITIAL_SESSION" || event === "SIGNED_IN" || event === "SIGNED_OUT") {
+        setTimeout(function () { fn(next, event); }, 0);
+      }
+    });
+    return function () {
+      data.subscription.unsubscribe();
+    };
+  }
+
   async function magicLink(email) {
     const c = client();
     if (!c) throw new Error("Supabase not loaded");
-    const redirectTo = location.origin + (window.HC?.base || "") + "account.html";
     const { error } = await c.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: redirectTo }
+      options: { emailRedirectTo: location.origin + location.pathname + location.search }
     });
     if (error) throw error;
   }
@@ -439,6 +456,8 @@
     ready,
     ensureAuth,
     getSession,
+    authRedirect,
+    watchSession,
     magicLink,
     signOut,
     loadShops,

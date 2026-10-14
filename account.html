@@ -448,6 +448,12 @@
       const msg = document.getElementById("auth-msg");
       const err = document.getElementById("auth-err");
       await refreshAuth();
+      HCCrawl.watchSession(() => {
+        refreshAuth().then(() => {
+          if (window.HC && HC.refreshLogin) HC.refreshLogin();
+          if (window.HCGuest && HCGuest.refreshBonus) HCGuest.refreshBonus();
+        });
+      });
       let shops = [];
       try {
         const res = await HCCrawl.loadShops("puy-coffee");

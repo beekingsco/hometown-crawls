@@ -221,7 +221,7 @@
         try {
           var res = await sb.auth.signInWithOtp({
             email: $("login-email").value.trim(),
-            options: { emailRedirectTo: location.origin + location.pathname + location.search }
+            options: { emailRedirectTo: window.location.origin + window.location.pathname + window.location.search }
           });
           if (res.error) throw res.error;
           $("login-ok").textContent = "Check your email for the magic link. It opens this page.";
@@ -236,6 +236,13 @@
         showBox($("card-err"), true);
         return;
       }
+      sb.auth.onAuthStateChange(function (event, session) {
+        if ((event === "INITIAL_SESSION" || event === "SIGNED_IN") && session) {
+          setTimeout(function () { enter(session); }, 0);
+        } else if ((event === "INITIAL_SESSION" || event === "SIGNED_OUT") && !session) {
+          $("view-login").classList.remove("hidden");
+        }
+      });
       sb.auth.getSession().then(function (res) {
         if (res.data && res.data.session) enter(res.data.session);
         else $("view-login").classList.remove("hidden");

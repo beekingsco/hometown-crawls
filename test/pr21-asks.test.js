@@ -29,6 +29,25 @@ const bonus = read("migrations/20261014230000_bonus_actions.sql");
 const photos = read("migrations/20261014240000_guest_photos.sql");
 const claim = read("migrations/20260928150000_claim_stamp_enforce_rules.sql");
 
+test("magic link returns to the page that sent it", () => {
+  const redirect = "location.origin + location.pathname + location.search";
+  const windowRedirect = "window.location.origin + window.location.pathname + window.location.search";
+  assert.match(crawl, new RegExp(redirect.replace(/[.+]/g, "\\$&")));
+  assert.doesNotMatch(crawl, /emailRedirectTo: redirectTo/);
+  assert.doesNotMatch(crawl, /account\.html/);
+  assert.match(crawl, /detectSessionInUrl: true/);
+  assert.match(crawl, /function watchSession/);
+  assert.match(account, /HCCrawl\.watchSession/);
+  for (const rel of [
+    "puyallup/holiday-coffee-crawl/index.html",
+    "puyallup/coffee-crawl/shop/index.html",
+    "puyallup/coffee-crawl/organizer/index.html",
+    "puyallup/coffee-crawl/shop/card/index.html"
+  ]) {
+    assert.match(read(rel), new RegExp(windowRedirect.replace(/[.+]/g, "\\$&")));
+  }
+});
+
 test("anonymous sign-in is gone and Log in sits in the header", () => {
   for (const file of [account, crawl, site, home, faqs, guide]) {
     assert.doesNotMatch(file, /signInAnonymously|btn-anon|Continue without an account/i);

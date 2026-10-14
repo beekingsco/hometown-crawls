@@ -121,6 +121,10 @@
 
   window.HC = window.HC || {};
   window.HC.base = base;
+  window.HC.refreshLogin = function () {
+    const header = document.getElementById("site-header");
+    if (header) paintLogin(header);
+  };
   window.HC.toast = function (msg) {
     document.querySelectorAll(".toast").forEach((t) => t.remove());
     const t = document.createElement("div");
