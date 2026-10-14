@@ -305,8 +305,10 @@
 .home-benefits-grid h3 { font-size: 25px; }
 .home-map-section { padding: 57px 0; }
 .home-businesses { background: #f2e4d5; }
-.home-footer .home-wordmark { width: 225px; font-size: inherit; filter: brightness(0) invert(94%) sepia(14%) saturate(330%); }
-.home-footer-top { gap: 44px; }
+/* Keep the mascot's face and map details in their original colors. */
+.home-footer .home-wordmark { width: 253px; max-width: 100%; box-sizing: border-box; padding: 12px 14px; border: 1px solid var(--home-line); border-radius: 8px; background: var(--home-cream); font-size: inherit; }
+.home-footer .home-wordmark img { display: block; }
+.home-footer-top { gap: 28px; padding-bottom: 28px; }
 .home-footer-top p { line-height: 1.7; }
 
 @media (min-width: 1600px) { .home-hero-art { width: calc(100% + 140px); } }
@@ -359,7 +361,7 @@
   .home-featured h3 { font-size: 28px; }
   .home-crawls { padding-block: 42px; }
   .home-map-section { padding-block: 42px; }
-  .home-footer .home-wordmark { width: 202px; }
+  .home-footer .home-wordmark { width: 230px; }
 }
 @media (max-width: 620px) {
   .home-wrap { width: calc(100% - 36px); }
@@ -409,8 +411,8 @@
   .home-benefits-grid h3 { font-size: 24px; margin-bottom: 10px; }
   .home-benefits-grid article > p:last-child { font-size: 14px; }
   .home-map-section { padding-block: 32px; }
-  .home-footer-top { gap: 22px; }
-  .home-footer .home-wordmark { width: 196px; }
+  .home-footer-top { gap: 16px; align-items: flex-start; padding-bottom: 24px; }
+  .home-footer .home-wordmark { width: 224px; }
   .home-footer-top p { width: 100%; font-size: 11px; }
 }
 @media (max-width: 360px) {
