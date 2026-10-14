@@ -1,0 +1,71 @@
+.card-print-page { background: #f8f2e7; color: #302119; }
+.card-toolbar { padding-top: 1.25rem; }
+.card-toolbar h1 { font-family: Fraunces, Georgia, serif; }
+.card-sheet {
+  width: min(100% - 32px, 720px);
+  margin: 16px auto;
+  display: grid;
+  gap: 16px;
+}
+.passport-card {
+  background: #fffaf1;
+  border: 1px solid #d8cbb8;
+  border-radius: 12px;
+  padding: 16px;
+  color: #302119;
+  font-family: Outfit, system-ui, sans-serif;
+}
+.passport-card h1,
+.passport-card h2 { font-family: Fraunces, Georgia, serif; letter-spacing: -0.04em; margin: 0 0 8px; }
+.card-crawl { font-size: 1.35rem; line-height: 1.15; }
+.card-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.card-brand img:first-child { width: 72px; height: auto; }
+.card-brand img:last-child { width: min(180px, 46vw); height: auto; }
+.card-signup, .card-prize, .card-turnin, .card-turnin-list { margin: 8px 0 0; font-size: 0.85rem; }
+.card-turnin, .card-prize { font-weight: 600; }
+.stamp-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 8px; margin-top: 12px; }
+.stamp-spot {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 4px;
+  border: 2px solid #302119;
+  border-radius: 50%;
+}
+.stamp-name { margin: 0; text-align: center; font-size: 11px; line-height: 1.25; }
+.card-line {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  border-bottom: 1px solid #302119;
+  min-height: 32px;
+  margin: 8px 0;
+  font-size: 0.95rem;
+}
+.card-line span { color: #75685b; font-size: 0.75rem; }
+.card-line b { font-weight: 600; }
+.card-rules { margin: 12px 0 0; padding-left: 1.1rem; font-size: 0.8rem; }
+.card-rules li + li { margin-top: 4px; }
+.card-sheet .passport-card:nth-child(2) { display: none; }
+
+@media (min-width: 700px) {
+  .stamp-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media print {
+  @page { size: letter; margin: 0.4in; }
+  body { background: #fff !important; }
+  .site-header, .site-footer, .card-toolbar { display: none !important; }
+  .card-sheet {
+    width: auto;
+    height: 10in;
+    margin: 0;
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    gap: 0.15in;
+    break-after: page;
+  }
+  .card-sheet .passport-card:nth-child(2) { display: block; }
+  .passport-card { border-radius: 8px; break-inside: avoid; }
+  .stamp-spot { width: 0.62in; height: 0.62in; }
+  .stamp-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
