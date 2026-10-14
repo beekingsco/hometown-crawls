@@ -22,62 +22,73 @@
   }
 
   function lights() {
-    var svg = svgEl("svg", { class: "card-lights", viewBox: "0 0 340 42", "aria-hidden": "true" });
+    var svg = svgEl("svg", {
+      class: "card-lights",
+      viewBox: "0 0 800 108",
+      preserveAspectRatio: "xMidYMid meet",
+      "aria-hidden": "true"
+    });
     svg.append(svgEl("path", {
-      d: "M6 24 C 28 8, 46 36, 72 20 S 112 6, 146 22 S 186 38, 220 18 S 268 8, 334 22",
+      d: "M6 62 C 80 18, 130 96, 200 54 S 310 8, 400 64 S 520 104, 610 46 S 720 14, 794 58",
       fill: "none",
       stroke: "#2C241C",
-      "stroke-width": "2.2",
+      "stroke-width": "5",
       "stroke-linecap": "round"
     }));
-    ["#D7263D", "#1F7A3A", "#E0B03A", "#D7263D", "#1F7A3A", "#E0B03A", "#D7263D", "#1F7A3A", "#E0B03A", "#D7263D"].forEach(function (color, index) {
-      var y = index % 2 === 0 ? 28 : 14;
-      svg.append(svgEl("circle", { cx: 16 + index * 33, cy: y, r: "6.5", fill: color }));
-      svg.append(svgEl("rect", { x: 13 + index * 33, y: y - 11, width: "6", height: "5", rx: "1", fill: "#3A3128" }));
-    });
+    var colors = ["#D7263D", "#1F7A3A", "#E0B03A"];
+    for (var i = 0; i < 11; i++) {
+      var x = 40 + i * 72;
+      var y = i % 2 === 0 ? 72 : 36;
+      svg.append(svgEl("rect", { x: x - 8, y: y - 26, width: "16", height: "12", rx: "2", fill: "#3A3128" }));
+      svg.append(svgEl("circle", { cx: x, cy: y, r: "18", fill: colors[i % 3] }));
+      svg.append(svgEl("circle", { cx: x - 6, cy: y - 6, r: "5", fill: "#ffffff", opacity: "0.35" }));
+    }
     return svg;
   }
 
   function treeScene() {
-    var svg = svgEl("svg", { class: "card-deco", viewBox: "0 0 120 96", "aria-hidden": "true" });
-    svg.append(svgEl("polygon", { points: "58,6 66,18 50,18", fill: "#E0B03A" }));
-    svg.append(svgEl("polygon", { points: "58,16 86,48 30,48", fill: "#1F4D36" }));
-    svg.append(svgEl("polygon", { points: "58,30 94,66 22,66", fill: "#2A6844" }));
-    svg.append(svgEl("polygon", { points: "58,46 102,84 14,84", fill: "#1F4D36" }));
-    [[40, 40], [70, 36], [48, 58], [78, 62], [36, 72], [64, 74]].forEach(function (dot) {
-      svg.append(svgEl("circle", { cx: dot[0], cy: dot[1], r: "2.2", fill: "#F4F7F8" }));
+    var svg = svgEl("svg", { class: "card-deco card-tree", viewBox: "0 0 180 160", "aria-hidden": "true" });
+    svg.append(svgEl("polygon", { points: "90,2 100,26 126,26 106,42 114,66 90,52 66,66 74,42 54,26 80,26", fill: "#E0B03A" }));
+    svg.append(svgEl("polygon", { points: "90,30 138,74 42,74", fill: "#1F4D36" }));
+    svg.append(svgEl("polygon", { points: "90,52 154,104 26,104", fill: "#246B45" }));
+    svg.append(svgEl("polygon", { points: "90,78 168,136 12,136", fill: "#1F4D36" }));
+    [[62, 64], [112, 58], [74, 90], [124, 96], [48, 116], [96, 120], [142, 112], [68, 128], [118, 78]].forEach(function (dot) {
+      svg.append(svgEl("circle", { cx: dot[0], cy: dot[1], r: "3.4", fill: "#F4F7F8" }));
     });
-    svg.append(svgEl("rect", { x: "52", y: "80", width: "12", height: "12", fill: "#6B3E2A" }));
-    svg.append(svgEl("rect", { x: "8", y: "70", width: "22", height: "16", rx: "1", fill: "#D7263D" }));
-    svg.append(svgEl("rect", { x: "16", y: "70", width: "6", height: "16", fill: "#E0B03A" }));
-    svg.append(svgEl("rect", { x: "92", y: "74", width: "20", height: "14", rx: "1", fill: "#1F7A3A" }));
-    svg.append(svgEl("rect", { x: "99", y: "74", width: "5", height: "14", fill: "#E0B03A" }));
+    svg.append(svgEl("rect", { x: "80", y: "132", width: "20", height: "24", fill: "#6B3E2A" }));
+    svg.append(svgEl("rect", { x: "6", y: "118", width: "42", height: "36", rx: "2", fill: "#D7263D" }));
+    svg.append(svgEl("rect", { x: "23", y: "118", width: "8", height: "36", fill: "#E0B03A" }));
+    svg.append(svgEl("rect", { x: "6", y: "132", width: "42", height: "8", fill: "#E0B03A" }));
+    svg.append(svgEl("rect", { x: "132", y: "126", width: "42", height: "28", rx: "2", fill: "#1F7A3A" }));
+    svg.append(svgEl("rect", { x: "149", y: "126", width: "8", height: "28", fill: "#E0B03A" }));
+    svg.append(svgEl("rect", { x: "132", y: "136", width: "42", height: "7", fill: "#E0B03A" }));
     return svg;
   }
 
   function hollyScene() {
-    var svg = svgEl("svg", { class: "card-deco", viewBox: "0 0 130 96", "aria-hidden": "true" });
+    var svg = svgEl("svg", { class: "card-deco card-holly", viewBox: "0 0 200 160", "aria-hidden": "true" });
     svg.append(svgEl("path", {
-      d: "M8 70 C 24 40, 40 48, 52 28 C 60 46, 78 36, 90 18",
-      fill: "none",
-      stroke: "#1F4D36",
-      "stroke-width": "3",
-      "stroke-linecap": "round"
+      d: "M4 118 C 36 96, 48 108, 70 78 C 86 104, 112 88, 132 58 C 146 82, 168 70, 196 42",
+      fill: "none", stroke: "#1F4D36", "stroke-width": "7", "stroke-linecap": "round"
     }));
     svg.append(svgEl("path", {
-      d: "M20 74 C 36 58, 48 64, 62 50 C 74 62, 96 54, 118 34",
-      fill: "none",
-      stroke: "#2A6844",
-      "stroke-width": "3",
-      "stroke-linecap": "round"
+      d: "M18 132 C 48 112, 64 122, 88 96 C 104 116, 136 104, 168 78",
+      fill: "none", stroke: "#246B45", "stroke-width": "6", "stroke-linecap": "round"
     }));
-    [[34, 52], [48, 44], [70, 40], [28, 66], [58, 60], [86, 48]].forEach(function (berry) {
-      svg.append(svgEl("circle", { cx: berry[0], cy: berry[1], r: "3.3", fill: "#D7263D" }));
+    [[28, 108], [46, 92], [64, 100], [84, 78], [102, 88], [122, 66], [58, 118], [96, 108], [140, 84], [154, 70]].forEach(function (leaf, index) {
+      svg.append(svgEl("ellipse", {
+        cx: leaf[0], cy: leaf[1], rx: index % 2 ? "11" : "9", ry: "5",
+        fill: index % 2 ? "#1F4D36" : "#2A6844",
+        transform: "rotate(" + (index * 28 - 40) + " " + leaf[0] + " " + leaf[1] + ")"
+      }));
     });
-    svg.append(svgEl("path", { d: "M96 58 h22 a8 8 0 0 1 0 16 h-22 z", fill: "#F8F4EA", stroke: "#1F4D36", "stroke-width": "2" }));
-    svg.append(svgEl("path", { d: "M96 58 h8 a10 8 0 0 1 0 16 h-8 z", fill: "#E0B03A" }));
-    svg.append(svgEl("path", { d: "M104 50 h8 v10 h-8 z", fill: "#1F4D36" }));
-    svg.append(svgEl("path", { d: "M100 50 q8 -12 16 0", fill: "none", stroke: "#6B3E2A", "stroke-width": "2" }));
+    [[40, 96], [72, 86], [98, 74], [126, 70], [54, 112], [88, 104], [146, 78], [34, 118], [112, 92]].forEach(function (berry) {
+      svg.append(svgEl("circle", { cx: berry[0], cy: berry[1], r: "5.5", fill: "#D7263D" }));
+    });
+    svg.append(svgEl("path", { d: "M150 96 h36 a12 12 0 0 1 0 24 h-36 z", fill: "#F8F4EA", stroke: "#1F4D36", "stroke-width": "2.5" }));
+    svg.append(svgEl("path", { d: "M150 96 h12 a16 12 0 0 1 0 24 h-12 z", fill: "#E0B03A" }));
+    svg.append(svgEl("path", { d: "M162 84 h12 v16 h-12 z", fill: "#1F4D36" }));
+    svg.append(svgEl("path", { d: "M158 84 q10 -16 22 0", fill: "none", stroke: "#6B3E2A", "stroke-width": "2.5" }));
     return svg;
   }
 
@@ -219,15 +230,20 @@
     var shops = Math.max(0, count || 0);
     var rows = Math.max(1, Math.ceil((shops || 1) / 5));
     var lines = Math.max(1, Math.ceil((shops || 1) / 2));
-    var stampIn = Math.min(0.62, Math.max(0.22, 3.15 / rows));
-    var lineIn = Math.min(0.18, Math.max(0.095, 3.15 / lines));
-    var tight = rows > 5 || lines > 12;
+    var tight = rows > 4 || lines > 12;
+    var very = rows > 10;
+    var stampIn = tight ? Math.min(0.62, Math.max(very ? 0.16 : 0.22, 2.05 / rows)) : Math.min(1.1, 3.55 / rows);
+    var lineIn = tight ? Math.min(0.14, Math.max(0.075, 1.55 / lines)) : Math.min(0.2, 2.5 / lines);
     return {
       stamp: stampIn.toFixed(3) + "in",
       list: (lineIn * 72 / 1.2).toFixed(2) + "pt",
-      deco: tight ? "0.55in" : "0.82in",
-      lights: tight ? "0.28in" : "0.4in",
-      rowGap: tight ? "1px" : "3px"
+      deco: very ? "0.7in" : tight ? "0.9in" : "1.65in",
+      mascot: very ? "0.62in" : tight ? "0.8in" : "1.3in",
+      rowGap: (tight ? 0.04 : 0.16).toFixed(2) + "in",
+      lights: tight ? "0.38in" : "auto",
+      title: tight ? "16pt" : "26pt",
+      edition: tight ? "11pt" : "16pt",
+      tight: tight
     };
   }
 
@@ -238,8 +254,12 @@
     page.style.setProperty("--stamp", scale.stamp);
     page.style.setProperty("--list", scale.list);
     page.style.setProperty("--deco", scale.deco);
-    page.style.setProperty("--lights", scale.lights);
+    page.style.setProperty("--mascot", scale.mascot);
     page.style.setProperty("--row-gap", scale.rowGap);
+    page.style.setProperty("--lights", scale.lights);
+    page.style.setProperty("--title", scale.title);
+    page.style.setProperty("--edition", scale.edition);
+    if (scale.tight) page.dataset.tight = "1";
     return page;
   }
 
