@@ -45,6 +45,14 @@
       <div class="card auth-panel">
         <div class="auth-status" id="auth-status">Checking session…</div>
         <div id="auth-signed-out">
+          <label class="check"><input type="checkbox" id="play-paper" /> Play with a paper card</label>
+          <div id="paper-fields" class="hidden">
+            <label class="field mt-2"><span>Name</span>
+              <input class="input" id="auth-name" maxlength="80" autocomplete="name" placeholder="Name on the card" />
+            </label>
+            <p class="form-note" id="paper-shop-note"></p>
+            <label class="check"><input type="checkbox" id="paper-terms" /> I agree to the <a href="/puyallup/holiday-coffee-crawl/rules">official rules</a>.</label>
+          </div>
           <label class="field"><span>Email</span>
             <input class="input" type="email" id="auth-email" placeholder="you@example.com" autocomplete="email" />
           </label>
@@ -58,10 +66,31 @@
           <div class="row">
             <button class="btn btn-ghost" type="button" id="btn-signout">Sign out</button>
             <a class="btn btn-primary" href="/puyallup/holiday-coffee-crawl">Open the holiday coffee trail</a>
+            <a class="btn btn-soft hidden" id="paper-reprint" href="/card.html?crawl=puy-coffee">Print paper card</a>
           </div>
         </div>
         <div class="form-success mt-2" id="auth-msg"></div>
         <div class="form-error mt-2" id="auth-err"></div>
+        <div id="paper-success" class="paper-success hidden">
+          <div class="paper-hero">
+            <img src="/assets/home/mascot.png" alt="" width="512" height="512" />
+            <svg class="paper-thumb" viewBox="0 0 48 48" aria-hidden="true"><path d="M16 22v16H9a3 3 0 0 1-3-3v-8a3 3 0 0 1 3-3h7Z"/><path d="M16 22.5 20.5 10a3.2 3.2 0 0 1 3.2-2.2c1.5 0 2.6 1.4 2.6 2.8v6.2h8.2a3.4 3.4 0 0 1 3.3 4.1l-2.6 11.2a3.4 3.4 0 0 1-3.3 2.6H16"/></svg>
+            <span class="paper-star" aria-hidden="true">★</span>
+          </div>
+          <h2 id="paper-success-copy">You're in the game! Take this to the counter to request your paper card.</h2>
+          <p class="muted" id="paper-mail-note"></p>
+          <button class="btn btn-primary" type="button" id="paper-next">Card options</button>
+        </div>
+      </div>
+
+      <div class="card hidden" id="paper-rewards">
+        <p class="eyebrow">Paper card</p>
+        <h2>Your card</h2>
+        <div class="paper-actions mt-2">
+          <a class="btn btn-primary" id="paper-download" href="/card.html?crawl=puy-coffee">Download &amp; print your card</a>
+          <button class="btn btn-soft" type="button" id="paper-ask">Ask at the counter</button>
+        </div>
+        <p class="mt-2 hidden" id="paper-counter-note"></p>
       </div>
 
       <div class="card" id="entries-card">
@@ -248,6 +277,7 @@
           <div class="row mt-2">
             <button class="btn btn-soft" type="button" id="btn-rotate-code">New code</button>
             <button class="btn btn-ghost" type="button" id="btn-print-sign">Print counter sign</button>
+            <a class="btn btn-ghost" id="btn-print-card" href="/card.html?crawl=puy-coffee&amp;blank=1">Print paper card</a>
           </div>
         </div>
 
@@ -371,6 +401,22 @@
           <p class="muted small mt-1">Approve or hide. Only approved photos show on the crawl page.</p>
           <div class="stack mt-2" id="org-photos"></div>
         </div>
+        <div class="card" id="player-search-card">
+          <div class="row" style="justify-content:space-between">
+            <h3>Players</h3>
+            <a class="btn btn-soft" id="org-print-card" href="/card.html?crawl=puy-coffee&amp;blank=1">Print paper card</a>
+          </div>
+          <p class="muted small mt-1">Search a digital or paper player by name or email. Check a shop to add a manual stamp. A digital stamp stays checked.</p>
+          <form class="mt-2" id="player-search">
+            <label class="field"><span>Name or email</span>
+              <input class="input" id="player-query" type="search" placeholder="Name or email" autocomplete="off" />
+            </label>
+            <button class="btn btn-primary" type="submit">Search players</button>
+          </form>
+          <p class="form-error mt-2" id="player-err" role="alert"></p>
+          <div class="stack mt-2" id="player-results"></div>
+          <div class="stack mt-2 hidden" id="player-detail"></div>
+        </div>
         <div class="card">
           <div class="row" style="justify-content:space-between">
             <h3>Team</h3>
@@ -403,6 +449,7 @@
   <script src="assets/store-listing.js"></script>
   <script src="assets/organizer-panel.js"></script>
   <script src="assets/guest-hub.js"></script>
+  <script src="assets/paper-card.js"></script>
   <script>
     function show(el, on) { el.classList.toggle("show", !!on); el.style.display = on ? "block" : "none"; }
     async function refreshAuth() {
@@ -420,6 +467,7 @@
             const saved = await HCCrawl.client().rpc("record_guest_consent");
             if (!saved.error) sessionStorage.removeItem("hc-contact-consent");
           }
+          if (window.HCPaper) await HCPaper.finish();
         } catch (e) {}
       } else {
         status.textContent = "Not signed in";
@@ -469,6 +517,10 @@
         show(msg, false); show(err, false);
         const email = document.getElementById("auth-email").value.trim();
         const consent = document.getElementById("contact-consent");
+        if (window.HCPaper && HCPaper.paperOn()) {
+          await HCPaper.submit({ show, msg, err });
+          return;
+        }
         if (!email) { err.textContent = "Enter your email."; show(err, true); return; }
         if (!consent || !consent.checked) { err.textContent = "Check the box so stores and organizers can contact you about prizes and offers."; show(err, true); return; }
         try { sessionStorage.setItem("hc-contact-consent", "1"); } catch (e) {}
