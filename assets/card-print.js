@@ -223,15 +223,42 @@
     return card;
   }
 
-  function sheet(kind, model) {
-    var page = el("section", "card-sheet card-sheet-" + kind);
-    page.append(face(kind, model));
-    page.append(face(kind, model));
+  function scaleFor(count) {
+    var shops = Math.max(0, count || 0);
+    var rows = Math.max(1, Math.ceil(shops / 5));
+    var lines = Math.max(1, Math.ceil(shops / 2));
+    var boxes = lines * 1.45;
+    var stamp = Math.min(0.48, Math.max(0.22, 5.2 / rows - 0.08));
+    var list = Math.min(8.5, Math.max(5.5, (4.8 * 72) / boxes / 1.15));
+    var tight = stamp < 0.36 || list < 7.25;
+    return {
+      stamp: stamp.toFixed(3) + "in",
+      list: list.toFixed(2) + "pt",
+      deco: tight ? "0.48in" : "0.64in",
+      lights: tight ? "0.26in" : "0.32in",
+      rowGap: tight ? "1px" : "2px"
+    };
+  }
+
+  function sheet(model) {
+    var page = el("section", "card-sheet");
+    var fold = el("div", "card-fold");
+    fold.setAttribute("aria-hidden", "true");
+    fold.append(el("span", null, "Fold"));
+    page.append(face("front", model));
+    page.append(fold);
+    page.append(face("back", model));
+    var scale = scaleFor((model.shops || []).length);
+    page.style.setProperty("--stamp", scale.stamp);
+    page.style.setProperty("--list", scale.list);
+    page.style.setProperty("--deco", scale.deco);
+    page.style.setProperty("--lights", scale.lights);
+    page.style.setProperty("--row-gap", scale.rowGap);
     return page;
   }
 
   function render(root, model) {
-    root.replaceChildren(sheet("front", model), sheet("back", model));
+    root.replaceChildren(sheet(model));
   }
 
   async function load() {
@@ -285,16 +312,13 @@
     render(root, model);
   }
 
-  function printCard(single) {
-    document.body.classList.toggle("print-single", !!single);
+  function printCard() {
     window.print();
   }
 
   document.addEventListener("DOMContentLoaded", function () {
-    var two = document.getElementById("card-print");
-    var one = document.getElementById("card-print-single");
-    if (two) two.addEventListener("click", function () { printCard(false); });
-    if (one) one.addEventListener("click", function () { printCard(true); });
+    var button = document.getElementById("card-print");
+    if (button) button.addEventListener("click", printCard);
     load();
   });
 
@@ -302,6 +326,7 @@
     TURN_IN: TURN_IN,
     subtitle: subtitle,
     orderedShops: orderedShops,
+    scaleFor: scaleFor,
     render: render
   };
 })();

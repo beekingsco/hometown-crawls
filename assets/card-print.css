@@ -107,7 +107,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
   gap: 8px;
-  flex: 1;
+  flex: 0 0 auto;
   align-content: start;
 }
 .shop-rule { background: #c6a15b; }
@@ -137,7 +137,44 @@
 .card-line b { font-weight: 600; color: #243028; min-height: 1em; }
 .card-turnin, .card-turnin-list { margin: 6px 0 0; font-size: 0.68rem; line-height: 1.35; color: #1f4d36; }
 .card-turnin { font-weight: 700; }
-.card-sheet .passport-card:nth-child(2) { display: none; }
+.card-fold {
+  border-top: 2px dashed #1f4d36;
+  margin: 10px 18% 4px;
+  height: 0;
+  position: relative;
+}
+.card-fold span {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translate(-50%, -50%);
+  background: #f8f2e7;
+  color: #1f4d36;
+  font-family: Outfit, system-ui, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 0 8px;
+}
+
+@media (min-width: 960px) {
+  .card-sheet {
+    width: min(100% - 32px, 980px);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr);
+    align-items: stretch;
+    gap: 0;
+  }
+  .card-fold {
+    border-top: 0;
+    border-left: 2px dashed #1f4d36;
+    margin: 6% 0;
+    height: auto;
+    width: 0;
+    justify-self: center;
+  }
+}
 
 @media (max-width: 380px) {
   .stamp-spot { width: 36px; height: 36px; font-size: 12px; }
@@ -150,41 +187,73 @@
 }
 
 @media print {
-  @page { size: letter landscape; margin: 0.28in; }
-  @page one-up { size: letter portrait; margin: 0.45in; }
-  body.print-single .card-sheet { page: one-up; }
-  body { background: #fff !important; }
+  @page { size: letter landscape; margin: 0; }
+  html, body, main, #card-sheets {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    height: 8.5in;
+    overflow: hidden !important;
+  }
   .site-header, .site-footer, .card-toolbar { display: none !important; }
   .card-sheet {
-    width: auto;
+    box-sizing: border-box;
+    width: 11in;
+    height: 8.5in;
     margin: 0;
+    padding: 0.28in 0.32in;
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.16in;
-    break-after: page;
-    page-break-after: always;
+    grid-template-columns: minmax(0, 1fr) 0.2in minmax(0, 1fr);
+    align-items: stretch;
+    overflow: hidden;
+    break-after: avoid;
+    page-break-after: avoid;
+    break-inside: avoid;
   }
-  .card-sheet .passport-card:nth-child(2) { display: flex; }
+  .card-fold {
+    border: 0;
+    margin: 0.12in 0;
+    height: auto;
+    width: 2px;
+    justify-self: center;
+    align-self: stretch;
+    background: repeating-linear-gradient(to bottom, #1f4d36 0 7px, transparent 7px 14px);
+  }
+  .card-fold span { display: none; }
   .passport-card {
     aspect-ratio: auto;
-    height: 7.65in;
-    border-width: 7px;
+    height: 7.94in;
+    width: auto;
+    min-height: 0;
+    overflow: hidden;
+    border-width: 6px;
+    padding: 4px 6px 5px;
     break-inside: avoid;
     page-break-inside: avoid;
   }
-  .stamp-spot { width: 0.48in; height: 0.48in; font-size: 11pt; }
+  .card-lights { height: var(--lights, 0.32in); }
   .card-print-page .passport-card h1,
-  .card-print-page .card-back-title { font-size: 16pt; }
-  .shop-key li { font-size: 8.5pt; }
-  .card-line, .card-turnin, .card-turnin-list { font-size: 8pt; }
-  .card-tagline, .card-edition, .card-key-title { font-size: 8pt; }
-  .card-deco { height: 0.85in; }
-  .card-mascot { width: 0.58in; }
-  body.print-single .card-sheet { display: block; }
-  body.print-single .passport-card:nth-child(2) { display: none !important; }
-  body.print-single .passport-card {
-    width: 5.6in;
-    height: 8.55in;
-    margin: 0 auto;
+  .card-print-page .card-back-title { font-size: 13pt; margin: 0 2px; }
+  .card-edition { font-size: 8pt; letter-spacing: 0.08em; margin-top: 1px; }
+  .card-tagline { font-size: 6.5pt; margin: 2px 4px 0; }
+  .card-key-title { font-size: 7pt; margin: 3px 0 4px; padding: 2px 0; }
+  .stamp-grid { gap: var(--row-gap, 2px) 0; margin: 3px 0; }
+  .stamp-spot {
+    width: var(--stamp, 0.42in);
+    height: var(--stamp, 0.42in);
+    font-size: 8pt;
   }
+  .shop-key { gap: 4px; }
+  .shop-key li {
+    font-size: var(--list, 7.5pt);
+    line-height: 1.15;
+    margin: 0 0 var(--row-gap, 2px);
+  }
+  .card-player { margin-top: 3px; }
+  .card-line { min-height: 0.2in; margin: 1px 0; font-size: 7.5pt; }
+  .card-line span { font-size: 6.5pt; }
+  .card-turnin, .card-turnin-list { font-size: 6.5pt; margin-top: 3px; }
+  .card-deco { height: var(--deco, 0.64in); }
+  .card-mascot { width: 0.48in; }
+  .card-motto { font-size: 6pt; }
 }
