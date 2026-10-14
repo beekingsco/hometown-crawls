@@ -31,6 +31,10 @@
       "destination": "/puyallup/coffee-crawl/shop/card/index.html"
     },
     {
+      "source": "/puyallup/coffee-crawl/shop/sign",
+      "destination": "/puyallup/coffee-crawl/shop/sign/index.html"
+    },
+    {
       "source": "/puyallup/coffee-crawl/organizer",
       "destination": "/puyallup/coffee-crawl/organizer/index.html"
     }
@@ -47,6 +51,11 @@
     }
   ],
   "redirects": [
+    {
+      "source": "/play",
+      "destination": "/puyallup/holiday-coffee-crawl",
+      "permanent": false
+    },
     {
       "source": "/shops/join",
       "destination": "/puyallup/coffee-crawl",

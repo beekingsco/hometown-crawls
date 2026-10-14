@@ -10,6 +10,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/assets/site.css" />
+  <script>
+    (function () {
+      var q = new URLSearchParams(location.search);
+      if (q.get("demo") === "1" && q.get("embed") !== "1") {
+        location.replace("/account?demo=1&tab=store");
+      }
+    })();
+  </script>
   <style>
     .portal-hero { padding: 2.25rem 0 1rem; }
     .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: .75rem; }

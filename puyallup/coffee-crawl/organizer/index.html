@@ -89,14 +89,14 @@
             <div id="per-shop" class="mt-2"></div>
           </div>
           <div class="card">
-            <div class="row" style="justify-content:space-between">
+            <div class="row record-toolbar" style="justify-content:space-between">
               <h3>Shops</h3>
               <div class="row">
                 <button class="btn btn-ghost" type="button" id="btn-refresh">Refresh</button>
                 <button class="btn btn-soft" type="button" id="btn-csv">Download CSV</button>
               </div>
             </div>
-            <div class="table-wrap mt-2">
+            <div class="table-wrap shop-table-wrap mt-2">
               <table class="shops">
                 <thead>
                   <tr>
@@ -112,6 +112,7 @@
                 <tbody id="shop-rows"></tbody>
               </table>
             </div>
+            <div class="record-cards mt-2" id="shop-cards"></div>
             <p class="muted small mt-2 hidden" id="shops-empty">No shops have applied yet.</p>
             <p class="form-error mt-2" id="action-err" role="alert"></p>
           </div>
@@ -274,8 +275,14 @@
       }).join("");
     }
 
+    function shopActions(s) {
+      var paidBtn = s.is_paid ? "Unmark" : "Mark paid";
+      return '<button class="btn btn-soft" type="button" data-act="paid" data-id="' + esc(s.listing_id) + '">' + paidBtn + "</button>" +
+        '<label class="check"><input type="checkbox" data-act="visible" data-id="' + esc(s.listing_id) + '"' + (s.is_visible ? " checked" : "") + "> Show on the passport</label>";
+    }
     function renderShops() {
       var body = $("shop-rows");
+      var cards = $("shop-cards");
       $("shops-empty").classList.toggle("hidden", shops.length > 0);
       body.innerHTML = shops.map(function (s) {
         var name = s.display_name || s.signup_business_name || "Shop";
@@ -286,16 +293,30 @@
         var map = s.is_visible
           ? '<span class="pill pill-ok">On map</span>'
           : '<span class="pill pill-muted">Hidden</span>';
-        var paidBtn = s.is_paid ? "Unmark" : "Mark paid";
-        var mapBtn = s.is_approved ? "Hide" : "Show on map";
         return "<tr><td><b>" + esc(name) + "</b>" +
           (s.address ? '<div class="small muted">' + esc(s.address) + "</div>" : "") +
           (s.owner_linked ? '<div class="small muted">Owner linked</div>' : "") +
           "</td><td>" + (contact || "—") + "</td><td>" + esc(s.applied_pt || "") + "</td><td>" + pay +           "</td><td>" + map +
           "</td><td>" + esc(String(Number(s.photo_count) || 0)) + '</td><td><div class="row">' +
-          '<button class="btn btn-soft" type="button" data-act="paid" data-id="' + esc(s.listing_id) + '">' + paidBtn + "</button>" +
-          '<button class="btn btn-ghost" type="button" data-act="approve" data-id="' + esc(s.listing_id) + '">' + mapBtn + "</button>" +
+          shopActions(s) +
           "</div></td></tr>";
+      }).join("");
+      if (!cards) return;
+      cards.innerHTML = shops.map(function (s) {
+        var name = s.display_name || s.signup_business_name || "Shop";
+        var chips = [
+          s.is_paid ? "Paid" : "Not paid",
+          s.is_visible ? "On map" : "Hidden",
+          String(Number(s.photo_count) || 0) + " photos"
+        ];
+        if (s.applied_pt) chips.push(s.applied_pt);
+        if (s.contact_name) chips.push(s.contact_name);
+        return '<article class="record-card"><b class="record-name">' + esc(name) + "</b>" +
+          '<p class="record-email">' + esc(s.email || "No email") + "</p>" +
+          '<div class="record-chips">' + chips.map(function (chip) {
+            return '<span class="chip">' + esc(chip) + "</span>";
+          }).join("") + "</div>" +
+          '<div class="record-actions">' + shopActions(s) + "</div></article>";
       }).join("");
     }
 
@@ -674,7 +695,7 @@
         });
       };
 
-      $("shop-rows").onclick = async function (ev) {
+      async function onShopAction(ev) {
         var btn = ev.target.closest("[data-act]");
         if (!btn || busy) return;
         var id = btn.getAttribute("data-id");
@@ -688,9 +709,13 @@
         }
         busy = true;
         try {
+          var visible = act === "visible" ? btn.checked === true : null;
           var res = act === "paid"
             ? await sb.rpc("organizer_set_paid", { p_listing: id, p_paid: !shop.is_paid, p_amount_cents: null })
-            : await sb.rpc("organizer_set_approved", { p_listing: id, p_approved: !shop.is_approved });
+            : await sb.rpc("organizer_set_shop_visible", { p_listing: id, p_visible: visible });
+          if (res.error && act === "visible" && /schema cache|organizer_set_shop_visible/i.test(res.error.message || "")) {
+            res = await sb.rpc("organizer_set_approved", { p_listing: id, p_approved: visible });
+          }
           if (res.error) {
             if (isDenied(res.error)) {
               note("<h2>You're not authorized</h2><p class=\"mt-1\">This sign-in can't change shops on that crawl.</p>");
@@ -706,7 +731,10 @@
         } finally {
           busy = false;
         }
-      };
+      }
+      $("shop-rows").onclick = onShopAction;
+      var shopCards = $("shop-cards");
+      if (shopCards) shopCards.onclick = onShopAction;
     });
   })();
   </script>

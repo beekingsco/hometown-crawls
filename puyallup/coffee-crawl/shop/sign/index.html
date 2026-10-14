@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Join our Hometown Crawl · Counter sign</title>
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root { --cream: #f4efe6; --forest: #1f3a24; --ink: #243028; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #e7e1d6; color: var(--ink); font-family: Outfit, sans-serif; }
+    .toolbar { display: flex; gap: 0.75rem; justify-content: center; padding: 1rem; }
+    button, a.btn { background: var(--forest); color: #fff; border: 0; border-radius: 999px; padding: 0.7rem 1.1rem; font: inherit; font-weight: 600; text-decoration: none; cursor: pointer; }
+    .sheet {
+      width: 8.5in;
+      min-height: 11in;
+      margin: 0 auto 1.5rem;
+      background: var(--cream);
+      color: var(--forest);
+      padding: 0.7in 0.65in;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    h1 { font-family: Fraunces, serif; font-size: 2.6rem; line-height: 1.05; margin: 0.2rem 0 0.4rem; }
+    .crawl { font-size: 1.25rem; font-weight: 650; margin: 0; }
+    .dates { margin: 0.25rem 0 0.8rem; }
+    .qr svg { width: 220px; height: 220px; }
+    .code { font-family: Fraunces, serif; font-size: 3.2rem; letter-spacing: 0.12em; margin: 0.4rem 0 0.2rem; }
+    .url { font-weight: 700; letter-spacing: 0.02em; }
+    ol { text-align: left; max-width: 28rem; margin: 1rem 0 0; padding-left: 1.2rem; }
+    li { margin: 0.45rem 0; }
+    .demo { margin-top: 1rem; font-size: 0.85rem; letter-spacing: 0.08em; }
+    @media print {
+      body { background: #fff; }
+      .toolbar { display: none; }
+      .sheet { margin: 0; box-shadow: none; }
+    }
+    @page { size: letter; margin: 0.4in; }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <button type="button" id="btn-print">Print</button>
+    <a class="btn" id="back" href="/account?tab=store">Back to the store tab</a>
+  </div>
+  <article class="sheet" id="sheet">
+    <p class="crawl" id="crawl-name">Puyallup Holiday Coffee Crawl</p>
+    <h1>Join our Hometown Crawl</h1>
+    <p class="dates">Nov 1 – Dec 31, 2026</p>
+    <div class="qr" id="qr"></div>
+    <p class="code" id="code">ANTHEMCO</p>
+    <p class="url">hometowncrawls.com/play</p>
+    <ol>
+      <li>Sign in with your email and join the crawl.</li>
+      <li>Visit shops and scan or enter the code to stamp your passport.</li>
+      <li>Fill your passport to enter the prize drawing.</li>
+    </ol>
+    <p class="demo" id="demo-label" hidden>DEMO DATA</p>
+  </article>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+  <script>
+    (function () {
+      var q = new URLSearchParams(location.search);
+      var code = (q.get("code") || "ANTHEMCO").toUpperCase();
+      var shop = q.get("shop") || "anthem";
+      var demo = q.get("demo") === "1";
+      document.getElementById("code").textContent = code;
+      if (demo) {
+        var label = document.getElementById("demo-label");
+        label.hidden = false;
+        var back = document.getElementById("back");
+        back.href = "/account?demo=1&tab=store";
+      }
+      var url = new URL("https://www.hometowncrawls.com/puyallup/holiday-coffee-crawl");
+      url.searchParams.set("shop", shop);
+      url.searchParams.set("code", code);
+      if (typeof qrcode === "function") {
+        var qr = qrcode(0, "M");
+        qr.addData(url.toString());
+        qr.make();
+        document.getElementById("qr").innerHTML = qr.createSvgTag(6, 0);
+      }
+      document.getElementById("btn-print").onclick = function () { window.print(); };
+    })();
+  </script>
+</body>
+</html>
