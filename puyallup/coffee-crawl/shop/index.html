@@ -422,7 +422,7 @@
         try {
           var res = await sb.auth.signInWithOtp({
             email: email,
-            options: { emailRedirectTo: location.origin + location.pathname }
+            options: { emailRedirectTo: window.location.origin + window.location.pathname + window.location.search }
           });
           if (res.error) throw res.error;
           $("login-ok").textContent = "Check your email for the magic link. It opens this page.";

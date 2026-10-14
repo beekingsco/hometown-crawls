@@ -29,6 +29,25 @@ const bonus = read("migrations/20261014230000_bonus_actions.sql");
 const photos = read("migrations/20261014240000_guest_photos.sql");
 const claim = read("migrations/20260928150000_claim_stamp_enforce_rules.sql");
 
+test("magic link returns to the page that sent it", () => {
+  const redirect = "location.origin + location.pathname + location.search";
+  const windowRedirect = "window.location.origin + window.location.pathname + window.location.search";
+  assert.match(crawl, new RegExp(redirect.replace(/[.+]/g, "\\$&")));
+  assert.doesNotMatch(crawl, /emailRedirectTo: redirectTo/);
+  assert.doesNotMatch(crawl, /account\.html/);
+  assert.match(crawl, /detectSessionInUrl: true/);
+  assert.match(crawl, /function watchSession/);
+  assert.match(account, /HCCrawl\.watchSession/);
+  for (const rel of [
+    "puyallup/holiday-coffee-crawl/index.html",
+    "puyallup/coffee-crawl/shop/index.html",
+    "puyallup/coffee-crawl/organizer/index.html",
+    "puyallup/coffee-crawl/shop/card/index.html"
+  ]) {
+    assert.match(read(rel), new RegExp(windowRedirect.replace(/[.+]/g, "\\$&")));
+  }
+});
+
 test("anonymous sign-in is gone and Log in sits in the header", () => {
   for (const file of [account, crawl, site, home, faqs, guide]) {
     assert.doesNotMatch(file, /signInAnonymously|btn-anon|Continue without an account/i);
@@ -128,6 +147,15 @@ test("demo never stamps, joins, or uploads, and claim_stamp has no bypass", () =
 test("guest entries, bonus actions, and photo consent are present", () => {
   assert.match(account, /id="entries-card"/);
   assert.match(account, /id="bonus-confirm"/);
+  assert.match(account, /Link to your post or review \(optional\)/);
+  assert.match(account, /Paste the link so the shop can confirm it\./);
+  assert.match(account, /https:\/\/instagram\.com\/p\/\.\.\./);
+  const guestPanel = account.slice(account.indexOf('id="panel-guest"'), account.indexOf('id="panel-store"'));
+  assert.ok(guestPanel.indexOf(">Claim a stamp<") < guestPanel.indexOf(">Scan QR<"));
+  assert.ok(guestPanel.indexOf(">Scan QR<") < guestPanel.indexOf(">Shop bonus<"));
+  assert.ok(guestPanel.indexOf(">Shop bonus<") < guestPanel.indexOf(">Photo from the crawl<"));
+  assert.match(guest, /Open @" \+ handle \+ " on Instagram/);
+  assert.match(guest, /card\.hidden = true/);
   assert.match(account, /I give Hometown Crawls permission to show this photo/);
   assert.match(guest, /1 entry for each stop/);
   assert.match(guest, /guest_submit_bonus/);
