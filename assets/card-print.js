@@ -1,6 +1,6 @@
 /* Live printable card model with a Puyallup-only holiday skin. */
 (function () {
-  var TURN_IN = "Bring your finished card to a co-organizer shop (e.g. Holiday Cafe, Anthem).";
+  var TURN_IN = "Bring your finished card to a co-organizer shop.";
   var TAGLINE = ["SIP", "SHOP", "EXPLORE", "SUPPORT LOCAL"];
 
   function params() {
@@ -191,8 +191,8 @@
     root.classList.toggle("holiday-preview-scroll", !!holiday);
     var instructions = document.getElementById("card-print-instructions");
     if (instructions) instructions.textContent = holiday
-      ? "Print at actual size on one portrait US Letter page. Stamp spaces, shop key, player details and rules are together. More than 30 shops use clearly numbered continuation pages."
-      : "Download & print puts the whole card on one portrait letter page. Shops mark the numbered circles in ink.";
+      ? "Print at actual size on one portrait US Letter page, or choose Save as PDF in the print dialog. The eligible paid-shop list refreshes before printing. More than 30 shops use numbered continuation pages."
+      : "Print on one portrait letter page, or choose Save as PDF in the print dialog. The eligible paid-shop list refreshes before printing.";
     if (holiday) HCHolidayCard.render(root, model);
     else root.replaceChildren(sheet(model));
   }
@@ -200,13 +200,12 @@
   async function load() {
     var root = document.getElementById("card-sheets");
     var status = document.getElementById("card-status");
-    if (!root) return;
+    if (!root) return false;
+    root.replaceChildren();
+    if (status) status.textContent = "Refreshing the live shop list…";
+    try {
     var crawl = params().get("crawl") || "puy-coffee";
     var blank = params().get("blank") === "1";
-    var pdfLink = document.getElementById("card-pdf-download");
-    var pdfNote = document.getElementById("card-pdf-note");
-    if (pdfLink) pdfLink.hidden = crawl !== "puy-coffee";
-    if (pdfNote) pdfNote.hidden = crawl !== "puy-coffee";
     var user = params().get("user") || "";
     var model = {
       crawlId: crawl,
@@ -221,9 +220,7 @@
     };
     var client = window.HCCrawl && HCCrawl.client && HCCrawl.client();
     if (!client) {
-      if (status) status.textContent = "Card details are temporarily unavailable.";
-      render(root, model);
-      return;
+      throw new Error("Card details are temporarily unavailable.");
     }
     var named = await client.from("crawls").select("name, starts_at, ends_at").eq("id", crawl).maybeSingle();
     if (!named.error && named.data) {
@@ -232,10 +229,12 @@
       model.endsAt = named.data.ends_at || "";
     }
     var shops = await client.rpc("get_public_crawl_shops", { p_crawl: crawl });
-    if (!shops.error && Array.isArray(shops.data)) model.shops = orderedShops(shops.data);
+    if (shops.error || !Array.isArray(shops.data)) throw new Error("Unable to refresh the live shop list.");
+    model.shops = orderedShops(shops.data);
     var info = null;
     if (!blank && user) info = await client.rpc("organizer_player_card", { p_crawl: crawl, p_user: user });
     else if (!blank) info = await client.rpc("my_paper_card", { p_crawl: crawl });
+    if (info && info.error) throw new Error("Unable to load your card details. Sign in again or choose a blank card.");
     var row = info && !info.error && info.data && info.data[0];
     if (row) {
       model.crawlName = row.crawl_name || model.crawlName;
@@ -251,16 +250,53 @@
     }
     if (status) status.textContent = model.shops.length ? "" : "Shops will appear here as they join.";
     render(root, model);
+    return model.shops.length > 0;
+    } catch (error) {
+      root.replaceChildren();
+      if (status) status.textContent = "Could not refresh this card. Please try again. Nothing has been printed.";
+      return false;
+    }
   }
 
-  function printCard() {
-    window.print();
+  async function waitForPrintAssets() {
+    if (document.fonts && document.fonts.ready) await document.fonts.ready;
+    var root = document.getElementById("card-sheets");
+    await Promise.all(Array.from(root.querySelectorAll("img")).map(async function (image) {
+      if (image.decode) await image.decode();
+      else if (!image.complete) await new Promise(function (resolve, reject) {
+        image.addEventListener("load", resolve, { once: true });
+        image.addEventListener("error", reject, { once: true });
+      });
+      if (!image.naturalWidth) throw new Error("Card image could not load.");
+    }));
+    await new Promise(function (resolve) { requestAnimationFrame(function () { requestAnimationFrame(resolve); }); });
+  }
+
+  var printing = false;
+  async function printCard() {
+    if (printing) return false;
+    printing = true;
+    var button = document.getElementById("card-print");
+    var status = document.getElementById("card-status");
+    if (button) button.disabled = true;
+    try {
+      if (!await load()) return false;
+      await waitForPrintAssets();
+      window.print();
+      return true;
+    } catch (error) {
+      if (status) status.textContent = "The card artwork could not load. Please try printing again.";
+      return false;
+    } finally {
+      printing = false;
+      if (button) button.disabled = false;
+    }
   }
 
   document.addEventListener("DOMContentLoaded", function () {
     var button = document.getElementById("card-print");
     if (button) button.addEventListener("click", printCard);
-    load();
+    load().finally(function () { if (button) button.disabled = false; });
   });
 
   window.HCCard = {
@@ -269,6 +305,8 @@
     formatDates: formatDates,
     orderedShops: orderedShops,
     scaleFor: scaleFor,
+    load: load,
+    printCard: printCard,
     render: render
   };
 })();

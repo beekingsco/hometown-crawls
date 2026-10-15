@@ -11,7 +11,7 @@ function node(tag = 'div') {
     classList: { toggle(name, on) { on ? classes.add(name) : classes.delete(name); }, contains: n => classes.has(n) },
     append(...children) { this.children.push(...children); },
     replaceChildren(...children) { this.children = children; this.innerHTML = ''; },
-    setAttribute() {}, addEventListener() {} };
+    querySelectorAll() { return []; }, setAttribute() {}, addEventListener() {} };
 }
 function context(search = '') {
   const elements = Object.fromEntries(['card-sheets','card-status','card-print','card-print-instructions'].map(id => [id,node()]));
@@ -19,7 +19,7 @@ function context(search = '') {
   const document = { body: node('body'), documentElement: node('html'),
     getElementById: id => elements[id], createElement: node, createTextNode: text => ({textContent:text}),
     addEventListener: (event,fn) => events.push(fn) };
-  const sandbox = { document, location: { search }, URLSearchParams, Intl, Date };
+  const sandbox = { document, location: { search }, URLSearchParams, Intl, Date, requestAnimationFrame:fn=>fn() };
   sandbox.window = sandbox;
   vm.createContext(sandbox);
   for (const file of ['assets/card-holiday.js','assets/card-print.js']) vm.runInContext(read(file),sandbox);
@@ -101,10 +101,45 @@ test('blank card never fetches participant personal details', async () => {
  assert.match(read('assets/card-holiday.css'),/holiday-brand\{[^}]*overflow:hidden/);
 });
 
-test('download is a real PDF, Puyallup-only, and separate from personalized print',()=>{
- const html=read('card.html');
- assert.match(html,/id="card-pdf-download"[^>]*href="\/assets\/downloads\/puyallup-holiday-coffee-crawl\.pdf"[^>]*download=/);
- assert.match(html,/Print current card/);
- assert.match(read('assets/card-print.js'),/pdfLink.hidden = crawl !== "puy-coffee"/);
- assert.equal(fs.readFileSync(path.join(root,'assets/downloads/puyallup-holiday-coffee-crawl.pdf')).subarray(0,5).toString(),'%PDF-');
+test('no static PDF or hardcoded shop list is shipped',()=>{
+ assert.doesNotMatch(read('card.html'),/card-pdf-download|15-shop|assets\/downloads/);
+ assert.match(read('card.html'),/Print \/ Save as PDF/);
+ assert.equal(fs.existsSync(path.join(root,'assets/downloads/puyallup-holiday-coffee-crawl.pdf')),false);
+ for(const file of ['assets/card-print.js','assets/card-holiday.js'])assert.doesNotMatch(read(file),/Holiday Cafe|Anthem|ANTHEM/);
+});
+function liveClient(sandbox, provider) {
+ sandbox.HCCrawl={client:()=>({from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:{name:'Live crawl'}})})})}),
+ rpc:async name=>name==='get_public_crawl_shops'?provider():{data:[]}})};
+}
+test('each print refreshes roster, waits for fonts/images, and prevents duplicate clicks',async()=>{
+ const {sandbox,elements,document}=context('?crawl=puy-coffee&blank=1');let names=['First Shop'],calls=0,printed=0;
+ liveClient(sandbox,async()=>{calls++;return {data:names.map(display_name=>({display_name}))};});
+ sandbox.print=()=>{printed++;assert.ok(elements['card-sheets'].innerHTML.includes('New Paid Shop'));};
+ assert.equal(await sandbox.HCCard.load(),true);assert.ok(elements['card-sheets'].innerHTML.includes('First Shop'));
+ names=['New Paid Shop','Second Paid Shop'];
+ let releaseFont,releaseImage,decoded=false;
+ document.fonts={ready:new Promise(r=>releaseFont=r)};
+ elements['card-sheets'].querySelectorAll=()=>[{naturalWidth:1024,decode:()=>new Promise(r=>{decoded=true;releaseImage=r;})}];
+ const printing=sandbox.HCCard.printCard();await new Promise(r=>setImmediate(r));
+ assert.equal(printed,0);assert.equal(decoded,false);assert.equal(elements['card-print'].disabled,true);
+ assert.equal(await sandbox.HCCard.printCard(),false);releaseFont();await new Promise(r=>setImmediate(r));
+ assert.equal(decoded,true);assert.equal(printed,0);releaseImage();assert.equal(await printing,true);
+ assert.equal(printed,1);assert.equal(calls,2);assert.equal(elements['card-print'].disabled,false);
+ assert.ok(!elements['card-sheets'].innerHTML.includes('First Shop'));
+});
+test('failed or empty live roster never prints stale content and retry recovers',async()=>{
+ const {sandbox,elements}=context('?crawl=puy-coffee&blank=1');let fail=false,empty=false,printed=0;
+ liveClient(sandbox,async()=>{if(fail)throw Error('network');return {data:empty?[]:[{display_name:'Current Shop'}]};});sandbox.print=()=>printed++;
+ await sandbox.HCCard.load();fail=true;assert.equal(await sandbox.HCCard.printCard(),false);
+ assert.equal(printed,0);assert.equal(elements['card-sheets'].innerHTML,'');assert.match(elements['card-status'].textContent,/Could not refresh/);
+ fail=false;empty=true;assert.equal(await sandbox.HCCard.printCard(),false);assert.equal(printed,0);
+ empty=false;assert.equal(await sandbox.HCCard.printCard(),true);assert.equal(printed,1);
+});
+test('RPC error and failed image decode block printing',async()=>{
+ const {sandbox,elements}=context('?crawl=puy-coffee&blank=1');let printed=0;
+ sandbox.print=()=>printed++;liveClient(sandbox,async()=>({error:{message:'denied'},data:null}));
+ assert.equal(await sandbox.HCCard.printCard(),false);assert.equal(printed,0);
+ liveClient(sandbox,async()=>({data:[{display_name:'Current Shop'}]}));
+ elements['card-sheets'].querySelectorAll=()=>[{naturalWidth:0,decode:async()=>{throw Error('image');}}];
+ assert.equal(await sandbox.HCCard.printCard(),false);assert.equal(printed,0);assert.equal(elements['card-print'].disabled,false);
 });

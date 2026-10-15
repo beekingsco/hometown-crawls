@@ -46,7 +46,7 @@ test("printable card is one portrait page with stamps and the shop key", () => {
   assert.match(cardHtml, /Download &amp; print/);
   assert.match(cardHtml, /one portrait letter page/);
   assert.doesNotMatch(cardHtml, /id="card-print-single"/);
-  assert.match(cardJs, /Bring your finished card to a co-organizer shop \(e\.g\. Holiday Cafe, Anthem\)\./);
+  assert.match(cardJs, /Bring your finished card to a co-organizer shop\./);
   assert.match(read("assets/card-holiday.js"), /Holiday/);
   assert.match(cardJs, /PARTICIPATING SHOPS/);
   assert.match(cardJs, /USE THIS KEY TO FIND YOUR NEXT STOP/);
