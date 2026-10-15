@@ -1,6 +1,5 @@
-/* Holiday paper card. One walking-mascot image. Ink circles only. */
+/* Live printable card model with a Puyallup-only holiday skin. */
 (function () {
-  var NS = "http://www.w3.org/2000/svg";
   var TURN_IN = "Bring your finished card to a co-organizer shop (e.g. Holiday Cafe, Anthem).";
   var TAGLINE = ["SIP", "SHOP", "EXPLORE", "SUPPORT LOCAL"];
 
@@ -15,92 +14,6 @@
     return node;
   }
 
-  function svgEl(tag, attrs) {
-    var node = document.createElementNS(NS, tag);
-    Object.keys(attrs || {}).forEach(function (key) { node.setAttribute(key, attrs[key]); });
-    return node;
-  }
-
-  function lights() {
-    var svg = svgEl("svg", {
-      class: "card-lights",
-      viewBox: "0 0 800 108",
-      preserveAspectRatio: "xMidYMid meet",
-      "aria-hidden": "true"
-    });
-    svg.append(svgEl("path", {
-      d: "M6 62 C 80 18, 130 96, 200 54 S 310 8, 400 64 S 520 104, 610 46 S 720 14, 794 58",
-      fill: "none",
-      stroke: "#2C241C",
-      "stroke-width": "5",
-      "stroke-linecap": "round"
-    }));
-    var colors = ["#D7263D", "#1F7A3A", "#E0B03A"];
-    for (var i = 0; i < 11; i++) {
-      var x = 40 + i * 72;
-      var y = i % 2 === 0 ? 72 : 36;
-      svg.append(svgEl("rect", { x: x - 8, y: y - 26, width: "16", height: "12", rx: "2", fill: "#3A3128" }));
-      svg.append(svgEl("circle", { cx: x, cy: y, r: "18", fill: colors[i % 3] }));
-      svg.append(svgEl("circle", { cx: x - 6, cy: y - 6, r: "5", fill: "#ffffff", opacity: "0.35" }));
-    }
-    return svg;
-  }
-
-  function treeScene() {
-    var svg = svgEl("svg", { class: "card-deco card-tree", viewBox: "0 0 180 160", "aria-hidden": "true" });
-    svg.append(svgEl("polygon", { points: "90,2 100,26 126,26 106,42 114,66 90,52 66,66 74,42 54,26 80,26", fill: "#E0B03A" }));
-    svg.append(svgEl("polygon", { points: "90,30 138,74 42,74", fill: "#1F4D36" }));
-    svg.append(svgEl("polygon", { points: "90,52 154,104 26,104", fill: "#246B45" }));
-    svg.append(svgEl("polygon", { points: "90,78 168,136 12,136", fill: "#1F4D36" }));
-    [[62, 64], [112, 58], [74, 90], [124, 96], [48, 116], [96, 120], [142, 112], [68, 128], [118, 78]].forEach(function (dot) {
-      svg.append(svgEl("circle", { cx: dot[0], cy: dot[1], r: "3.4", fill: "#F4F7F8" }));
-    });
-    svg.append(svgEl("rect", { x: "80", y: "132", width: "20", height: "24", fill: "#6B3E2A" }));
-    svg.append(svgEl("rect", { x: "6", y: "118", width: "42", height: "36", rx: "2", fill: "#D7263D" }));
-    svg.append(svgEl("rect", { x: "23", y: "118", width: "8", height: "36", fill: "#E0B03A" }));
-    svg.append(svgEl("rect", { x: "6", y: "132", width: "42", height: "8", fill: "#E0B03A" }));
-    svg.append(svgEl("rect", { x: "132", y: "126", width: "42", height: "28", rx: "2", fill: "#1F7A3A" }));
-    svg.append(svgEl("rect", { x: "149", y: "126", width: "8", height: "28", fill: "#E0B03A" }));
-    svg.append(svgEl("rect", { x: "132", y: "136", width: "42", height: "7", fill: "#E0B03A" }));
-    return svg;
-  }
-
-  function hollyScene() {
-    var svg = svgEl("svg", { class: "card-deco card-holly", viewBox: "0 0 200 160", "aria-hidden": "true" });
-    svg.append(svgEl("path", {
-      d: "M4 118 C 36 96, 48 108, 70 78 C 86 104, 112 88, 132 58 C 146 82, 168 70, 196 42",
-      fill: "none", stroke: "#1F4D36", "stroke-width": "7", "stroke-linecap": "round"
-    }));
-    svg.append(svgEl("path", {
-      d: "M18 132 C 48 112, 64 122, 88 96 C 104 116, 136 104, 168 78",
-      fill: "none", stroke: "#246B45", "stroke-width": "6", "stroke-linecap": "round"
-    }));
-    [[28, 108], [46, 92], [64, 100], [84, 78], [102, 88], [122, 66], [58, 118], [96, 108], [140, 84], [154, 70]].forEach(function (leaf, index) {
-      svg.append(svgEl("ellipse", {
-        cx: leaf[0], cy: leaf[1], rx: index % 2 ? "11" : "9", ry: "5",
-        fill: index % 2 ? "#1F4D36" : "#2A6844",
-        transform: "rotate(" + (index * 28 - 40) + " " + leaf[0] + " " + leaf[1] + ")"
-      }));
-    });
-    [[40, 96], [72, 86], [98, 74], [126, 70], [54, 112], [88, 104], [146, 78], [34, 118], [112, 92]].forEach(function (berry) {
-      svg.append(svgEl("circle", { cx: berry[0], cy: berry[1], r: "5.5", fill: "#D7263D" }));
-    });
-    svg.append(svgEl("path", { d: "M150 96 h36 a12 12 0 0 1 0 24 h-36 z", fill: "#F8F4EA", stroke: "#1F4D36", "stroke-width": "2.5" }));
-    svg.append(svgEl("path", { d: "M150 96 h12 a16 12 0 0 1 0 24 h-12 z", fill: "#E0B03A" }));
-    svg.append(svgEl("path", { d: "M162 84 h12 v16 h-12 z", fill: "#1F4D36" }));
-    svg.append(svgEl("path", { d: "M158 84 q10 -16 22 0", fill: "none", stroke: "#6B3E2A", "stroke-width": "2.5" }));
-    return svg;
-  }
-
-  function motto(line) {
-    var p = el("p", "card-motto");
-    var bits = line.split(" / ");
-    p.append(document.createTextNode(bits[0] + " "));
-    p.append(el("span", "heart", "♥"));
-    p.append(document.createTextNode(" " + (bits[1] || "")));
-    return p;
-  }
-
   function tagline() {
     var p = el("p", "card-tagline");
     TAGLINE.forEach(function (word, index) {
@@ -111,13 +24,16 @@
   }
 
   function dateParts(value) {
+    // Calendar dates have no timezone. Preserve their day instead of parsing as UTC.
+    var dateOnly = typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+    var date = new Date(dateOnly ? value + "T12:00:00Z" : value);
     var parts = {};
     new Intl.DateTimeFormat("en-US", {
       month: "long",
       day: "numeric",
       year: "numeric",
-      timeZone: "America/Los_Angeles"
-    }).formatToParts(new Date(value)).forEach(function (part) {
+      timeZone: dateOnly ? "UTC" : "America/Los_Angeles"
+    }).formatToParts(date).forEach(function (part) {
       if (part.type !== "literal") parts[part.type] = part.value;
     });
     return parts;
@@ -141,7 +57,6 @@
   }
 
   function subtitle(name, starts, ends) {
-    if (/holiday/i.test(String(name || ""))) return "HOLIDAY EDITION";
     return formatDates(starts, ends);
   }
 
@@ -197,13 +112,12 @@
     var card = el("article", "passport-card");
     var shops = model.shops || [];
     var half = Math.ceil(shops.length / 2);
-    card.append(lights());
     card.append(el("h1", "card-crawl", model.crawlName || "Hometown crawl"));
     var edition = subtitle(model.crawlName, model.startsAt, model.endsAt);
     if (edition) card.append(el("p", "card-edition", edition));
     card.append(tagline());
     card.append(stampGrid(shops));
-    card.append(el("h2", "card-back-title", "PARTICIPATING COFFEE SHOPS"));
+    card.append(el("h2", "card-back-title", "PARTICIPATING SHOPS"));
     card.append(el("p", "card-key-title", "USE THIS KEY TO FIND YOUR NEXT STOP"));
     var key = el("div", "shop-key");
     key.append(shopColumn(shops.slice(0, half), 1));
@@ -211,17 +125,24 @@
     key.append(shopColumn(shops.slice(half), half + 1));
     card.append(key);
     card.append(playerBlock(model));
+    var rules = el("ul", "card-rules");
+    ["Get one ink stamp in each circle. The shop stamps the card.",
+     "Use the name and email on this card. That is the account for the drawing.",
+     "One card per person.", "Show some love if you can and buy something at the shop.",
+     "NO PURCHASE NECESSARY. Each stamped stop is one prize entry. A finished card adds 3 bonus entries."
+    ].forEach(function (rule) { rules.append(el("li", null, rule)); });
+    card.append(rules);
     var foot = el("div", "card-foot");
-    foot.append(treeScene());
+
     var center = el("div", "card-center");
     var mascot = document.createElement("img");
     mascot.className = "card-mascot";
     mascot.src = "/assets/home/mascot.png";
     mascot.alt = "";
     center.append(mascot);
-    center.append(motto("GOOD COFFEE / BRIGHTER DAYS"));
+
     foot.append(center);
-    foot.append(hollyScene());
+
     card.append(foot);
     return card;
   }
@@ -264,7 +185,16 @@
   }
 
   function render(root, model) {
-    root.replaceChildren(sheet(model));
+    var holiday = model.crawlId === "puy-coffee" && window.HCHolidayCard;
+    document.body.classList.toggle("holiday-print", !!holiday);
+    document.documentElement.classList.toggle("holiday-print", !!holiday);
+    root.classList.toggle("holiday-preview-scroll", !!holiday);
+    var instructions = document.getElementById("card-print-instructions");
+    if (instructions) instructions.textContent = holiday
+      ? "Print at actual size on one portrait US Letter page. Stamp spaces, shop key, player details and rules are together. More than 30 shops use clearly numbered continuation pages."
+      : "Download & print puts the whole card on one portrait letter page. Shops mark the numbered circles in ink.";
+    if (holiday) HCHolidayCard.render(root, model);
+    else root.replaceChildren(sheet(model));
   }
 
   async function load() {
@@ -273,8 +203,13 @@
     if (!root) return;
     var crawl = params().get("crawl") || "puy-coffee";
     var blank = params().get("blank") === "1";
+    var pdfLink = document.getElementById("card-pdf-download");
+    var pdfNote = document.getElementById("card-pdf-note");
+    if (pdfLink) pdfLink.hidden = crawl !== "puy-coffee";
+    if (pdfNote) pdfNote.hidden = crawl !== "puy-coffee";
     var user = params().get("user") || "";
     var model = {
+      crawlId: crawl,
       crawlName: "Hometown crawl",
       startsAt: "",
       endsAt: "",
@@ -331,8 +266,10 @@
   window.HCCard = {
     TURN_IN: TURN_IN,
     subtitle: subtitle,
+    formatDates: formatDates,
     orderedShops: orderedShops,
     scaleFor: scaleFor,
     render: render
   };
 })();
+

@@ -47,19 +47,19 @@ test("printable card is one portrait page with stamps and the shop key", () => {
   assert.match(cardHtml, /one portrait letter page/);
   assert.doesNotMatch(cardHtml, /id="card-print-single"/);
   assert.match(cardJs, /Bring your finished card to a co-organizer shop \(e\.g\. Holiday Cafe, Anthem\)\./);
-  assert.match(cardJs, /HOLIDAY EDITION/);
-  assert.match(cardJs, /PARTICIPATING COFFEE SHOPS/);
+  assert.match(read("assets/card-holiday.js"), /Holiday/);
+  assert.match(cardJs, /PARTICIPATING SHOPS/);
   assert.match(cardJs, /USE THIS KEY TO FIND YOUR NEXT STOP/);
   assert.match(cardJs, /SIP/);
-  assert.match(cardJs, /GOOD COFFEE \/ BRIGHTER DAYS/);
+  assert.match(cardJs, /NO PURCHASE NECESSARY/);
   assert.match(cardJs, /mascot\.png/);
   assert.doesNotMatch(cardJs, /wordmark-phone\.png/);
   assert.doesNotMatch(cardJs, /card-fold/);
   assert.doesNotMatch(cardJs, /initials/i);
   const css = read("assets/card-print.css");
   assert.match(css, /size: letter portrait/);
-  assert.match(css, /#1f4d36/i);
-  assert.match(css, /#f8f4ea/i);
+  assert.match(css, /#ad4424/i);
+  assert.match(css, /#fffaf1/i);
   assert.match(css, /width: 20%/);
   assert.match(css, /var\(--stamp/);
   assert.match(css, /height: 11in/);
@@ -74,7 +74,7 @@ test("stamp numbers follow the alphabetical shop key", () => {
   };
   cardSandbox.window = cardSandbox;
   vm.runInNewContext(cardJs, cardSandbox, { filename: "assets/card-print.js" });
-  assert.equal(cardSandbox.HCCard.subtitle("Puyallup Holiday Coffee Crawl"), "HOLIDAY EDITION");
+  assert.equal(cardSandbox.HCCard.subtitle("Puyallup Holiday Coffee Crawl"), "");
   assert.equal(
     cardSandbox.HCCard.subtitle("Puyallup Pub Crawl", "2026-10-01T18:00:00Z", "2026-12-01T06:59:00Z"),
     "OCTOBER 1 – NOVEMBER 30, 2026"
@@ -116,3 +116,4 @@ test("shop query matches a listing id or a business id", () => {
   assert.equal(sandbox.HCPaper.matchShop(rows, ""), null);
   assert.match(sandbox.HCPaper.TURN_IN, /Holiday Cafe, Anthem/);
 });
+

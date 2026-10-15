@@ -8,9 +8,9 @@
 }
 .passport-card {
   box-sizing: border-box;
-  background: #f8f4ea;
-  color: #1f4d36;
-  border: 8px solid #1f4d36;
+  background: #fffaf1;
+  color: #ad4424;
+  border: 8px solid #ad4424;
   border-radius: 6px;
   padding: 8px 10px 10px;
   font-family: Outfit, system-ui, sans-serif;
@@ -25,7 +25,7 @@
   font-weight: 800;
   text-transform: uppercase;
   text-align: center;
-  color: #1f4d36;
+  color: #ad4424;
   letter-spacing: 0.02em;
   line-height: 0.98;
   margin: 2px 4px 0;
@@ -34,7 +34,7 @@
 .card-edition {
   margin: 6px 0 0;
   text-align: center;
-  color: #c0392b;
+  color: #ad4424;
   font-weight: 800;
   letter-spacing: 0.14em;
   font-size: 1rem;
@@ -42,13 +42,13 @@
 .card-tagline {
   margin: 4px 8px 0;
   text-align: center;
-  color: #1f4d36;
+  color: #ad4424;
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   line-height: 1.35;
 }
-.card-tagline .star { color: #c0392b; }
+.card-tagline .star { color: #ad4424; }
 .stamp-grid {
   display: flex;
   flex-wrap: wrap;
@@ -62,7 +62,7 @@
 .stamp-spot {
   width: 42px;
   height: 42px;
-  border: 1.5px solid #1f4d36;
+  border: 1.5px solid #ad4424;
   border-radius: 50%;
   color: #8a8a8a;
   display: grid;
@@ -84,18 +84,18 @@
 .card-motto {
   margin: 0;
   text-align: center;
-  color: #1f4d36;
+  color: #ad4424;
   font-size: 0.58rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   line-height: 1.25;
 }
-.card-motto .heart { color: #c0392b; }
+.card-motto .heart { color: #ad4424; }
 .card-key-title {
   margin: 6px 0 8px;
   padding: 4px 0;
   text-align: center;
-  color: #c0392b;
+  color: #ad4424;
   font-weight: 700;
   letter-spacing: 0.05em;
   font-size: 0.68rem;
@@ -120,21 +120,21 @@
   font-size: 0.72rem;
   line-height: 1.25;
 }
-.shop-num { color: #c0392b; font-weight: 700; min-width: 1.15em; }
+.shop-num { color: #ad4424; font-weight: 700; min-width: 1.15em; }
 .shop-name { min-width: 0; overflow-wrap: anywhere; }
 .card-player { margin-top: 6px; }
 .card-line {
   display: flex;
   gap: 6px;
   align-items: flex-end;
-  border-bottom: 1px solid #1f4d36;
+  border-bottom: 1px solid #ad4424;
   min-height: 22px;
   margin: 3px 0;
   font-size: 0.72rem;
 }
-.card-line span { color: #1f4d36; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.card-line span { color: #ad4424; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
 .card-line b { font-weight: 600; color: #243028; min-height: 1em; }
-.card-turnin, .card-turnin-list { margin: 6px 0 0; font-size: 0.68rem; line-height: 1.35; color: #1f4d36; }
+.card-turnin, .card-turnin-list { margin: 6px 0 0; font-size: 0.68rem; line-height: 1.35; color: #ad4424; }
 .card-turnin { font-weight: 700; }
 
 @media (max-width: 380px) {
@@ -223,3 +223,11 @@
   .card-mascot { width: var(--mascot, 1.3in); }
   .card-motto { font-size: 7pt; }
 }
+
+
+.card-rules { font-size: 9px; line-height: 1.25; margin: 8px 0; padding-left: 16px; }
+.card-foot { display: block; text-align: center; }
+.card-mascot { width: 48px; }
+@media print { .card-rules { font-size: 7pt; } .card-mascot { width: .5in; } }
+
+.card-toolbar [hidden] { display: none !important; }
