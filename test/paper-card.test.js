@@ -40,15 +40,55 @@ test("paper signup copy, terms, and consent stay on the guest form", () => {
   assert.doesNotMatch(account, /signInAnonymously/);
 });
 
-test("printable card is 2-up ink circles with the turn-in line", () => {
+test("printable card is one portrait page with stamps and the shop key", () => {
   assert.match(cardHtml, /id="card-sheets"/);
-  assert.match(cardJs, /Bring your finished card to a co-organizer shop \(e\.g\. Holiday Cafe, Anthem\)\./);
+  assert.match(cardHtml, /id="card-print"/);
+  assert.match(cardHtml, /Download &amp; print/);
+  assert.match(cardHtml, /one portrait letter page/);
+  assert.doesNotMatch(cardHtml, /id="card-print-single"/);
+  assert.match(cardJs, /Bring your finished card to a co-organizer shop\./);
+  assert.match(read("assets/card-holiday.js"), /Holiday/);
+  assert.match(cardJs, /PARTICIPATING SHOPS/);
+  assert.match(cardJs, /USE THIS KEY TO FIND YOUR NEXT STOP/);
+  assert.match(cardJs, /SIP/);
   assert.match(cardJs, /NO PURCHASE NECESSARY/);
-  assert.match(cardJs, /wordmark-phone\.png/);
   assert.match(cardJs, /mascot\.png/);
-  assert.doesNotMatch(cardJs.slice(cardJs.indexOf("var RULES")), /initials/i);
-  assert.match(read("assets/card-print.css"), /size: letter/);
-  assert.match(read("assets/card-print.css"), /nth-child\(2\)/);
+  assert.doesNotMatch(cardJs, /wordmark-phone\.png/);
+  assert.doesNotMatch(cardJs, /card-fold/);
+  assert.doesNotMatch(cardJs, /initials/i);
+  const css = read("assets/card-print.css");
+  assert.match(css, /size: letter portrait/);
+  assert.match(css, /#ad4424/i);
+  assert.match(css, /#fffaf1/i);
+  assert.match(css, /width: 20%/);
+  assert.match(css, /var\(--stamp/);
+  assert.match(css, /height: 11in/);
+});
+
+test("stamp numbers follow the alphabetical shop key", () => {
+  const cardSandbox = {
+    document: { addEventListener() {}, getElementById() { return null; }, createElement() { return {}; } },
+    URLSearchParams,
+    Intl,
+    Date
+  };
+  cardSandbox.window = cardSandbox;
+  vm.runInNewContext(cardJs, cardSandbox, { filename: "assets/card-print.js" });
+  assert.equal(cardSandbox.HCCard.subtitle("Puyallup Holiday Coffee Crawl"), "");
+  assert.equal(
+    cardSandbox.HCCard.subtitle("Puyallup Pub Crawl", "2026-10-01T18:00:00Z", "2026-12-01T06:59:00Z"),
+    "OCTOBER 1 – NOVEMBER 30, 2026"
+  );
+  assert.deepEqual(cardSandbox.HCCard.orderedShops([
+    { display_name: "Woods Coffee" },
+    { display_name: "ANTHEM Coffee" },
+    { display_name: "ANTHEM Coffee" },
+    { display_name: "Holiday Cafe" }
+  ]), ["ANTHEM Coffee", "Holiday Cafe", "Woods Coffee"]);
+  const roomy = cardSandbox.HCCard.scaleFor(15);
+  const crowded = cardSandbox.HCCard.scaleFor(70);
+  assert.ok(parseFloat(roomy.stamp) > parseFloat(crowded.stamp));
+  assert.ok(parseFloat(roomy.list) > parseFloat(crowded.list));
 });
 
 test("manual stamps are staff-only and claim_stamp still uses 50 meters", () => {
@@ -76,3 +116,4 @@ test("shop query matches a listing id or a business id", () => {
   assert.equal(sandbox.HCPaper.matchShop(rows, ""), null);
   assert.match(sandbox.HCPaper.TURN_IN, /Holiday Cafe, Anthem/);
 });
+

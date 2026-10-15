@@ -1,0 +1,69 @@
+/* Puyallup-only one-page seasonal card. Shared site and nonseasonal cards stay separate. */
+.holiday-sheet{box-sizing:border-box;width:816px;height:1056px;padding:40px;margin:0 auto 28px;background:#fff;break-after:page}
+.holiday-card{--orange:#ad4424;--paper:#fffaf1;--ink:#302119;--muted:#75685b;--line:#d8cbb8;box-sizing:border-box;height:976px;padding:22px 30px 18px;border:1.5px solid var(--orange);background:var(--paper);color:var(--ink);font-family:Outfit,sans-serif;line-height:1.3;display:flex;flex-direction:column}
+.holiday-card *{box-sizing:border-box}
+.holiday-card p,.holiday-card h1,.holiday-card h2{margin:0}
+.holiday-lights{display:block;flex:none;width:100%;height:25px;margin-bottom:8px}
+.holiday-header{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:13px;flex:none}
+.holiday-header>div{flex:1;min-width:0}
+.holiday-brand{display:block;position:relative;overflow:hidden;width:150px;height:62px;margin-bottom:5px}
+/* Display lettering only; retain the shared source image unchanged. */
+.holiday-brand img{position:absolute;display:block;width:210.7px;max-width:none;height:79px;left:-60.7px;top:-8px}
+.holiday-card h1{font:600 27px/1.05 Fraunces,Georgia,serif;letter-spacing:-.7px;max-width:440px;color:var(--ink)}
+.holiday-intro{font-size:11px;color:var(--muted);padding-top:6px}
+.holiday-mascot{display:block;width:86px;height:129px;object-fit:contain;flex:none}
+.holiday-section-label{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:6px;flex:none}
+.holiday-card h2{font:600 17px/1.1 Fraunces,Georgia,serif;color:var(--ink)}
+.holiday-section-label p{font-size:10px;color:var(--muted)}
+.holiday-stamp-grid{display:grid;grid-template-columns:repeat(var(--stamp-columns,5),1fr);gap:12px 9px;margin:12px 0 15px;flex:none}
+.holiday-stamp{width:var(--stamp-size,82px);height:var(--stamp-size,82px);border:1.5px solid var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;background:#fffdfa;margin:auto;color:#b4a596;font:500 18px Outfit}
+.holiday-key{display:grid;grid-auto-flow:column;grid-template-rows:repeat(var(--key-rows,8),20px);grid-template-columns:1fr 1fr;column-gap:24px;margin:9px 0 12px;flex:none}
+.holiday-key-row{display:flex;align-items:center;gap:8px;min-width:0}
+.holiday-key-no{font-size:10px;font-weight:600;color:var(--orange);width:18px;flex:none}
+.holiday-key-name{font-size:12px;line-height:1.1;overflow-wrap:anywhere}
+.holiday-participant{display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;margin-bottom:10px;flex:none}
+.holiday-field{display:flex;align-items:baseline;gap:7px;min-width:0;font-size:10px}
+.holiday-field>span{flex:none;color:var(--muted)}
+.holiday-field b{border-bottom:1px solid var(--muted);min-height:19px;flex:1;min-width:0;font-size:11px;font-weight:400;overflow-wrap:anywhere}
+.holiday-signup{grid-column:1/-1}
+.holiday-rules{display:grid;grid-template-columns:1.12fr 1fr;gap:22px;border-top:1px solid var(--line);padding-top:10px;flex:none}
+.holiday-rules h2{font-size:15px;margin-bottom:5px}
+.holiday-rules ul{padding-left:14px;margin:0;font-size:10px;line-height:1.35}
+.holiday-rules li{margin-bottom:3px}
+.holiday-prize,.holiday-turnin{font-size:10px;line-height:1.35}
+.holiday-prize strong{color:var(--orange);font-size:9px}
+.holiday-turnin b{display:block;font-weight:600;margin:7px 0 2px}
+.holiday-footer{border-top:1px solid var(--line);padding-top:8px;margin-top:auto;display:flex;justify-content:space-between;gap:12px;font-size:9px;color:var(--muted);flex:none}
+.holiday-crowded .holiday-stamp-grid{gap:9px;margin:10px 0 12px}
+.holiday-crowded .holiday-key{grid-template-rows:repeat(var(--key-rows),18px);margin:8px 0 10px}
+.holiday-crowded .holiday-key-name{font-size:11px}
+.holiday-crowded .holiday-header{margin-bottom:10px}
+.holiday-compact .holiday-key{grid-template-rows:repeat(var(--key-rows),16px)}
+.holiday-compact .holiday-key-name{font-size:10px}
+.holiday-preview-scroll{overflow-x:auto}
+@media print{
+ html.holiday-print,body.holiday-print,body.holiday-print main,body.holiday-print #card-sheets{width:auto;height:auto;overflow:visible!important}
+ body.holiday-print .holiday-sheet{margin:0;break-after:page;page-break-after:always;break-inside:avoid}
+ body.holiday-print .holiday-sheet:last-child{break-after:auto;page-break-after:auto}
+ body.holiday-print *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+/* Explicit dimensions also keep print engines from stretching circles or form fields. */
+.holiday-stamp-grid{display:flex;flex-wrap:wrap;justify-content:space-between;column-gap:20px}
+.holiday-stamp{width:82px;height:82px;flex:0 0 82px;margin:0 14px}
+.holiday-crowded .holiday-stamp{width:62px;height:62px;flex-basis:62px;margin:0 12px}
+.holiday-compact .holiday-stamp{width:46px;height:46px;flex-basis:46px;margin:0 20px}
+.holiday-section-label h2{white-space:nowrap;flex:none}
+.holiday-section-label p{flex:none}
+.holiday-participant{display:flex;flex-wrap:wrap;column-gap:20px;row-gap:6px}
+.holiday-field{width:calc(50% - 10px);flex:none}
+.holiday-field.holiday-signup{width:100%}
+.holiday-field b{width:0;flex:1 1 0}
+.holiday-header{height:129px}
+.holiday-participant{height:48px;align-content:flex-start}
+.holiday-field{height:20px;align-items:center}
+.holiday-field b{line-height:17px}
+.holiday-crowded .holiday-header{height:115px}
+.holiday-crowded .holiday-mascot{height:110px;width:74px}
+.holiday-crowded .holiday-brand{width:150px}
+.holiday-crowded .holiday-key{grid-template-rows:repeat(var(--key-rows),17px)}
+.holiday-compact .holiday-key{grid-template-rows:repeat(var(--key-rows),15px)}
