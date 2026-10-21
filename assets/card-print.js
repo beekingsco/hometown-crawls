@@ -125,10 +125,18 @@
     key.append(shopColumn(shops.slice(half), half + 1));
     card.append(key);
     card.append(playerBlock(model));
+    var how = el("div", "card-howto");
+    how.append(el("h2", null, "How to play"));
+    var steps = el("ol", "card-rules");
+    ["Sign up with your name, email, and phone.",
+     "Visit the participating shops.",
+     "Get an ink stamp at each shop.",
+     "Bring your finished card to a co-organizer shop (e.g. Holiday Cafe, Anthem)."
+    ].forEach(function (step) { steps.append(el("li", null, step)); });
+    how.append(steps);
+    card.append(how);
     var rules = el("ul", "card-rules");
-    ["Get one ink stamp in each circle. The shop stamps the card.",
-     "Use the name and email on this card. That is the account for the drawing.",
-     "One card per person.", "Show some love if you can and buy something at the shop.",
+    ["Show some love if you can and buy something at the shop.",
      "NO PURCHASE NECESSARY. Each stamped stop is one prize entry. A finished card adds 3 bonus entries."
     ].forEach(function (rule) { rules.append(el("li", null, rule)); });
     card.append(rules);

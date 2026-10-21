@@ -33,10 +33,31 @@
     return !!(box && box.checked);
   }
 
+  function phoneDigits(value) {
+    var digits = String(value || "").replace(/\D/g, "");
+    if (digits.length === 11 && digits.charAt(0) === "1") digits = digits.slice(1);
+    return digits;
+  }
+
+  function validPhone(value) {
+    var digits = phoneDigits(value);
+    return digits.length >= 10 && digits.length <= 15;
+  }
+
+  function signupError(row) {
+    if (!row || !String(row.name || "").trim()) return "Enter your name.";
+    if (!String(row.email || "").trim()) return "Enter your email.";
+    if (!validPhone(row.phone)) return "Enter a valid phone number.";
+    if (!row.contact) return "Check the box to approve contact if you win or receive prizes.";
+    if (!row.photo) return "Check the box to approve photo use on the website.";
+    if (row.paper && !row.terms) return "Check the box to agree to the official rules.";
+    return "";
+  }
+
   function readPending() {
     try {
       var parsed = JSON.parse(sessionStorage.getItem(PENDING) || "null");
-      return parsed && parsed.terms === true ? parsed : null;
+      return parsed && parsed.contact === true && parsed.photo === true ? parsed : null;
     } catch (e) {
       return null;
     }
@@ -121,73 +142,124 @@
     return TURN_IN + (names.length ? " " + names.join(", ") + "." : "");
   }
 
+  function formSignup() {
+    var phone = document.getElementById("auth-phone");
+    var terms = document.getElementById("paper-terms");
+    var consent = document.getElementById("contact-consent");
+    var photo = document.getElementById("photo-promo-consent");
+    var area = document.getElementById("area-crawl-opt-in");
+    return {
+      name: (document.getElementById("auth-name").value || "").trim(),
+      email: (document.getElementById("auth-email").value || "").trim(),
+      phone: phone ? phone.value.trim() : "",
+      contact: !!(consent && consent.checked),
+      photo: !!(photo && photo.checked),
+      area: !!(area && area.checked),
+      terms: !!(terms && terms.checked),
+      paper: paperOn(),
+      shop: shopParam(),
+      crawl: crawlId()
+    };
+  }
+
+  function signupFromLocation() {
+    var query = params();
+    if (query.get("contact") !== "1" || query.get("photo") !== "1") return null;
+    var name = query.get("signup_name") || query.get("card_name") || "";
+    var phone = query.get("signup_phone") || "";
+    if (!name || !phone) return null;
+    return {
+      name: name,
+      email: query.get("signup_email") || "",
+      phone: phone,
+      contact: true,
+      photo: true,
+      terms: query.get("terms") === "1",
+      paper: query.get("play") === "paper",
+      area: query.get("area") === "1",
+      shop: query.get("shop") || "",
+      crawl: query.get("crawl") || "puy-coffee"
+    };
+  }
+
   async function submit(ui) {
     var show = ui.show;
     var msg = ui.msg;
     var err = ui.err;
     show(msg, false);
     show(err, false);
-    var name = (document.getElementById("auth-name").value || "").trim();
-    var email = (document.getElementById("auth-email").value || "").trim();
-    var terms = document.getElementById("paper-terms");
-    var consent = document.getElementById("contact-consent");
-    if (!name) { err.textContent = "Enter the name for the paper card."; show(err, true); return; }
-    if (!email) { err.textContent = "Enter your email."; show(err, true); return; }
-    if (!terms || !terms.checked) { err.textContent = "Check the box to agree to the official rules."; show(err, true); return; }
-    if (!consent || !consent.checked) { err.textContent = "Check the box so stores and organizers can contact you about prizes and offers."; show(err, true); return; }
-    var crawl = crawlId();
-    var shop = shopParam();
-    writePending({ name: name, email: email, shop: shop, crawl: crawl, terms: true });
+    var row = formSignup();
+    var problem = signupError(row);
+    if (problem) { err.textContent = problem; show(err, true); return; }
+    writePending(row);
     try { sessionStorage.setItem("hc-contact-consent", "1"); } catch (e) {}
     var next = new URLSearchParams(location.search);
-    next.set("play", "paper");
-    next.set("crawl", crawl);
-    next.set("card_name", name);
-    if (shop) next.set("shop", shop);
+    next.set("crawl", row.crawl);
+    next.set("signup_name", row.name);
+    next.set("signup_email", row.email);
+    next.set("signup_phone", row.phone);
+    next.set("contact", "1");
+    next.set("photo", "1");
+    if (row.area) next.set("area", "1");
+    else next.delete("area");
+    if (row.paper) {
+      next.set("play", "paper");
+      next.set("card_name", row.name);
+      next.set("terms", "1");
+    } else {
+      next.delete("play");
+      next.delete("card_name");
+      next.delete("terms");
+    }
+    if (row.shop) next.set("shop", row.shop);
     else next.delete("shop");
     history.replaceState(null, "", location.pathname + "?" + next.toString());
     if (demoOn()) {
-      showSuccess("Demo preview. No email was sent and no account was changed.");
+      if (row.paper) showSuccess("Demo preview. No email was sent and no account was changed.");
+      else { msg.textContent = "Demo preview. No email was sent and no account was changed."; show(msg, true); }
       return;
     }
     var session = await HCCrawl.getSession();
     var same = session && session.user && !session.user.is_anonymous && session.user.email &&
-      session.user.email.toLowerCase() === email.toLowerCase();
+      session.user.email.toLowerCase() === row.email.toLowerCase();
     if (same) {
       await finish();
+      if (!row.paper) { msg.textContent = "You're signed in."; show(msg, true); }
       return;
     }
-    await HCCrawl.magicLink(email);
-    showSuccess("Check your email for the sign-in link. Open it, then choose how to get the card.");
+    await HCCrawl.magicLink(row.email);
+    if (row.paper) showSuccess("Check your email for the sign-in link. Open it, then choose how to get the card.");
+    else { msg.textContent = "Check your email for the magic link."; show(msg, true); }
   }
 
   async function finish() {
     if (demoOn() || !window.HCCrawl || !HCCrawl.client) return;
-    var pending = readPending();
-    var wanted = params().get("play") === "paper" || !!pending;
-    if (!wanted) return;
+    var pending = readPending() || signupFromLocation();
+    if (!pending) return;
     var session = await HCCrawl.getSession();
     if (!session || !session.user || session.user.is_anonymous || !session.user.email) return;
-    var crawl = (pending && pending.crawl) || crawlId();
-    var name = (pending && pending.name) || params().get("card_name") || "";
-    if (!name) {
+    var crawl = pending.crawl || crawlId();
+    var name = pending.name || "";
+    if (!name || !validPhone(pending.phone) || !pending.contact || !pending.photo) {
       var form = document.getElementById("auth-signed-out");
       if (form) form.classList.remove("hidden");
-      var toggle = document.getElementById("play-paper");
-      if (toggle) toggle.checked = true;
-      showBlock("paper-fields", true);
       return;
     }
-    var saved = await HCCrawl.client().rpc("record_paper_play", {
+    var saved = await HCCrawl.client().rpc("record_guest_signup", {
       p_crawl: crawl,
       p_name: name,
-      p_shop: (pending && pending.shop) || shopParam(),
-      p_terms: true
+      p_phone: pending.phone,
+      p_contact: true,
+      p_photo: true,
+      p_shop: pending.shop || shopParam(),
+      p_paper: !!pending.paper,
+      p_terms: !!pending.terms,
+      p_area: !!pending.area
     });
     if (saved.error) {
       var err = document.getElementById("auth-err");
       if (err) {
-        err.textContent = saved.error.message || "The paper card signup did not save.";
+        err.textContent = saved.error.message || "Signup did not save.";
         err.classList.add("show");
         err.style.display = "block";
       }
@@ -195,11 +267,71 @@
     }
     clearPending();
     var clean = new URLSearchParams(location.search);
-    clean.delete("play");
-    clean.delete("card_name");
+    ["play", "card_name", "signup_name", "signup_email", "signup_phone", "contact", "photo", "terms", "area"].forEach(function (key) {
+      clean.delete(key);
+    });
     history.replaceState(null, "", location.pathname + (clean.toString() ? "?" + clean.toString() : ""));
-    showRewards(crawl);
-    setText("paper-mail-note", "");
+    if (pending.paper) {
+      showRewards(crawl);
+      setText("paper-mail-note", "");
+    }
+    await refreshNearby();
+  }
+
+  function crawlLink(id) {
+    if (id === "puy-coffee") return "/puyallup/holiday-coffee-crawl";
+    return "";
+  }
+
+  async function refreshNearby() {
+    var card = document.getElementById("nearby-crawls");
+    var list = document.getElementById("nearby-list");
+    if (!card || !list) return;
+    if (demoOn() || !window.HCCrawl || !HCCrawl.client) {
+      card.classList.add("hidden");
+      return;
+    }
+    var session = await HCCrawl.getSession();
+    if (!session || !session.user || session.user.is_anonymous || !session.user.email) {
+      card.classList.add("hidden");
+      return;
+    }
+    var res = await HCCrawl.client().rpc("guest_nearby_crawls");
+    list.replaceChildren();
+    var rows = res.error ? [] : (res.data || []);
+    if (!rows.length) {
+      card.classList.add("hidden");
+      return;
+    }
+    rows.forEach(function (row) {
+      var article = document.createElement("article");
+      article.className = "record-card";
+      var name = document.createElement("b");
+      name.className = "record-name";
+      name.textContent = row.name || "Crawl";
+      var place = document.createElement("p");
+      place.className = "small muted";
+      place.textContent = row.region_label || row.city || "";
+      var join = document.createElement("button");
+      join.type = "button";
+      join.className = "btn btn-primary";
+      join.textContent = "Join";
+      join.addEventListener("click", async function () {
+        join.disabled = true;
+        var saved = await HCCrawl.client().rpc("join_listed_crawl", { p_crawl: row.id });
+        if (saved.error) {
+          join.disabled = false;
+          place.textContent = saved.error.message || "Could not join that crawl.";
+          return;
+        }
+        var href = crawlLink(row.id);
+        if (href) location.assign(href);
+        else await refreshNearby();
+      });
+      article.append(name, place, join);
+      list.append(article);
+    });
+    card.classList.remove("hidden");
   }
 
   function bindSignup() {
@@ -226,7 +358,7 @@
     }
   }
 
-  function playerCard(row, crawl) {
+  function playerCard(row, crawl, detailId) {
     var article = document.createElement("article");
     article.className = "record-card";
     var name = document.createElement("b");
@@ -235,6 +367,13 @@
     var email = document.createElement("p");
     email.className = "record-email";
     email.textContent = row.player_email || "";
+    var phone = document.createElement("p");
+    phone.className = "small";
+    phone.textContent = row.player_phone || "No phone";
+    var flags = document.createElement("p");
+    flags.className = "small muted";
+    flags.textContent = "Prize contact: " + (row.contact_consent ? "approved" : "not approved")
+      + " · Photo promo: " + (row.photo_promo_consent ? "approved" : "not approved");
     var mode = document.createElement("span");
     mode.className = "chip";
     mode.textContent = row.play_mode === "paper" ? "Paper" : "Digital";
@@ -245,13 +384,13 @@
     open.type = "button";
     open.className = "btn btn-soft";
     open.textContent = "Open player";
-    open.addEventListener("click", function () { openPlayer(crawl, row); });
-    article.append(name, email, mode, count, open);
+    open.addEventListener("click", function () { openPlayer(crawl, row, detailId); });
+    article.append(name, email, phone, flags, mode, count, open);
     return article;
   }
 
-  async function openPlayer(crawl, row) {
-    var detail = document.getElementById("player-detail");
+  async function openPlayer(crawl, row, detailId) {
+    var detail = document.getElementById(detailId || "player-detail");
     if (!detail) return;
     detail.classList.remove("hidden");
     detail.replaceChildren();
@@ -302,25 +441,15 @@
     });
   }
 
-  function bindOrganizer() {
-    var form = document.getElementById("player-search");
+  function bindPlayerSearch(ids, crawlFn) {
+    var form = document.getElementById(ids.form);
     if (!form) return;
-    var picker = document.getElementById("org-crawl");
-    var print = document.getElementById("org-print-card");
-    function crawl() {
-      return (picker && picker.value) || crawlId();
-    }
-    function syncPrint() {
-      if (print) print.href = cardHref(crawl(), "blank=1");
-    }
-    if (picker) picker.addEventListener("change", syncPrint);
-    syncPrint();
     form.addEventListener("submit", async function (event) {
       event.preventDefault();
-      var err = document.getElementById("player-err");
-      var results = document.getElementById("player-results");
+      var err = document.getElementById(ids.err);
+      var results = document.getElementById(ids.results);
       if (err) { err.textContent = ""; err.classList.remove("show"); }
-      var query = (document.getElementById("player-query").value || "").trim();
+      var query = (document.getElementById(ids.query).value || "").trim();
       if (query.length < 2) {
         if (err) { err.textContent = "Enter at least 2 characters."; err.classList.add("show"); }
         return;
@@ -329,7 +458,8 @@
         if (err) { err.textContent = "Demo mode does not search live players."; err.classList.add("show"); }
         return;
       }
-      var res = await HCCrawl.client().rpc("organizer_search_players", { p_crawl: crawl(), p_query: query });
+      var crawl = crawlFn();
+      var res = await HCCrawl.client().rpc("organizer_search_players", { p_crawl: crawl, p_query: query });
       if (res.error) {
         if (err) { err.textContent = res.error.message || "Could not search players."; err.classList.add("show"); }
         return;
@@ -344,9 +474,36 @@
           results.append(empty);
           return;
         }
-        rows.forEach(function (row) { results.append(playerCard(row, crawl())); });
+        rows.forEach(function (row) { results.append(playerCard(row, crawl, ids.detail)); });
       }
     });
+  }
+
+  function bindOrganizer() {
+    var picker = document.getElementById("org-crawl");
+    var print = document.getElementById("org-print-card");
+    function crawl() {
+      return (picker && picker.value) || crawlId();
+    }
+    function syncPrint() {
+      if (print) print.href = cardHref(crawl(), "blank=1");
+    }
+    if (picker) picker.addEventListener("change", syncPrint);
+    syncPrint();
+    bindPlayerSearch({
+      form: "player-search",
+      query: "player-query",
+      err: "player-err",
+      results: "player-results",
+      detail: "player-detail"
+    }, crawl);
+    bindPlayerSearch({
+      form: "store-player-search",
+      query: "store-player-query",
+      err: "store-player-err",
+      results: "store-player-results",
+      detail: "store-player-detail"
+    }, crawlId);
   }
 
   document.addEventListener("DOMContentLoaded", function () {
@@ -358,8 +515,11 @@
     TURN_IN: TURN_IN,
     paperOn: paperOn,
     matchShop: matchShop,
+    validPhone: validPhone,
+    signupError: signupError,
     submit: submit,
     finish: finish,
+    refreshNearby: refreshNearby,
     cardHref: cardHref
   };
 })();

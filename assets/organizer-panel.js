@@ -386,6 +386,79 @@
       });
     }
 
+    var optIns = [];
+    function paintOptIns(rows) {
+      optIns = rows || [];
+      var results = document.getElementById("area-opt-in-results");
+      if (!results) return;
+      results.replaceChildren();
+      if (!optIns.length) {
+        var empty = document.createElement("p");
+        empty.className = "muted small";
+        empty.textContent = "No opted-in guests in that region.";
+        results.append(empty);
+        return;
+      }
+      optIns.forEach(function (row) {
+        var article = document.createElement("article");
+        article.className = "record-card";
+        var name = document.createElement("b");
+        name.className = "record-name";
+        name.textContent = row.player_name || row.player_email || "Guest";
+        var detail = document.createElement("p");
+        detail.className = "small";
+        detail.textContent = [row.player_email, row.player_phone, row.region_label || row.region_city, row.crawl_name].filter(Boolean).join(" · ");
+        article.append(name, detail);
+        results.append(article);
+      });
+    }
+    async function loadOptIns() {
+      var err = document.getElementById("area-opt-in-err");
+      if (err) { err.textContent = ""; err.classList.remove("show"); }
+      if (demoOn()) {
+        if (err) { err.textContent = "Demo mode does not list live opt-ins."; err.classList.add("show"); }
+        return;
+      }
+      var regionEl = document.getElementById("area-opt-in-region");
+      var region = regionEl ? regionEl.value.trim() : "";
+      var res = await HCCrawl.client().rpc("organizer_area_opt_ins", { p_region: region });
+      if (res.error) {
+        if (err) { err.textContent = res.error.message || "Could not load opt-ins."; err.classList.add("show"); }
+        return;
+      }
+      paintOptIns(res.data || []);
+    }
+    var optForm = document.getElementById("area-opt-in-form");
+    if (optForm) {
+      optForm.addEventListener("submit", function (ev) {
+        ev.preventDefault();
+        loadOptIns();
+      });
+    }
+    var optCsv = document.getElementById("area-opt-in-csv");
+    if (optCsv) {
+      optCsv.addEventListener("click", function () {
+        if (demoOn()) return;
+        var header = ["name", "email", "phone", "crawl", "region", "city", "state", "postal", "opted_in_at"];
+        var lines = [header.join(",")];
+        optIns.forEach(function (row) {
+          lines.push([
+            row.player_name, row.player_email, row.player_phone, row.crawl_name,
+            row.region_label, row.region_city, row.region_state, row.region_postal, row.opted_in_at
+          ].map(function (value) {
+            return '"' + String(value == null ? "" : value).replace(/"/g, '""') + '"';
+          }).join(","));
+        });
+        var blob = new Blob([lines.join("\n")], { type: "text/csv" });
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement("a");
+        link.href = url;
+        link.download = "area-crawl-opt-ins.csv";
+        link.click();
+        URL.revokeObjectURL(url);
+      });
+    }
+
     var invite = document.getElementById("co-invite-form");
     if (invite) {
       invite.addEventListener("submit", async function (ev) {

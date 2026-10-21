@@ -47,16 +47,23 @@
         <div id="auth-signed-out">
           <label class="check"><input type="checkbox" id="play-paper" /> Play with a paper card</label>
           <div id="paper-fields" class="hidden">
-            <label class="field mt-2"><span>Name</span>
-              <input class="input" id="auth-name" maxlength="80" autocomplete="name" placeholder="Name on the card" />
-            </label>
             <p class="form-note" id="paper-shop-note"></p>
             <label class="check"><input type="checkbox" id="paper-terms" /> I agree to the <a href="/puyallup/holiday-coffee-crawl/rules">official rules</a>.</label>
           </div>
-          <label class="field"><span>Email</span>
-            <input class="input" type="email" id="auth-email" placeholder="you@example.com" autocomplete="email" />
+          <label class="field mt-2"><span>Name</span>
+            <input class="input" id="auth-name" maxlength="80" autocomplete="name" placeholder="Your name" required />
           </label>
-          <label class="check"><input type="checkbox" id="contact-consent" /> I agree that participating stores and organizers can access my info to contact me about prizes and future offers.</label>
+          <label class="field"><span>Email</span>
+            <input class="input" type="email" id="auth-email" placeholder="you@example.com" autocomplete="email" required />
+          </label>
+          <label class="field"><span>Phone</span>
+            <input class="input" type="tel" id="auth-phone" maxlength="40" autocomplete="tel" inputmode="tel" placeholder="(253) 555-0100" required />
+          </label>
+          <p class="form-note" id="prize-contact-note">We'll use this info to contact you if you win or receive prizes.</p>
+          <p class="form-note" id="share-note">Your name, email, and phone are shared with the organizers of crawls you join.</p>
+          <label class="check"><input type="checkbox" id="contact-consent" required /> I agree that participating stores and organizers can access my info to contact me about prizes and future offers.</label>
+          <label class="check"><input type="checkbox" id="photo-promo-consent" required /> I approve use of any photos of me for Hometown Crawls website promotional material.</label>
+          <label class="check"><input type="checkbox" id="area-crawl-opt-in" /> Tell me about new crawls in my area.</label>
           <div class="row mt-2">
             <button class="btn btn-primary" type="button" id="btn-magic">Send magic link</button>
           </div>
@@ -91,6 +98,11 @@
           <button class="btn btn-soft" type="button" id="paper-ask">Ask at the counter</button>
         </div>
         <p class="mt-2 hidden" id="paper-counter-note"></p>
+      </div>
+
+      <div class="card hidden" id="nearby-crawls">
+        <h3>There's a crawl near you</h3>
+        <div class="stack mt-2" id="nearby-list"></div>
       </div>
 
       <div class="card" id="entries-card">
@@ -281,6 +293,20 @@
           </div>
         </div>
 
+        <div class="card" id="store-player-search-card">
+          <h3>Players</h3>
+          <p class="muted small mt-1">Search a player on this crawl by name, email, or phone. Crawl staff can see the phone number and consent flags.</p>
+          <form class="mt-2" id="store-player-search">
+            <label class="field"><span>Name, email, or phone</span>
+              <input class="input" id="store-player-query" type="search" placeholder="Name, email, or phone" autocomplete="off" />
+            </label>
+            <button class="btn btn-primary" type="submit">Search players</button>
+          </form>
+          <p class="form-error mt-2" id="store-player-err" role="alert"></p>
+          <div class="stack mt-2" id="store-player-results"></div>
+          <div class="stack mt-2 hidden" id="store-player-detail"></div>
+        </div>
+
         <form class="card" id="listing-form">
           <div class="row" style="justify-content:space-between">
             <h3>Public listing</h3>
@@ -406,16 +432,31 @@
             <h3>Players</h3>
             <a class="btn btn-soft" id="org-print-card" href="/card.html?crawl=puy-coffee&amp;blank=1">Print paper card</a>
           </div>
-          <p class="muted small mt-1">Search a digital or paper player by name or email. Check a shop to add a manual stamp. A digital stamp stays checked.</p>
+          <p class="muted small mt-1">Search a digital or paper player by name, email, or phone. Check a shop to add a manual stamp. A digital stamp stays checked.</p>
           <form class="mt-2" id="player-search">
-            <label class="field"><span>Name or email</span>
-              <input class="input" id="player-query" type="search" placeholder="Name or email" autocomplete="off" />
+            <label class="field"><span>Name, email, or phone</span>
+              <input class="input" id="player-query" type="search" placeholder="Name, email, or phone" autocomplete="off" />
             </label>
             <button class="btn btn-primary" type="submit">Search players</button>
           </form>
           <p class="form-error mt-2" id="player-err" role="alert"></p>
           <div class="stack mt-2" id="player-results"></div>
           <div class="stack mt-2 hidden" id="player-detail"></div>
+        </div>
+        <div class="card" id="area-opt-in-card">
+          <h3>New-crawl opt-ins</h3>
+          <p class="muted small mt-1">Guests who asked to hear about new crawls in their area. Filter by city, state, or zip. This list does not send any messages.</p>
+          <form class="mt-2" id="area-opt-in-form">
+            <label class="field"><span>Region</span>
+              <input class="input" id="area-opt-in-region" type="search" placeholder="City, state, or zip" autocomplete="off" />
+            </label>
+            <div class="row">
+              <button class="btn btn-primary" type="submit">Show opt-ins</button>
+              <button class="btn btn-soft" type="button" id="area-opt-in-csv">Download CSV</button>
+            </div>
+          </form>
+          <p class="form-error mt-2" id="area-opt-in-err" role="alert"></p>
+          <div class="stack mt-2" id="area-opt-in-results"></div>
         </div>
         <div class="card">
           <div class="row" style="justify-content:space-between">
@@ -467,12 +508,17 @@
             const saved = await HCCrawl.client().rpc("record_guest_consent");
             if (!saved.error) sessionStorage.removeItem("hc-contact-consent");
           }
-          if (window.HCPaper) await HCPaper.finish();
+          if (window.HCPaper) {
+            await HCPaper.finish();
+            if (HCPaper.refreshNearby) await HCPaper.refreshNearby();
+          }
         } catch (e) {}
       } else {
         status.textContent = "Not signed in";
         out.classList.remove("hidden");
         inn.classList.add("hidden");
+        var nearby = document.getElementById("nearby-crawls");
+        if (nearby) nearby.classList.add("hidden");
       }
       return s;
     }
@@ -517,7 +563,7 @@
         show(msg, false); show(err, false);
         const email = document.getElementById("auth-email").value.trim();
         const consent = document.getElementById("contact-consent");
-        if (window.HCPaper && HCPaper.paperOn()) {
+        if (window.HCPaper) {
           await HCPaper.submit({ show, msg, err });
           return;
         }
