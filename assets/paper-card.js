@@ -147,12 +147,14 @@
     var terms = document.getElementById("paper-terms");
     var consent = document.getElementById("contact-consent");
     var photo = document.getElementById("photo-promo-consent");
+    var area = document.getElementById("area-crawl-opt-in");
     return {
       name: (document.getElementById("auth-name").value || "").trim(),
       email: (document.getElementById("auth-email").value || "").trim(),
       phone: phone ? phone.value.trim() : "",
       contact: !!(consent && consent.checked),
       photo: !!(photo && photo.checked),
+      area: !!(area && area.checked),
       terms: !!(terms && terms.checked),
       paper: paperOn(),
       shop: shopParam(),
@@ -174,6 +176,7 @@
       photo: true,
       terms: query.get("terms") === "1",
       paper: query.get("play") === "paper",
+      area: query.get("area") === "1",
       shop: query.get("shop") || "",
       crawl: query.get("crawl") || "puy-coffee"
     };
@@ -197,6 +200,8 @@
     next.set("signup_phone", row.phone);
     next.set("contact", "1");
     next.set("photo", "1");
+    if (row.area) next.set("area", "1");
+    else next.delete("area");
     if (row.paper) {
       next.set("play", "paper");
       next.set("card_name", row.name);
@@ -248,7 +253,8 @@
       p_photo: true,
       p_shop: pending.shop || shopParam(),
       p_paper: !!pending.paper,
-      p_terms: !!pending.terms
+      p_terms: !!pending.terms,
+      p_area: !!pending.area
     });
     if (saved.error) {
       var err = document.getElementById("auth-err");
@@ -261,7 +267,7 @@
     }
     clearPending();
     var clean = new URLSearchParams(location.search);
-    ["play", "card_name", "signup_name", "signup_email", "signup_phone", "contact", "photo", "terms"].forEach(function (key) {
+    ["play", "card_name", "signup_name", "signup_email", "signup_phone", "contact", "photo", "terms", "area"].forEach(function (key) {
       clean.delete(key);
     });
     history.replaceState(null, "", location.pathname + (clean.toString() ? "?" + clean.toString() : ""));
@@ -269,6 +275,63 @@
       showRewards(crawl);
       setText("paper-mail-note", "");
     }
+    await refreshNearby();
+  }
+
+  function crawlLink(id) {
+    if (id === "puy-coffee") return "/puyallup/holiday-coffee-crawl";
+    return "";
+  }
+
+  async function refreshNearby() {
+    var card = document.getElementById("nearby-crawls");
+    var list = document.getElementById("nearby-list");
+    if (!card || !list) return;
+    if (demoOn() || !window.HCCrawl || !HCCrawl.client) {
+      card.classList.add("hidden");
+      return;
+    }
+    var session = await HCCrawl.getSession();
+    if (!session || !session.user || session.user.is_anonymous || !session.user.email) {
+      card.classList.add("hidden");
+      return;
+    }
+    var res = await HCCrawl.client().rpc("guest_nearby_crawls");
+    list.replaceChildren();
+    var rows = res.error ? [] : (res.data || []);
+    if (!rows.length) {
+      card.classList.add("hidden");
+      return;
+    }
+    rows.forEach(function (row) {
+      var article = document.createElement("article");
+      article.className = "record-card";
+      var name = document.createElement("b");
+      name.className = "record-name";
+      name.textContent = row.name || "Crawl";
+      var place = document.createElement("p");
+      place.className = "small muted";
+      place.textContent = row.region_label || row.city || "";
+      var join = document.createElement("button");
+      join.type = "button";
+      join.className = "btn btn-primary";
+      join.textContent = "Join";
+      join.addEventListener("click", async function () {
+        join.disabled = true;
+        var saved = await HCCrawl.client().rpc("join_listed_crawl", { p_crawl: row.id });
+        if (saved.error) {
+          join.disabled = false;
+          place.textContent = saved.error.message || "Could not join that crawl.";
+          return;
+        }
+        var href = crawlLink(row.id);
+        if (href) location.assign(href);
+        else await refreshNearby();
+      });
+      article.append(name, place, join);
+      list.append(article);
+    });
+    card.classList.remove("hidden");
   }
 
   function bindSignup() {
@@ -456,6 +519,7 @@
     signupError: signupError,
     submit: submit,
     finish: finish,
+    refreshNearby: refreshNearby,
     cardHref: cardHref
   };
 })();

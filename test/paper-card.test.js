@@ -129,6 +129,39 @@ test("guest phone and both consents are stored and searchable by staff", () => {
   assert.match(account, /id="store-player-search"/);
 });
 
+test("one account can join many crawls, with a region and an optional area opt-in", () => {
+  assert.match(sql, /primary key \(user_id, crawl_id\)/);
+  assert.match(account, /shared with the organizers of crawls you join/);
+  assert.match(account, /id="area-crawl-opt-in"/);
+  assert.match(account, /Tell me about new crawls in my area\./);
+  assert.doesNotMatch(account, /id="area-crawl-opt-in"[^>]*required/);
+  assert.match(account, /There's a crawl near you/);
+  assert.match(account, /id="area-opt-in-csv"/);
+  assert.equal(sandbox.HCPaper.signupError({
+    name: "Ada", email: "ada@example.com", phone: "(253) 555-0100", contact: true, photo: true, area: false
+  }), "");
+  const region = read("migrations/20261021160000_guest_regions.sql");
+  assert.match(region, /is_listed boolean not null default true/);
+  assert.match(region, /where id = 'puy-pub'/);
+  assert.match(region, /region_city text/);
+  assert.match(region, /area_crawl_opt_in boolean not null default false/);
+  assert.match(region, /area_crawl_opt_in_at/);
+  assert.match(region, /guest_nearby_crawls/);
+  assert.match(region, /join_listed_crawl/);
+  assert.match(region, /organizer_area_opt_ins/);
+  assert.match(region, /private\.is_crawl_staff/);
+  assert.match(region, /<= 50/);
+  assert.doesNotMatch(region, /service_role/);
+  assert.doesNotMatch(region, /grant execute on function public\.guest_nearby_crawls\(\) to anon/);
+  assert.doesNotMatch(region, /grant execute on function public\.organizer_area_opt_ins\(text\) to anon/);
+  assert.doesNotMatch(region, /grant execute on function public\.join_listed_crawl\(text\) to anon/);
+  assert.doesNotMatch(region.slice(region.indexOf("create function public.record_guest_signup")), /claim_stamp|c_radius|demo_bypass/);
+  assert.match(paper, /join_listed_crawl/);
+  assert.match(paper, /guest_nearby_crawls/);
+  assert.match(paper, /p_area/);
+  assert.doesNotMatch(read("assets/organizer-panel.js"), /send_message|mailto:/);
+});
+
 test("manual stamps are staff-only and claim_stamp still uses 50 meters", () => {
   assert.match(sql, /play_mode = 'paper'/);
   assert.match(sql, /signup_listing_id/);
