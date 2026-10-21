@@ -105,7 +105,12 @@ test('no static PDF or hardcoded shop list is shipped',()=>{
  assert.doesNotMatch(read('card.html'),/card-pdf-download|15-shop|assets\/downloads/);
  assert.match(read('card.html'),/Print \/ Save as PDF/);
  assert.equal(fs.existsSync(path.join(root,'assets/downloads/puyallup-holiday-coffee-crawl.pdf')),false);
- for(const file of ['assets/card-print.js','assets/card-holiday.js'])assert.doesNotMatch(read(file),/Holiday Cafe|Anthem|ANTHEM/);
+ for(const file of ['assets/card-print.js','assets/card-holiday.js']){
+  const example = "Bring your finished card to a co-organizer shop (e.g. Holiday Cafe, Anthem).";
+  assert.match(read(file), /How to play/);
+  assert.match(read(file), /e\.g\. Holiday Cafe, Anthem/);
+  assert.doesNotMatch(read(file).split(example).join(''), /Holiday Cafe|Anthem|ANTHEM/);
+ }
 });
 function liveClient(sandbox, provider) {
  sandbox.HCCrawl={client:()=>({from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:{name:'Live crawl'}})})})}),

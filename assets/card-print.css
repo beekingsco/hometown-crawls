@@ -225,7 +225,17 @@
 }
 
 
-.card-rules { font-size: 9px; line-height: 1.25; margin: 8px 0; padding-left: 16px; }
+.card-howto h2,
+.card-print-page .card-howto h2 {
+  font-family: Outfit, system-ui, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 6px 0 2px;
+  color: #ad4424;
+}
+.card-rules { font-size: 9px; line-height: 1.25; margin: 4px 0 8px; padding-left: 16px; }
 .card-foot { display: block; text-align: center; }
 .card-mascot { width: 48px; }
 @media print { .card-rules { font-size: 7pt; } .card-mascot { width: .5in; } }

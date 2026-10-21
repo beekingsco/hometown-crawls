@@ -31,6 +31,21 @@ test("paper signup copy, terms, and consent stay on the guest form", () => {
   assert.match(account, /Play with a paper card/);
   assert.match(account, /id="paper-terms"/);
   assert.match(account, /id="contact-consent"/);
+  assert.match(account, /id="auth-phone"/);
+  assert.match(account, /id="photo-promo-consent"/);
+  assert.match(account, /We'll use this info to contact you if you win or receive prizes\./);
+  assert.equal(sandbox.HCPaper.signupError({
+    name: "Ada", email: "ada@example.com", phone: "2535550100", contact: false, photo: true
+  }).length > 0, true);
+  assert.equal(sandbox.HCPaper.signupError({
+    name: "Ada", email: "ada@example.com", phone: "2535550100", contact: true, photo: false
+  }).length > 0, true);
+  assert.equal(sandbox.HCPaper.signupError({
+    name: "Ada", email: "ada@example.com", phone: "12", contact: true, photo: true
+  }), "Enter a valid phone number.");
+  assert.equal(sandbox.HCPaper.signupError({
+    name: "Ada", email: "ada@example.com", phone: "(253) 555-0100", contact: true, photo: true, paper: false
+  }), "");
   assert.match(account, /You're in the game! Take this to the counter to request your paper card\./);
   assert.match(account, /Download &amp; print your card/);
   assert.match(account, /Ask at the counter/);
@@ -52,6 +67,9 @@ test("printable card is one portrait page with stamps and the shop key", () => {
   assert.match(cardJs, /USE THIS KEY TO FIND YOUR NEXT STOP/);
   assert.match(cardJs, /SIP/);
   assert.match(cardJs, /NO PURCHASE NECESSARY/);
+  assert.match(cardJs, /How to play/);
+  assert.match(read("assets/card-holiday.js"), /How to play/);
+  assert.match(read("assets/card-holiday.js"), /Holiday Cafe, Anthem/);
   assert.match(cardJs, /mascot\.png/);
   assert.doesNotMatch(cardJs, /wordmark-phone\.png/);
   assert.doesNotMatch(cardJs, /card-fold/);
@@ -89,6 +107,26 @@ test("stamp numbers follow the alphabetical shop key", () => {
   const crowded = cardSandbox.HCCard.scaleFor(70);
   assert.ok(parseFloat(roomy.stamp) > parseFloat(crowded.stamp));
   assert.ok(parseFloat(roomy.list) > parseFloat(crowded.list));
+});
+
+test("guest phone and both consents are stored and searchable by staff", () => {
+  const guest = read("migrations/20261021150000_guest_phone_consent.sql");
+  assert.match(guest, /photo_promo_consent boolean not null default false/);
+  assert.match(guest, /photo_promo_consented_at/);
+  assert.match(guest, /add column if not exists phone text/);
+  assert.match(guest, /Prize contact approval is required/);
+  assert.match(guest, /Photo promotional approval is required/);
+  assert.match(guest, /player_phone text/);
+  assert.match(guest, /private\.is_crawl_staff/);
+  assert.match(guest, /regexp_replace\(coalesce\(p\.phone, ''\), '\\D', '', 'g'\)/);
+  assert.doesNotMatch(guest, /service_role/);
+  assert.doesNotMatch(guest, /grant execute on function public\.record_guest_signup[\s\S]*to anon/);
+  assert.doesNotMatch(guest, /grant execute on function public\.organizer_search_players[\s\S]*to anon/);
+  assert.doesNotMatch(guest.slice(guest.indexOf("create or replace function")), /claim_stamp|c_radius|demo_bypass/);
+  assert.match(paper, /record_guest_signup/);
+  assert.match(paper, /player_phone/);
+  assert.match(paper, /photo_promo_consent/);
+  assert.match(account, /id="store-player-search"/);
 });
 
 test("manual stamps are staff-only and claim_stamp still uses 50 meters", () => {
