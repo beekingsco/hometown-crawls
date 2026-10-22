@@ -24,6 +24,7 @@
       name: (fixture() && fixture().shop && fixture().shop.name) || "",
       stampLabel: "",
       address: base.address || "",
+      postal: base.postal || "",
       phone: base.phone || "",
       hours: base.hours || "",
       description: base.description || "",
@@ -41,7 +42,7 @@
     try {
       var saved = JSON.parse(localStorage.getItem(KEY) || "null");
       if (saved && typeof saved === "object") {
-        ["name", "stampLabel", "address", "phone", "hours", "description", "website", "instagram", "cover", "logo", "stamp"].forEach(function (key) {
+        ["name", "stampLabel", "address", "postal", "phone", "hours", "description", "website", "instagram", "cover", "logo", "stamp"].forEach(function (key) {
           if (typeof saved[key] === "string") listing[key] = saved[key];
         });
         if (Array.isArray(saved.gallery)) listing.gallery = saved.gallery.filter(function (item) { return typeof item === "string"; }).slice(0, 8);
@@ -96,6 +97,7 @@
       "list-name": listing.name,
       "list-stamp-label": listing.stampLabel,
       "list-address": listing.address,
+      "list-postal": listing.postal,
       "list-phone": listing.phone,
       "list-hours": listing.hours,
       "list-description": listing.description,
@@ -120,6 +122,7 @@
     listing.name = document.getElementById("list-name").value.trim();
     listing.stampLabel = document.getElementById("list-stamp-label").value.trim();
     listing.address = document.getElementById("list-address").value.trim();
+    listing.postal = document.getElementById("list-postal").value.trim();
     listing.phone = document.getElementById("list-phone").value.trim();
     listing.hours = document.getElementById("list-hours").value.trim();
     listing.description = document.getElementById("list-description").value.trim();
@@ -132,6 +135,7 @@
     if (!listing.name || listing.name.length > 200) return "Shop name needs to be 1–200 characters.";
     if (listing.stampLabel.length > 40) return "Stamp label needs to be 40 characters or fewer.";
     if (listing.address.length > 300) return "Address needs to be 300 characters or fewer.";
+    if (listing.postal && !/^\d{5}(?:-\d{4})?$/.test(listing.postal)) return "Zip code needs to be 5 digits.";
     if (listing.hours.length > 500) return "Hours need to be 500 characters or fewer.";
     if (listing.description.length > 600) return "Description needs to be 600 characters or fewer.";
     if (listing.website && !/^https?:\/\//i.test(listing.website)) return "Website must start with http:// or https://.";
@@ -256,6 +260,7 @@
         "list-name": listing.display_name || "",
         "list-stamp-label": listing.stamp_label || "",
         "list-address": listing.address || "",
+        "list-postal": listing.postal_code || "",
         "list-phone": listing.phone || "",
         "list-hours": listing.hours || "",
         "list-description": listing.blurb || "",
@@ -318,6 +323,7 @@
         name: document.getElementById("list-name").value.trim(),
         stampLabel: document.getElementById("list-stamp-label").value.trim(),
         address: document.getElementById("list-address").value.trim(),
+        postal: document.getElementById("list-postal").value.trim(),
         phone: document.getElementById("list-phone").value.trim(),
         hours: document.getElementById("list-hours").value.trim(),
         description: document.getElementById("list-description").value.trim(),
@@ -330,6 +336,7 @@
         p_listing: listing.listing_id,
         p_name: draft.name,
         p_address: draft.address,
+        p_postal: draft.postal,
         p_phone: draft.phone,
         p_hours: draft.hours,
         p_blurb: draft.description,
@@ -345,6 +352,7 @@
       }
       listing.display_name = draft.name;
       listing.stamp_label = draft.stampLabel;
+      listing.postal_code = draft.postal;
       if (ok) { ok.textContent = "Listing saved."; ok.classList.add("show"); }
       if (window.HC) HC.toast("Listing saved");
     });

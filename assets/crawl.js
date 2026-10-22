@@ -99,6 +99,7 @@
       logo_url: row.logo_url || "",
       stamp_image_url: row.stamp_image_url || "",
       stamp_label: row.stamp_label || "",
+      postal_code: row.postal_code || "",
       photo_urls: photos
     };
   }
@@ -267,14 +268,16 @@
       .map((s) => {
         const got = stamped.has(s.id);
         const init = window.HC?.initials(s.name) || "?";
-        const avatar = s.logo_url
-          ? `<span class="shop-avatar"><img src="${s.logo_url}" alt=""></span>`
+        const image = (s.photo_urls && s.photo_urls[0]) || s.stamp_image_url || s.logo_url || "";
+        const avatar = image
+          ? `<span class="shop-avatar"><img src="${escapeHtml(image)}" alt=""></span>`
           : `<span class="shop-avatar">${init}</span>`;
         return `<div class="shop-row" data-id="${s.id}">
           ${avatar}
           <div style="flex:1;min-width:0">
             <b>${escapeHtml(s.name)}</b>
             <div class="muted small">${escapeHtml(s.address || "")}</div>
+            ${s.postal_code ? `<div class="muted small">Zip ${escapeHtml(s.postal_code)}</div>` : ""}
           </div>
           <span class="pill ${got ? "pill-ok" : "pill-muted"}">${got ? "Stamped" : "Open"}</span>
         </div>`;
@@ -359,11 +362,24 @@
         weight: 2
       })
         .addTo(map)
-        .bindPopup(`<b>${escapeHtml(s.name)}</b><br><span style="color:#6b6558">${escapeHtml(s.address || "")}</span>`);
+        .bindPopup(shopPopup(s));
     });
     if (bounds.length > 1) map.fitBounds(bounds, { padding: [28, 28] });
     setTimeout(() => map.invalidateSize(), 120);
     return map;
+  }
+
+  function shopImage(shop) {
+    return (shop.photo_urls && shop.photo_urls[0]) || shop.stamp_image_url || shop.logo_url || "";
+  }
+
+  function shopPopup(shop) {
+    const image = shopImage(shop);
+    const photo = image
+      ? `<img src="${escapeHtml(image)}" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:8px;display:block;margin-bottom:6px">`
+      : "";
+    const zip = shop.postal_code ? `<br><span style="color:#6b6558">Zip ${escapeHtml(shop.postal_code)}</span>` : "";
+    return `${photo}<b>${escapeHtml(shop.name)}</b><br><span style="color:#6b6558">${escapeHtml(shop.address || "")}</span>${zip}`;
   }
 
   function escapeHtml(str) {

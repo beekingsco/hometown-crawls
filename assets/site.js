@@ -158,7 +158,7 @@
       icon.href = "/favicon.ico";
       document.head.appendChild(icon);
     }
-    if (!document.body.classList.contains("home-page")) {
+    if (!document.body.classList.contains("home-page") && !document.querySelector("link[href*='fonts.googleapis.com']")) {
       const fonts = document.createElement("link");
       fonts.rel = "stylesheet";
       fonts.href = "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap";

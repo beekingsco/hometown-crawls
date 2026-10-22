@@ -164,7 +164,7 @@
             <a href="/">Home</a> · Puyallup Holiday Coffee Crawl
           </nav>
           <span class="hc-dates"><span class="dot">☕</span> Nov 1 – Dec 31, 2026</span>
-          <h1>Puyallup Holiday Coffee Crawl</h1>
+          <h1 id="crawl-display-name">Puyallup Holiday Coffee Crawl</h1>
           <p class="hc-kicker">2 months. <span id="location-count">Shops on the passport</span></p>
           <p class="lead">Crawl your way through the coffee wonderland of Puyallup.</p>
           <div class="row mt-2">
@@ -397,6 +397,7 @@
           logo_url: s.logo_url || "",
           stamp_image_url: s.stamp_image_url || "",
           stamp_label: s.stamp_label || "",
+          postal_code: s.postal_code || "",
           photo_urls: photos
         };
       });
@@ -418,7 +419,7 @@
       empty.classList.add("hidden");
       grid.innerHTML = shops.map(function (s) {
         var photos = Array.isArray(s.photo_urls) ? s.photo_urls : [];
-        var photo = httpUrl(photos[0]);
+        var photo = httpUrl(photos[0]) || httpUrl(s.stamp_image_url) || httpUrl(s.logo_url);
         var media = photo
           ? '<img class="cover" src="' + esc(photo) + '" alt="' + esc(s.display_name || "Shop") + '" loading="lazy" />'
           : '<div class="cover" style="display:grid;place-items:center;color:var(--green);font-family:var(--font-display);font-size:1.4rem">' + esc((window.HC && HC.initials(s.display_name)) || "☕") + "</div>";
@@ -430,6 +431,7 @@
         return '<article class="card shop-card">' + media +
           '<div class="body"><h3>' + esc(s.display_name) + "</h3>" +
           (s.address ? '<p class="muted small">' + esc(s.address) + "</p>" : "") +
+          (s.postal_code ? '<p class="muted small">Zip ' + esc(s.postal_code) + "</p>" : "") +
           (s.hours ? '<p class="small"><strong>Hours</strong> · ' + esc(s.hours) + "</p>" : "") +
           (s.blurb ? "<p>" + esc(s.blurb) + "</p>" : "") +
           (links.length ? '<p class="row shop-links">' + links.join("") + "</p>" : "") +
@@ -513,6 +515,11 @@
         $("shops-err").textContent = "Shops couldn't be loaded. Refresh to try again.";
         showBox($("shops-err"), true);
       }
+
+      try {
+        var named = await HCCrawl.client().from("crawls").select("name").eq("id", CRAWL).maybeSingle();
+        if (named.data && named.data.name && $("crawl-display-name")) $("crawl-display-name").textContent = named.data.name;
+      } catch (ignore) {}
 
       var countEl = $("location-count");
       var countLine = $("shop-count-line");

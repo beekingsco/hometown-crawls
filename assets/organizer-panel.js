@@ -293,7 +293,9 @@
         list.innerHTML = shops.map(function (row) {
           var pay = row.is_paid ? '<span class="pill pill-ok">Paid</span>' : '<span class="pill pill-wait">Unpaid</span>';
           return '<article class="record-card"><b class="record-name">' + esc(row.display_name) + '</b><p class="record-email">' +
-            esc(row.scans || 0) + ' scans</p><div class="record-chips">' + pay + '</div><label class="check"><input type="checkbox" data-listing="' +
+            esc(row.scans || 0) + ' scans</p><div class="record-chips">' + pay +
+            '</div><div class="row mt-1"><button class="btn btn-soft" type="button" data-edit-shop="' + esc(row.listing_id) +
+            '">Edit</button></div><label class="check"><input type="checkbox" data-listing="' +
             esc(row.listing_id) + '"' + (row.is_visible ? " checked" : "") + "> Show on the passport</label></article>";
         }).join("") || '<p class="muted small">No stores yet.</p>';
       }
@@ -372,8 +374,129 @@
       });
     }
 
+    var editing = null;
+    var shopPaths = [];
+
+    function shopForm() {
+      return document.getElementById("org-shop-form");
+    }
+
+    function shopMessage(id, text) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = text || "";
+      el.classList.toggle("show", !!text);
+    }
+
+    function shopImageUrl(path) {
+      if (!path || !window.HCCrawl) return "";
+      var out = HCCrawl.client().storage.from("shop-images").getPublicUrl(path);
+      return (out && out.data && out.data.publicUrl) || "";
+    }
+
+    function setShopPreview(imgId, emptyId, path) {
+      var img = document.getElementById(imgId);
+      var empty = document.getElementById(emptyId);
+      var src = shopImageUrl(path);
+      if (!img) return;
+      if (src) {
+        img.src = src;
+        img.classList.remove("hidden");
+        if (empty) empty.classList.add("hidden");
+      } else {
+        img.removeAttribute("src");
+        img.classList.add("hidden");
+        if (empty) empty.classList.remove("hidden");
+      }
+    }
+
+    function paintShopGallery() {
+      var gallery = document.getElementById("org-shop-gallery");
+      if (!gallery) return;
+      var rest = shopPaths.slice(1);
+      gallery.innerHTML = rest.map(function (src, index) {
+        return '<figure class="gallery-item"><img src="' + esc(shopImageUrl(src)) + '" alt=""><button type="button" data-remove-org-photo="' + (index + 1) + '">Remove</button></figure>';
+      }).join("") || '<p class="muted small">No gallery photos yet.</p>';
+    }
+
+    function paintShopForm(row) {
+      editing = row;
+      shopPaths = Array.isArray(row.photo_paths) ? row.photo_paths.slice() : [];
+      var form = shopForm();
+      if (form) {
+        form.classList.remove("hidden");
+        form.hidden = false;
+      }
+      var fields = {
+        "org-shop-name": row.display_name || "",
+        "org-shop-stamp-label": row.stamp_label || "",
+        "org-shop-address": row.address || "",
+        "org-shop-postal": row.postal_code || "",
+        "org-shop-phone": row.phone || "",
+        "org-shop-hours": row.hours || "",
+        "org-shop-description": row.blurb || "",
+        "org-shop-website": row.website || "",
+        "org-shop-instagram": row.instagram || ""
+      };
+      Object.keys(fields).forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.value = fields[id];
+      });
+      setShopPreview("org-shop-cover-preview", "org-shop-cover-empty", shopPaths[0]);
+      setShopPreview("org-shop-logo-preview", "org-shop-logo-empty", row.logo_path);
+      setShopPreview("org-shop-stamp-preview", "org-shop-stamp-empty", row.stamp_image_path);
+      paintShopGallery();
+      shopMessage("org-shop-ok", "");
+      shopMessage("org-shop-err", "");
+    }
+
+    function closeShopForm() {
+      editing = null;
+      shopPaths = [];
+      var form = shopForm();
+      if (!form) return;
+      form.classList.add("hidden");
+      form.hidden = true;
+    }
+
+    function shopFileType(file) {
+      if (!file) return "";
+      return file.type === "image/jpg" ? "image/jpeg" : file.type;
+    }
+
+    async function uploadShopFile(folder, file, limitMb) {
+      var type = shopFileType(file);
+      if (["image/jpeg", "image/png", "image/webp"].indexOf(type) === -1) throw new Error("Use a PNG, JPG, or WebP image.");
+      if (file.size > limitMb * 1024 * 1024) throw new Error("Images need to be " + limitMb + " MB or smaller.");
+      var ext = type === "image/png" ? "png" : type === "image/webp" ? "webp" : "jpg";
+      var path = editing.listing_id + "/" + folder + "/" + (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())) + "." + ext;
+      var up = await HCCrawl.client().storage.from("shop-images").upload(path, file, { contentType: type, upsert: false });
+      if (up.error) throw up.error;
+      return path;
+    }
+
+    async function openShop(listingId) {
+      shopMessage("org-shop-err", "");
+      var res = await HCCrawl.client().rpc("organizer_shop_listing", { p_listing: listingId });
+      if (res.error || !res.data || !res.data.length) {
+        shopMessage("org-shop-err", (res.error && res.error.message) || "Could not open that shop.");
+        var form = shopForm();
+        if (form) { form.classList.remove("hidden"); form.hidden = false; }
+        return;
+      }
+      paintShopForm(res.data[0]);
+      var form = shopForm();
+      if (form && form.scrollIntoView) form.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
     var storeList = document.getElementById("org-stores");
     if (storeList) {
+      storeList.addEventListener("click", function (ev) {
+        if (demoOn()) return;
+        var btn = ev.target.closest && ev.target.closest("[data-edit-shop]");
+        if (!btn) return;
+        openShop(btn.getAttribute("data-edit-shop"));
+      });
       storeList.addEventListener("change", async function (ev) {
         if (demoOn()) return;
         var box = ev.target.closest && ev.target.closest("[data-listing]");
@@ -384,6 +507,128 @@
         });
         if (saved.error) box.checked = !box.checked;
       });
+    }
+
+    var shopEditor = shopForm();
+    if (shopEditor) {
+      var cancelShop = document.getElementById("org-shop-cancel");
+      if (cancelShop) cancelShop.addEventListener("click", closeShopForm);
+      shopEditor.addEventListener("submit", async function (ev) {
+        if (demoOn()) return;
+        ev.preventDefault();
+        shopMessage("org-shop-ok", "");
+        shopMessage("org-shop-err", "");
+        if (!editing) { shopMessage("org-shop-err", "Choose a shop from the list."); return; }
+        var draft = {
+          name: document.getElementById("org-shop-name").value.trim(),
+          stampLabel: document.getElementById("org-shop-stamp-label").value.trim(),
+          address: document.getElementById("org-shop-address").value.trim(),
+          postal: document.getElementById("org-shop-postal").value.trim(),
+          phone: document.getElementById("org-shop-phone").value.trim(),
+          hours: document.getElementById("org-shop-hours").value.trim(),
+          description: document.getElementById("org-shop-description").value.trim(),
+          website: document.getElementById("org-shop-website").value.trim(),
+          instagram: document.getElementById("org-shop-instagram").value.trim().replace(/^@/, "")
+        };
+        if (!draft.name || draft.name.length > 200) { shopMessage("org-shop-err", "Shop name needs to be 1–200 characters."); return; }
+        if (draft.postal && !/^\d{5}(?:-\d{4})?$/.test(draft.postal)) { shopMessage("org-shop-err", "Zip code needs to be 5 digits."); return; }
+        if (draft.website && !/^https?:\/\//i.test(draft.website)) { shopMessage("org-shop-err", "Website must start with http:// or https://."); return; }
+        var saved = await HCCrawl.client().rpc("shop_save_listing", {
+          p_listing: editing.listing_id,
+          p_name: draft.name,
+          p_address: draft.address,
+          p_postal: draft.postal,
+          p_phone: draft.phone,
+          p_hours: draft.hours,
+          p_blurb: draft.description,
+          p_website: draft.website,
+          p_instagram: draft.instagram,
+          p_stamp_label: draft.stampLabel
+        });
+        if (saved.error) { shopMessage("org-shop-err", saved.error.message || "Could not save the shop."); return; }
+        editing.display_name = draft.name;
+        editing.postal_code = draft.postal;
+        editing.stamp_label = draft.stampLabel;
+        var listed = shops.filter(function (row) { return row.listing_id === editing.listing_id; })[0];
+        if (listed) listed.display_name = draft.name;
+        renderLive();
+        shopMessage("org-shop-ok", "Shop saved.");
+      });
+
+      async function onOrgFile(inputId, folder, limitMb, apply) {
+        var input = document.getElementById(inputId);
+        if (!input) return;
+        input.addEventListener("change", async function () {
+          if (demoOn()) return;
+          var file = input.files && input.files[0];
+          input.value = "";
+          if (!file) return;
+          if (!editing) { shopMessage("org-shop-err", "Choose a shop from the list."); return; }
+          shopMessage("org-shop-err", "");
+          var path = "";
+          try {
+            path = await uploadShopFile(folder, file, limitMb);
+            await apply(path);
+            setShopPreview("org-shop-cover-preview", "org-shop-cover-empty", shopPaths[0]);
+            setShopPreview("org-shop-logo-preview", "org-shop-logo-empty", editing.logo_path);
+            setShopPreview("org-shop-stamp-preview", "org-shop-stamp-empty", editing.stamp_image_path);
+            paintShopGallery();
+            shopMessage("org-shop-ok", "Image saved.");
+          } catch (e) {
+            if (path) {
+              try { await HCCrawl.client().storage.from("shop-images").remove([path]); } catch (ignore) {}
+            }
+            shopMessage("org-shop-err", (e && e.message) || "Could not add that image.");
+          }
+        });
+      }
+
+      onOrgFile("file-org-cover", "gallery", 5, async function (path) {
+        var next = [path].concat(shopPaths.filter(function (item) { return item !== path; })).slice(0, 8);
+        var saved = await HCCrawl.client().rpc("shop_set_photo_paths", { p_listing: editing.listing_id, p_paths: next });
+        if (saved.error) throw saved.error;
+        shopPaths = next;
+        editing.photo_paths = next;
+      });
+      onOrgFile("file-org-gallery", "gallery", 5, async function (path) {
+        if (shopPaths.length >= 8) throw new Error("You can keep up to 8 photos.");
+        var next = shopPaths.concat([path]);
+        var saved = await HCCrawl.client().rpc("shop_set_photo_paths", { p_listing: editing.listing_id, p_paths: next });
+        if (saved.error) throw saved.error;
+        shopPaths = next;
+        editing.photo_paths = next;
+      });
+      onOrgFile("file-org-stamp", "stamp", 2, async function (path) {
+        var saved = await HCCrawl.client().rpc("shop_set_stamp_art", { p_listing: editing.listing_id, p_kind: "stamp", p_path: path });
+        if (saved.error) throw saved.error;
+        editing.stamp_image_path = path;
+      });
+      onOrgFile("file-org-logo", "logo", 2, async function (path) {
+        var saved = await HCCrawl.client().rpc("shop_set_stamp_art", { p_listing: editing.listing_id, p_kind: "logo", p_path: path });
+        if (saved.error) throw saved.error;
+        editing.logo_path = path;
+      });
+
+      var orgGallery = document.getElementById("org-shop-gallery");
+      if (orgGallery) {
+        orgGallery.addEventListener("click", async function (ev) {
+          if (demoOn() || !editing) return;
+          var btn = ev.target.closest && ev.target.closest("[data-remove-org-photo]");
+          if (!btn) return;
+          var index = Number(btn.getAttribute("data-remove-org-photo"));
+          var removed = shopPaths[index];
+          var next = shopPaths.filter(function (_, i) { return i !== index; });
+          var saved = await HCCrawl.client().rpc("shop_set_photo_paths", { p_listing: editing.listing_id, p_paths: next });
+          if (saved.error) { shopMessage("org-shop-err", saved.error.message || "Could not remove that photo."); return; }
+          shopPaths = next;
+          editing.photo_paths = next;
+          if (removed) {
+            try { await HCCrawl.client().storage.from("shop-images").remove([removed]); } catch (ignore) {}
+          }
+          setShopPreview("org-shop-cover-preview", "org-shop-cover-empty", shopPaths[0]);
+          paintShopGallery();
+        });
+      }
     }
 
     var optIns = [];

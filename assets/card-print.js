@@ -62,7 +62,11 @@
 
   function orderedShops(rows) {
     var seen = {};
-    return (rows || []).map(function (row) { return row && row.display_name; }).filter(function (name) {
+    return (rows || []).map(function (row) {
+      if (!row || !row.display_name) return "";
+      var zip = String(row.postal_code || "").trim();
+      return zip ? row.display_name + " · " + zip : row.display_name;
+    }).filter(function (name) {
       if (!name || seen[name]) return false;
       seen[name] = true;
       return true;
@@ -199,7 +203,7 @@
     root.classList.toggle("holiday-preview-scroll", !!holiday);
     var instructions = document.getElementById("card-print-instructions");
     if (instructions) instructions.textContent = holiday
-      ? "Print at actual size on one portrait US Letter page, or choose Save as PDF in the print dialog. The eligible paid-shop list refreshes before printing. More than 30 shops use numbered continuation pages."
+      ? "Print at actual size on one portrait US Letter page, or choose Download print-ready PDF. The eligible paid-shop list refreshes before printing. The QR code opens hometowncrawls.com/puyallup/holiday-coffee-crawl. More than 30 shops use numbered continuation pages."
       : "Print on one portrait letter page, or choose Save as PDF in the print dialog. The eligible paid-shop list refreshes before printing.";
     if (holiday) HCHolidayCard.render(root, model);
     else root.replaceChildren(sheet(model));
@@ -217,7 +221,8 @@
     var user = params().get("user") || "";
     var model = {
       crawlId: crawl,
-      crawlName: "Hometown crawl",
+      crawlName: crawl === "puy-coffee" ? "Downtown Puyallup Holiday Coffee Crawl" : "Hometown crawl",
+      publicUrl: crawl === "puy-coffee" && window.HCHolidayCard ? HCHolidayCard.PUBLIC_URL : "",
       startsAt: "",
       endsAt: "",
       signupShop: "",
@@ -285,8 +290,10 @@
     if (printing) return false;
     printing = true;
     var button = document.getElementById("card-print");
+    var download = document.getElementById("card-save-pdf");
     var status = document.getElementById("card-status");
     if (button) button.disabled = true;
+    if (download) download.disabled = true;
     try {
       if (!await load()) return false;
       await waitForPrintAssets();
@@ -298,13 +305,19 @@
     } finally {
       printing = false;
       if (button) button.disabled = false;
+      if (download) download.disabled = false;
     }
   }
 
   document.addEventListener("DOMContentLoaded", function () {
     var button = document.getElementById("card-print");
+    var download = document.getElementById("card-save-pdf");
     if (button) button.addEventListener("click", printCard);
-    load().finally(function () { if (button) button.disabled = false; });
+    if (download) download.addEventListener("click", printCard);
+    load().finally(function () {
+      if (button) button.disabled = false;
+      if (download) download.disabled = false;
+    });
   });
 
   window.HCCard = {
