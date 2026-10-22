@@ -62,7 +62,11 @@
 
   function orderedShops(rows) {
     var seen = {};
-    return (rows || []).map(function (row) { return row && row.display_name; }).filter(function (name) {
+    return (rows || []).map(function (row) {
+      if (!row || !row.display_name) return "";
+      var zip = String(row.postal_code || "").trim();
+      return zip ? row.display_name + " · " + zip : row.display_name;
+    }).filter(function (name) {
       if (!name || seen[name]) return false;
       seen[name] = true;
       return true;
