@@ -47,7 +47,8 @@ test("Puyallup display name changes in data and the public URL stays", () => {
   assert.match(holiday, /from\("crawls"\)\.select\("name"\)/);
   assert.match(holiday, /Zip /);
   assert.match(holiday, /stamp_image_url/);
-  assert.match(card, /m\.crawlName \|\| 'Puyallup Holiday Coffee Crawl'/);
+  assert.match(card, /m\.crawlName \|\| 'Downtown Puyallup Holiday Coffee Crawl'/);
+  assert.match(card, /hometowncrawls\.com\/puyallup\/holiday-coffee-crawl/);
   assert.match(read("assets/crawl.js"), /Zip \$\{escapeHtml\(shop\.postal_code\)\}/);
 });
 

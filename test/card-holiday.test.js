@@ -22,7 +22,7 @@ function context(search = '') {
   const sandbox = { document, location: { search }, URLSearchParams, Intl, Date, requestAnimationFrame:fn=>fn() };
   sandbox.window = sandbox;
   vm.createContext(sandbox);
-  for (const file of ['assets/card-holiday.js','assets/card-print.js']) vm.runInContext(read(file),sandbox);
+  for (const file of ['assets/qrcode-generator.js','assets/card-holiday.js','assets/card-print.js']) vm.runInContext(read(file),sandbox);
   return {sandbox, elements, events, document};
 }
 const model = count => ({ crawlId:'puy-coffee',crawlName:'Puyallup Holiday Coffee Crawl',
@@ -99,6 +99,33 @@ test('blank card never fetches participant personal details', async () => {
  assert.match(html,/<span class="holiday-brand"><img/);
  assert.equal((html.match(/class="holiday-mascot"/g)||[]).length,1);
  assert.match(read('assets/card-holiday.css'),/holiday-brand\{[^}]*overflow:hidden/);
+});
+
+test('holiday card shows the crawl name, website, and a QR code for the public page', () => {
+  const {sandbox} = context();
+  const html = sandbox.HCHolidayCard.markup({
+    crawlId: 'puy-coffee',
+    crawlName: 'Downtown Puyallup Holiday Coffee Crawl',
+    publicUrl: 'https://www.hometowncrawls.com/puyallup/holiday-coffee-crawl',
+    shops: ['Live Shop'],
+    playerName: '',
+    playerEmail: '',
+    signupShop: '',
+    turnIn: []
+  });
+  assert.match(html, />Downtown Puyallup Holiday Coffee Crawl</);
+  assert.match(html, /hometowncrawls\.com\/puyallup\/holiday-coffee-crawl/);
+  assert.match(html, /<svg/);
+  assert.doesNotMatch(html, /Happy Donuts|Anthem Coffee/);
+  assert.equal(sandbox.HCHolidayCard.publicUrl({ publicUrl: 'https://evil.example/old-slug' }), 'https://www.hometowncrawls.com/puyallup/holiday-coffee-crawl');
+  const qr = sandbox.qrcode(0, 'M');
+  qr.addData('https://www.hometowncrawls.com/puyallup/holiday-coffee-crawl');
+  qr.make();
+  assert.match(html, new RegExp(qr.createSvgTag({ cellSize: 2, margin: 4, scalable: true }).split('<path')[1].slice(0, 40).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  const vercel = read('vercel.json');
+  for (const source of ['/play', '/puyallupwa/coffee', '/puyallupwa/pub']) {
+    assert.match(vercel, new RegExp('"source": "' + source + '"[\\s\\S]*?"destination": "/puyallup/holiday-coffee-crawl"'));
+  }
 });
 
 test('no static PDF or hardcoded shop list is shipped',()=>{
