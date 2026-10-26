@@ -21,18 +21,18 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/site.css" />
+  <link rel="stylesheet" href="assets/app.css" />
   
 </head>
 <body>
   <header class="site-header" id="site-header"></header>
   <main>
-
-    <div class="wrap-narrow page-hero">
+    <div class="wrap stack" id="account-app">
+    <div class="page-hero">
       <p class="eyebrow">Account</p>
       <h1>Your passport home</h1>
       <p>Sign in with an email magic link. Your stamps start grey and fill in with color after each visit. Prize entries stay on that account.</p>
     </div>
-    <div class="wrap stack" id="account-app">
       <div class="demo-banner hidden" id="demo-banner" role="status"></div>
       <div class="role-tabs hidden" id="role-tabs" role="tablist" aria-label="Account sections">
         <button type="button" id="tab-guest" role="tab" aria-controls="panel-guest" aria-selected="true">Guest</button>
@@ -41,7 +41,7 @@
       </div>
 
       <div id="panel-guest" role="tabpanel" aria-labelledby="tab-guest">
-        <div class="stack" style="max-width:720px">
+        <div class="stack">
       <div class="card auth-panel">
         <div class="auth-status" id="auth-status">Checking session…</div>
         <div id="auth-signed-out">
@@ -61,14 +61,16 @@
           </label>
           <p class="form-note" id="prize-contact-note">We'll use this info to contact you if you win or receive prizes.</p>
           <p class="form-note" id="share-note">Your name, email, and phone are shared with the organizers of crawls you join.</p>
-          <label class="check"><input type="checkbox" id="contact-consent" required /> I agree that participating stores and organizers can access my info to contact me about prizes and future offers.</label>
-          <label class="check"><input type="checkbox" id="photo-promo-consent" required /> I approve use of any photos of me for Hometown Crawls website promotional material.</label>
-          <label class="check"><input type="checkbox" id="area-crawl-opt-in" /> Tell me about new crawls in my area.</label>
+          <div class="consent-block">
+            <label class="check"><input type="checkbox" id="contact-consent" required /> I agree that participating stores and organizers can access my info to contact me about prizes and future offers.</label>
+            <label class="check"><input type="checkbox" id="photo-promo-consent" required /> I approve use of any photos of me for Hometown Crawls website promotional material.</label>
+            <label class="check"><input type="checkbox" id="area-crawl-opt-in" /> Tell me about new crawls in my area.</label>
+          </div>
           <div class="row mt-2">
             <button class="btn btn-primary" type="button" id="btn-magic">Send magic link</button>
           </div>
           <p class="form-note">We’ll email a one-time sign-in link. No password required. You can unsubscribe from offers later.</p>
-          <p class="form-note">Shop host or organizer? Read the <a href="/account/store/help">store checklist</a> or the <a href="/account/organizer/help">organizer checklist</a> before Saturday, October 31.</p>
+          <p class="form-note">Shop host or organizer? Read the <a href="/account/store/help">store checklist</a> or the <a href="/account/organizer/help">organizer checklist</a> and run through it before launch Saturday, Oct 31.</p>
         </div>
         <div id="auth-signed-in" class="hidden">
           <div class="row">

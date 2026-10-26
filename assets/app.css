@@ -1,28 +1,29 @@
 /* App pages share Atlas's homepage palette. Homepage files stay untouched.
    Tokens apply only when the body is not the homepage. */
 body:not(.home-page) {
-  --bg: #f8f2e7;
-  --cream: #f8f2e7;
-  --paper: #fffaf1;
+  --bg: #FBF6ED;
+  --cream: #FBF6ED;
+  --paper: #FFFCF6;
   --ink: #302119;
   --ink-soft: #302119;
-  --muted: #75685b;
-  --green: #ad4424;
-  --green-deep: #91351c;
-  --green-mid: #ad4424;
+  --muted: #75685B;
+  --green: #D74616;
+  --green-deep: #b83a12;
+  --green-mid: #D74616;
   --soft: #f4e2d1;
-  --line: #d8cbb8;
-  --line-strong: #d8cbb8;
+  --line: #E5D9C7;
+  --line-strong: #E5D9C7;
   --gold-soft: #f4e2d1;
-  --gold-ink: #91351c;
+  --gold-ink: #b83a12;
   --shadow: none;
   --shadow-sm: none;
   --radius: 9px;
   --radius-sm: 5px;
   --radius-pill: 5px;
-  --header-h: 84px;
+  --header-h: 76px;
   background: var(--bg);
   color: var(--ink);
+  font-size: 16px;
 }
 
 body:not(.home-page) h1,
@@ -33,20 +34,30 @@ body:not(.home-page) .eyebrow { color: var(--muted); letter-spacing: 0.16em; }
 body:not(.home-page) a:hover { color: var(--green); }
 
 body:not(.home-page) .site-header {
-  background: rgba(248, 242, 231, 0.98);
+  background: rgba(251, 246, 237, 0.98);
   backdrop-filter: none;
   border-bottom: 1px solid var(--line);
 }
 body:not(.home-page) .wordmark {
-  display: block;
-  width: 210px;
+  display: flex;
+  align-items: center;
+  width: auto;
+  max-width: min(172px, 46vw);
+  height: 46px;
   flex: 0 0 auto;
   line-height: 0;
   padding: 0;
 }
-body:not(.home-page) .wordmark img { width: 100%; height: auto; display: block; }
+body:not(.home-page) .wordmark img {
+  width: auto;
+  height: 46px;
+  max-height: 46px;
+  object-fit: contain;
+  object-position: left center;
+  display: block;
+}
 body:not(.home-page) .nav-links a {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   color: var(--ink);
   opacity: 1;
@@ -81,6 +92,7 @@ body:not(.home-page) .btn-primary {
   background: var(--green);
   border-color: var(--green);
   color: var(--paper);
+  box-shadow: none;
 }
 body:not(.home-page) .btn-primary:hover { background: var(--green-deep); }
 body:not(.home-page) .btn-ghost,
@@ -107,7 +119,21 @@ body:not(.home-page) textarea.input {
   border-color: var(--line);
   background: var(--paper);
 }
-body:not(.home-page) .input:focus { border-color: var(--green); box-shadow: 0 0 0 3px #ad442422; }
+body:not(.home-page) .input:focus { border-color: var(--green); box-shadow: 0 0 0 3px #D7461622; }
+body:not(.home-page) select.input {
+  appearance: none;
+  -webkit-appearance: none;
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='none' stroke='%23302119' stroke-width='1.6' d='M1 1.5 6 6.5 11 1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  background-size: 12px 8px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  min-height: 2.85rem;
+  padding: 0.7rem 2.25rem 0.7rem 0.85rem;
+}
 
 body:not(.home-page) .role-tabs {
   width: 100%;
@@ -170,14 +196,22 @@ body:not(.home-page) .nav-login-mark { background: #f4e2d1; color: #91351c; }
 
 body:not(.home-page) .site-footer {
   background: #302119;
-  color: #f8f2e7;
+  color: #FBF6ED;
 }
-body:not(.home-page) .site-footer a { color: #f8f2e7; }
+body:not(.home-page) .site-footer a { color: #FBF6ED; }
 body:not(.home-page) .site-footer a:hover { color: #f1a179; opacity: 1; }
 body:not(.home-page) .footer-wordmark {
-  width: 196px;
+  width: 200px;
+  max-width: 70vw;
+  height: auto;
+  max-height: none;
   margin-bottom: 0.7rem;
   filter: brightness(0) invert(94%) sepia(14%) saturate(330%);
+}
+body:not(.home-page) .footer-wordmark img {
+  width: 100%;
+  height: auto;
+  max-height: none;
 }
 body:not(.home-page) .toast { background: #302119; border-radius: 5px; }
 
@@ -215,15 +249,48 @@ body:not(.home-page) .start-points p { color: var(--muted); font-size: 0.95rem; 
   body:not(.home-page) .start-points { grid-template-columns: repeat(3, 1fr); }
 }
 @media (max-width: 420px) {
-  body:not(.home-page) { --header-h: 72px; }
-  body:not(.home-page) .wordmark { width: 148px; }
-  body:not(.home-page) .nav-login { padding: 8px 12px; font-size: 13px; }
+  body:not(.home-page) { --header-h: 64px; }
+  body:not(.home-page) .wordmark,
+  body:not(.home-page) .wordmark img { height: 38px; max-height: 38px; }
+  body:not(.home-page) .footer-wordmark,
+  body:not(.home-page) .footer-wordmark img { height: auto; max-height: none; }
+  body:not(.home-page) .nav-login { padding: 8px 12px; font-size: 14px; }
+}
+
+.guide-column { width: min(100% - 36px, 840px); margin-inline: auto; }
+.guide-page { font-size: 16px; line-height: 1.65; }
+.guide-page .page-hero p { max-width: none; font-size: 16px; color: var(--ink-soft); }
+.guide-page .card { padding: 1.6rem 1.7rem; }
+.guide-page .card > .eyebrow {
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  color: #D74616;
+  font-weight: 700;
+}
+.guide-page .guide-steps { font-size: 16px; line-height: 1.65; }
+.guide-page .card h3 { font-size: 1.35rem; }
+#support-form { padding-bottom: 1.85rem; }
+#support-send { margin-bottom: 1.35rem; }
+#account-app > .page-hero,
+#panel-guest > .stack {
+  width: 100%;
+  max-width: 760px;
+  margin-left: 0;
+  margin-right: auto;
+}
+#account-app > .page-hero,
+#account-app .guest-extras > h2 { margin-left: 0; padding-left: 0; }
+@media (max-width: 640px) {
+  .guide-column { width: min(100% - 28px, 840px); }
+  .guide-page .card { padding: 1.15rem 1.05rem; }
+  .guide-page .row { flex-direction: column; align-items: stretch; }
+  .guide-page .row .btn { width: 100%; white-space: normal; }
 }
 
 .paper-hero { display: flex; align-items: flex-end; gap: 8px; margin: 12px 0; }
 .paper-hero img { width: 96px; height: auto; }
-.paper-thumb { width: 42px; height: 42px; stroke: #ad4424; fill: none; stroke-width: 2.2; }
-.paper-star { color: #ad4424; font-size: 42px; line-height: 1; }
+.paper-thumb { width: 42px; height: 42px; stroke: #D74616; fill: none; stroke-width: 2.2; }
+.paper-star { color: #D74616; font-size: 42px; line-height: 1; }
 .paper-success h2 { font-size: 1.45rem; line-height: 1.25; }
 .paper-actions { display: flex; flex-direction: column; gap: 10px; }
 .paper-actions .btn { width: 100%; text-align: center; }

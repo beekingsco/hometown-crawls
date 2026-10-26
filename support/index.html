@@ -19,6 +19,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/assets/site.css" />
+  <link rel="stylesheet" href="/assets/app.css" />
   <style>.hp-field{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}</style>
 </head>
 <body>
@@ -47,7 +48,7 @@
             <option>Other</option>
           </select>
         </label>
-        <label class="field"><span>Crawl <span class="muted">(optional)</span></span>
+        <label class="field"><span class="field-label">Crawl <span class="opt">(optional)</span></span>
           <select class="input" id="support-crawl" name="crawl">
             <option value="">Not sure</option>
             <option value="Downtown Puyallup Holiday Coffee Crawl">Downtown Puyallup Holiday Coffee Crawl</option>
@@ -57,7 +58,7 @@
         <label class="field hidden" id="support-crawl-other-wrap"><span>Which crawl?</span>
           <input class="input" id="support-crawl-other" maxlength="120" />
         </label>
-        <label class="field"><span>Shop name <span class="muted">(optional)</span></span>
+        <label class="field"><span class="field-label">Shop name <span class="opt">(optional)</span></span>
           <input class="input" id="support-shop" name="shop" maxlength="120" autocomplete="organization" />
         </label>
         <label class="field"><span>What happened?</span>

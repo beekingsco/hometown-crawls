@@ -75,6 +75,10 @@ test("footer, sitemap, and rewrite point at /support", () => {
   const sitemap = read("sitemap.xml");
   assert.match(site, /link\("support", "Support"\)/);
   assert.match(home, /href="\/support">Support/);
+  assert.match(home, /href="\/account">Account/);
+  assert.match(site, /href="\$\{base\}account">Account/);
+  assert.match(read("assets/site.css"), /footer-wordmark[\s\S]*brightness\(0\) invert\(94%\) sepia\(14%\) saturate\(330%\)/);
+  assert.match(read("support/index.html"), /href="\/assets\/app\.css"/);
   assert.match(vercel, /"source": "\/support"/);
   assert.match(vercel, /"destination": "\/support\/index.html"/);
   assert.match(sitemap, /https:\/\/www\.hometowncrawls\.com\/support/);

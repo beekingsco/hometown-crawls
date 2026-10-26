@@ -111,7 +111,7 @@
             <a href="${base}organize.html">Start a crawl</a>
             <a href="${base}puyallup/coffee-crawl">Join as a shop</a>
             <a href="${base}faqs.html">FAQs</a>
-            <a href="${base}account.html">Account</a>
+            <a href="${base}account">Account</a>
             ${link("support", "Support")}
           </div>
         </div>

@@ -39,6 +39,9 @@ test("store checklist covers the host steps and does not add a bypass", () => {
   ]) {
     assert.match(storeHelp, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }
+  assert.match(storeHelp, /Host guide/);
+  assert.match(storeHelp, /the counter card/);
+  assert.doesNotMatch(storeHelp, /shop counter card|Store · Testing/);
   assert.match(storeHelp, /noindex/);
   assert.doesNotMatch(storeHelp, /service_role|RESEND_API_KEY|demo=1/);
   assert.match(vercel, /"source": "\/account\/store\/help"/);
@@ -69,6 +72,9 @@ test("organizer checklist covers crawl setup, paper stamps, and the counter pilo
   ]) {
     assert.match(organizerHelp, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }
+  assert.match(organizerHelp, /Organizer guide/);
+  assert.doesNotMatch(organizerHelp, /Organizer · Testing/);
+  assert.match(organizerHelp, /guide-column/);
   assert.match(organizerHelp, /noindex/);
   assert.doesNotMatch(organizerHelp, /service_role|RESEND_API_KEY/);
   assert.match(vercel, /"source": "\/account\/organizer\/help"/);
