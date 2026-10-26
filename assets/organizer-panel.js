@@ -256,6 +256,7 @@
       var btn = document.getElementById("tab-organizer");
       if (tabs) tabs.classList.remove("hidden");
       if (btn) btn.classList.remove("hidden");
+      if (window.HCStoreDemo && HCStoreDemo.openRequestedTab) HCStoreDemo.openRequestedTab();
     }
 
     function current() {

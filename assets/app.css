@@ -229,3 +229,17 @@ body:not(.home-page) .start-points p { color: var(--muted); font-size: 0.95rem; 
 .paper-actions .btn { width: 100%; text-align: center; }
 #player-detail .check { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; }
 #player-search-card .btn, #player-detail .btn { margin-top: 8px; }
+
+.prose a { text-decoration: underline; text-underline-offset: 0.12em; }
+.guide-steps { margin: 0.65rem 0 0; padding-left: 1.2rem; }
+.guide-steps li { margin: 0.4rem 0; }
+.hp-field {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}

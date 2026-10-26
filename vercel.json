@@ -23,6 +23,18 @@
       "destination": "/privacy/index.html"
     },
     {
+      "source": "/support",
+      "destination": "/support/index.html"
+    },
+    {
+      "source": "/account/store/help",
+      "destination": "/account/store/help/index.html"
+    },
+    {
+      "source": "/account/organizer/help",
+      "destination": "/account/organizer/help/index.html"
+    },
+    {
       "source": "/puyallup/coffee-crawl/shop",
       "destination": "/puyallup/coffee-crawl/shop/index.html"
     },
