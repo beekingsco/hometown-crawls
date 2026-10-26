@@ -34,6 +34,12 @@ Open http://localhost:8080
 
 Public config in `assets/config.js`. RPCs: `join_crawl`, `claim_stamp`. Shops from `business_public` + `memberships`.
 
+## Support and testing checklists
+
+- Hosts: `/account/store/help` (Instructions on the Store tab)
+- Organizers: `/account/organizer/help` (Instructions on the Organizer tab)
+- Anyone: `/support` posts to `/api/support` and emails `SUPPORT_TO_EMAIL` (default `hello@hometowncrawls.com`) through Resend. See `docs/support.md`.
+
 ## SEO / GEO
 
 - Unique title, description, canonical, and Open Graph on public pages

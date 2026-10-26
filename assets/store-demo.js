@@ -258,6 +258,14 @@
     }
   }
 
+  function openRequestedTab() {
+    var want = new URLSearchParams(location.search).get("tab");
+    if (want !== "guest" && want !== "store" && want !== "organizer") return;
+    var btn = document.getElementById("tab-" + want);
+    if (!btn || btn.classList.contains("hidden")) return;
+    selectTab(want);
+  }
+
   function selectTab(name) {
     if (name !== "guest" && name !== "store" && name !== "organizer") name = "guest";
     ["guest", "store", "organizer"].forEach(function (tab) {
@@ -444,6 +452,7 @@
     downloadGuests: downloadGuests,
     refreshGuest: refreshGuest,
     selectTab: selectTab,
+    openRequestedTab: openRequestedTab,
     randomStoreCode: randomStoreCode,
     loadCoupon: loadCoupon,
     esc: esc

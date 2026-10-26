@@ -5,6 +5,8 @@
   // Root pages sit at /, shops/join at /shops/, crawl at /puyallupwa/coffee/
   function assetPrefix() {
     if (path === "/puyallup" || path.startsWith("/puyallup/")) return "/";
+    // Nested account pages (/account/store/help) need root-absolute links.
+    if (path.startsWith("/account/")) return "/";
     if (path.includes("/puyallupwa/")) return "../../";
     if (path.includes("/shops/") || path.includes("/guides/")) return "../";
     return "";
@@ -110,6 +112,7 @@
             <a href="${base}puyallup/coffee-crawl">Join as a shop</a>
             <a href="${base}faqs.html">FAQs</a>
             <a href="${base}account.html">Account</a>
+            ${link("support", "Support")}
           </div>
         </div>
         <div class="footer-bottom">

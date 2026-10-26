@@ -109,6 +109,16 @@ h3 { font-size: 1.25rem; }
   gap: 1rem;
 }
 
+.wordmark {
+  display: block;
+  width: 210px;
+  max-width: 46vw;
+  flex: 0 0 auto;
+  min-width: 0;
+  line-height: 0;
+}
+.wordmark img { width: 100%; height: auto; }
+
 .brand {
   display: inline-flex;
   align-items: center;

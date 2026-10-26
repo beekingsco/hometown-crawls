@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Support · Hometown Crawls</title>
+  <meta name="theme-color" content="#f8f2e7" />
+  <meta name="description" content="Send a note to Hometown Crawls. We reply to the email you enter." />
+  <link rel="canonical" href="https://www.hometowncrawls.com/support" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Hometown Crawls" />
+  <meta property="og:title" content="Support · Hometown Crawls" />
+  <meta property="og:description" content="Send a note to Hometown Crawls. We reply to the email you enter." />
+  <meta property="og:url" content="https://www.hometowncrawls.com/support" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Support · Hometown Crawls" />
+  <meta name="twitter:description" content="Send a note to Hometown Crawls. We reply to the email you enter." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/site.css" />
+  <style>.hp-field{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}</style>
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+  <main>
+    <div class="wrap-narrow page-hero">
+      <p class="eyebrow">Support</p>
+      <h1>How can we help?</h1>
+      <p>Send a note and we will reply to the email you enter. Hosts and organizers can also start from the <a href="/account/store/help">store checklist</a> or the <a href="/account/organizer/help">organizer checklist</a>.</p>
+    </div>
+
+    <div class="wrap-narrow stack prose" style="padding-bottom:2.5rem">
+      <form class="card" id="support-form">
+        <label class="field"><span>Name</span>
+          <input class="input" id="support-name" name="name" maxlength="80" autocomplete="name" required />
+        </label>
+        <label class="field"><span>Email</span>
+          <input class="input" id="support-email" name="email" type="email" maxlength="320" autocomplete="email" required />
+        </label>
+        <label class="field"><span>I am a</span>
+          <select class="input" id="support-role" name="role" required>
+            <option value="">Choose one</option>
+            <option>Guest</option>
+            <option>Shop host</option>
+            <option>Organizer</option>
+            <option>Other</option>
+          </select>
+        </label>
+        <label class="field"><span>Crawl <span class="muted">(optional)</span></span>
+          <select class="input" id="support-crawl" name="crawl">
+            <option value="">Not sure</option>
+            <option value="Downtown Puyallup Holiday Coffee Crawl">Downtown Puyallup Holiday Coffee Crawl</option>
+            <option value="other">Other</option>
+          </select>
+        </label>
+        <label class="field hidden" id="support-crawl-other-wrap"><span>Which crawl?</span>
+          <input class="input" id="support-crawl-other" maxlength="120" />
+        </label>
+        <label class="field"><span>Shop name <span class="muted">(optional)</span></span>
+          <input class="input" id="support-shop" name="shop" maxlength="120" autocomplete="organization" />
+        </label>
+        <label class="field"><span>What happened?</span>
+          <textarea class="input" id="support-message" name="message" maxlength="4000" required placeholder="A few sentences is plenty."></textarea>
+        </label>
+        <div class="hp-field" aria-hidden="true">
+          <label>Leave blank
+            <input id="support-company" name="hc_hp" tabindex="-1" autocomplete="off" value="" />
+          </label>
+        </div>
+        <input type="hidden" id="support-started" value="" />
+        <button class="btn btn-primary mt-2" type="submit" id="support-send">Send</button>
+        <p class="form-error mt-2" id="support-err" role="alert"></p>
+        <p class="form-note">If this page cannot send, email <a href="mailto:hello@hometowncrawls.com">hello@hometowncrawls.com</a>.</p>
+      </form>
+
+      <div class="card hidden" id="support-done" role="status" hidden>
+        <p class="eyebrow">Support</p>
+        <h2>We got it</h2>
+        <p class="mt-1">We'll reply to the email you entered.</p>
+        <button class="btn btn-ghost mt-2" type="button" id="support-another">Send another note</button>
+      </div>
+      <noscript>
+        <p class="card">Email <a href="mailto:hello@hometowncrawls.com">hello@hometowncrawls.com</a> and include your role, the crawl, and the shop name.</p>
+      </noscript>
+    </div>
+  </main>
+  <footer class="site-footer" id="site-footer"></footer>
+  <script src="/assets/site.js"></script>
+  <script>
+    (function () {
+      var form = document.getElementById("support-form");
+      var done = document.getElementById("support-done");
+      var err = document.getElementById("support-err");
+      var send = document.getElementById("support-send");
+      var started = document.getElementById("support-started");
+      var crawl = document.getElementById("support-crawl");
+      var otherWrap = document.getElementById("support-crawl-other-wrap");
+      var busy = false;
+
+      function stamp() { started.value = String(Date.now()); }
+      stamp();
+
+      crawl.addEventListener("change", function () {
+        var showOther = crawl.value === "other";
+        otherWrap.classList.toggle("hidden", !showOther);
+        if (!showOther) document.getElementById("support-crawl-other").value = "";
+      });
+
+      function showError(text) {
+        err.textContent = text || "";
+        err.classList.toggle("show", !!text);
+      }
+
+      function crawlValue() {
+        if (crawl.value === "other") return document.getElementById("support-crawl-other").value.trim();
+        return crawl.value;
+      }
+
+      form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        if (busy) return;
+        showError("");
+        busy = true;
+        send.disabled = true;
+        send.textContent = "Sending…";
+        try {
+          var response = await fetch("/api/support", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: document.getElementById("support-name").value.trim(),
+              email: document.getElementById("support-email").value.trim(),
+              role: document.getElementById("support-role").value,
+              crawl: crawlValue(),
+              shop: document.getElementById("support-shop").value.trim(),
+              message: document.getElementById("support-message").value.trim(),
+              company: document.getElementById("support-company").value,
+              started: Number(started.value)
+            })
+          });
+          var data = {};
+          try { data = await response.json(); } catch (e) {}
+          if (!response.ok) {
+            showError(data.error || "We couldn't send that. Email hello@hometowncrawls.com.");
+            return;
+          }
+          form.classList.add("hidden");
+          form.hidden = true;
+          done.classList.remove("hidden");
+          done.hidden = false;
+        } catch (e) {
+          showError("We couldn't send that. Email hello@hometowncrawls.com.");
+        } finally {
+          busy = false;
+          send.disabled = false;
+          send.textContent = "Send";
+        }
+      });
+
+      document.getElementById("support-another").addEventListener("click", function () {
+        form.reset();
+        stamp();
+        otherWrap.classList.add("hidden");
+        form.classList.remove("hidden");
+        form.hidden = false;
+        done.classList.add("hidden");
+        done.hidden = true;
+        showError("");
+        document.getElementById("support-name").focus();
+      });
+    })();
+  </script>
+</body>
+</html>
