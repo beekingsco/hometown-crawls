@@ -9,7 +9,7 @@
 .holiday-brand{display:block;position:relative;overflow:hidden;width:150px;height:62px;margin-bottom:5px}
 /* Display lettering only; retain the shared source image unchanged. */
 .holiday-brand img{position:absolute;display:block;width:210.7px;max-width:none;height:79px;left:-60.7px;top:-8px}
-.holiday-card h1{font:600 27px/1.05 Fraunces,Georgia,serif;letter-spacing:-.7px;max-width:440px;color:var(--ink)}
+.holiday-card h1{font:600 20px/1.15 Fraunces,Georgia,serif;letter-spacing:-.3px;max-width:100%;color:var(--ink)}
 .holiday-intro{font-size:11px;color:var(--muted);padding-top:6px}
 .holiday-mascot{display:block;width:86px;height:129px;object-fit:contain;flex:none}
 .holiday-section-label{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:6px;flex:none}
@@ -33,7 +33,13 @@
 .holiday-prize,.holiday-turnin{font-size:10px;line-height:1.35}
 .holiday-prize strong{color:var(--orange);font-size:9px}
 .holiday-turnin b{display:block;font-weight:600;margin:7px 0 2px}
-.holiday-footer{border-top:1px solid var(--line);padding-top:8px;margin-top:auto;display:flex;justify-content:space-between;gap:12px;font-size:9px;color:var(--muted);flex:none}
+.holiday-find{display:flex;align-items:center;gap:14px;margin-top:auto;padding-top:10px;flex:none}
+.holiday-qr{width:96px;height:96px;flex:none;background:#fff;border:1px solid var(--line);padding:0}
+.holiday-qr svg{display:block;width:100%;height:100%}
+.holiday-find-copy{min-width:0}
+.holiday-find-label{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:650}
+.holiday-url{font-size:13px;line-height:1.25;font-weight:650;color:var(--ink);overflow-wrap:anywhere}
+.holiday-footer{border-top:1px solid var(--line);padding-top:8px;margin-top:8px;display:flex;justify-content:space-between;gap:12px;font-size:9px;color:var(--muted);flex:none}
 .holiday-crowded .holiday-stamp-grid{gap:9px;margin:10px 0 12px}
 .holiday-crowded .holiday-key{grid-template-rows:repeat(var(--key-rows),18px);margin:8px 0 10px}
 .holiday-crowded .holiday-key-name{font-size:11px}

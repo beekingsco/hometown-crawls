@@ -322,6 +322,9 @@
           <label class="field"><span>Address</span>
             <input class="input" id="list-address" maxlength="300" />
           </label>
+          <label class="field"><span>Zip code</span>
+            <input class="input" id="list-postal" maxlength="10" inputmode="numeric" placeholder="98371" autocomplete="postal-code" />
+          </label>
           <label class="field"><span>Phone</span>
             <input class="input" id="list-phone" maxlength="40" />
           </label>
@@ -421,6 +424,61 @@
             <article class="card"><p class="eyebrow">Scans</p><p class="stat-value" id="org-total-scans">—</p></article>
           </div>
           <div class="stack mt-2" id="org-stores"></div>
+          <form class="card mt-2 hidden" id="org-shop-form" hidden>
+            <div class="row" style="justify-content:space-between">
+              <h3>Edit shop</h3>
+              <button class="btn btn-ghost" type="button" id="org-shop-cancel">Close</button>
+            </div>
+            <p class="muted small mt-1">Same public listing as the Store tab, including the stamp and shop image. Saves only for a shop on a crawl you organize.</p>
+            <label class="field mt-2"><span>Header / shop name</span>
+              <input class="input" id="org-shop-name" maxlength="200" required />
+            </label>
+            <label class="field"><span>Stamp label</span>
+              <input class="input" id="org-shop-stamp-label" maxlength="40" placeholder="Short name on the passport" />
+            </label>
+            <label class="field"><span>Address</span>
+              <input class="input" id="org-shop-address" maxlength="300" />
+            </label>
+            <label class="field"><span>Zip code</span>
+              <input class="input" id="org-shop-postal" maxlength="10" inputmode="numeric" placeholder="98371" autocomplete="postal-code" />
+            </label>
+            <label class="field"><span>Phone</span>
+              <input class="input" id="org-shop-phone" maxlength="40" />
+            </label>
+            <label class="field"><span>Hours</span>
+              <textarea class="input" id="org-shop-hours" maxlength="500"></textarea>
+            </label>
+            <label class="field"><span>Description</span>
+              <textarea class="input" id="org-shop-description" maxlength="600"></textarea>
+            </label>
+            <label class="field"><span>Website</span>
+              <input class="input" id="org-shop-website" maxlength="300" placeholder="https://" />
+            </label>
+            <label class="field"><span>Instagram</span>
+              <input class="input" id="org-shop-instagram" maxlength="100" placeholder="@yourshop" />
+            </label>
+            <div class="stamp-art-grid mt-2">
+              <div>
+                <p class="eyebrow">Cover</p>
+                <div class="crop-frame mt-1"><img id="org-shop-cover-preview" alt="" class="hidden" /><span class="small muted" id="org-shop-cover-empty">Shop image on the public card</span></div>
+                <input class="input mt-1" id="file-org-cover" type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" />
+              </div>
+              <div>
+                <p class="eyebrow">Logo</p>
+                <div class="crop-frame mt-1"><img id="org-shop-logo-preview" alt="" class="hidden" /><span class="small muted" id="org-shop-logo-empty">Used if there is no stamp image</span></div>
+                <input class="input mt-1" id="file-org-logo" type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" />
+              </div>
+            </div>
+            <p class="eyebrow mt-2">Stamp image</p>
+            <div class="crop-frame mt-1"><img id="org-shop-stamp-preview" alt="" class="hidden" /><span class="small muted" id="org-shop-stamp-empty">Square PNG, JPG, or WebP, 2 MB</span></div>
+            <input class="input mt-1" id="file-org-stamp" type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" />
+            <p class="eyebrow mt-2">Gallery</p>
+            <div id="org-shop-gallery" class="mt-1"></div>
+            <input class="input mt-1" id="file-org-gallery" type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" />
+            <button class="btn btn-primary mt-2" type="submit">Save shop</button>
+            <p class="form-success mt-2" id="org-shop-ok" role="status"></p>
+            <p class="form-error mt-2" id="org-shop-err" role="alert"></p>
+          </form>
         </div>
         <div class="card">
           <h3>Guest photos</h3>
