@@ -449,6 +449,8 @@
 }
 .home-card-photo { position: relative; aspect-ratio: 1.5 / 1; background: #e6d8c1; }
 .home-card-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.home-card-photo-square { aspect-ratio: 1 / 1; background: #fff; }
+.home-card-photo-square img { object-fit: contain; }
 .home-card-photo .home-tag { position: absolute; top: 12px; left: 12px; }
 .home-card-body { padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .home-crawl-card h3 { font-size: 24px; letter-spacing: -.04em; line-height: 1.15; margin: 0; }
