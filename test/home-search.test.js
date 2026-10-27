@@ -100,6 +100,13 @@ test("nearby crawls sort by distance and drop ended or far rows", () => {
   assert.ok(rows[0].distance <= rows[1].distance);
 });
 
+test("the Puyallup holiday crawl card uses the holiday hero, other coffee crawls do not", () => {
+  assert.equal(home.typeArt("coffee", "puy-coffee"), "/assets/home/puyallup-holiday-coffee-crawl-hero.jpg");
+  assert.equal(home.typeArt("coffee", "other-coffee"), "/assets/home/coffee.jpg");
+  assert.equal(home.typeArt("coffee"), "/assets/home/coffee.jpg");
+  assert.equal(home.typeArt("pub", "puy-pub"), "/assets/home/pub.jpg");
+});
+
 test("dates use Pacific time and known crawls link to their pages", () => {
   assert.equal(home.formatDates(coffee), "November 1 – December 31, 2026");
   assert.equal(home.formatDates(pub), "October 1 – November 30, 2026");

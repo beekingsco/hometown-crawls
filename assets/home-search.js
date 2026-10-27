@@ -65,7 +65,8 @@
     return KNOWN_PAGES[id] || "/account.html";
   }
 
-  function typeArt(type) {
+  function typeArt(type, id) {
+    if (id === "puy-coffee") return "/assets/home/puyallup-holiday-coffee-crawl-hero.jpg";
     const key = String(type || "").toLowerCase();
     if (key === "coffee") return "/assets/home/coffee.jpg";
     if (key === "pub") return "/assets/home/pub.jpg";
@@ -178,10 +179,12 @@
       const photo = document.createElement("div");
       photo.className = "home-card-photo";
       const img = document.createElement("img");
-      img.src = typeArt(crawl.type);
+      const holiday = crawl.id === "puy-coffee";
+      img.src = typeArt(crawl.type, crawl.id);
       img.alt = "";
-      img.width = 700;
-      img.height = 420;
+      img.width = holiday ? 1170 : 700;
+      img.height = holiday ? 1170 : 420;
+      if (holiday) photo.className = "home-card-photo home-card-photo-square";
       photo.append(img);
       const phase = crawlPhase(crawl);
       if (phase === "active" || phase === "upcoming") {
