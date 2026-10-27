@@ -77,7 +77,13 @@ test("footer, sitemap, and rewrite point at /support", () => {
   assert.match(home, /href="\/support">Support/);
   assert.match(home, /href="\/account">Account/);
   assert.match(site, /href="\$\{base\}account">Account/);
-  assert.match(read("assets/site.css"), /footer-wordmark[\s\S]*brightness\(0\) invert\(94%\) sepia\(14%\) saturate\(330%\)/);
+  assert.match(read("assets/site.js"), /footer-wordmark[\s\S]*wordmark-footer\.png/);
+  assert.match(read("assets/site.js"), /wordmark-phone\.png/);
+  assert.doesNotMatch(read("assets/site.css"), /footer-wordmark[\s\S]*brightness\(0\)/);
+  assert.doesNotMatch(read("assets/app.css"), /footer-wordmark[\s\S]*brightness\(0\)/);
+  assert.doesNotMatch(read("assets/home.css"), /home-footer \.home-wordmark[\s\S]*brightness\(0\)/);
+  assert.match(read("index.html"), /home-footer-top[\s\S]*wordmark-footer\.png/);
+  assert.match(read("index.html"), /home-wordmark[\s\S]*wordmark-phone\.png/);
   assert.match(read("support/index.html"), /href="\/assets\/app\.css"/);
   assert.match(vercel, /"source": "\/support"/);
   assert.match(vercel, /"destination": "\/support\/index.html"/);

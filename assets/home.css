@@ -305,7 +305,7 @@
 .home-benefits-grid h3 { font-size: 25px; }
 .home-map-section { padding: 57px 0; }
 .home-businesses { background: #f2e4d5; }
-.home-footer .home-wordmark { width: 225px; font-size: inherit; filter: brightness(0) invert(94%) sepia(14%) saturate(330%); }
+.home-footer .home-wordmark { width: 225px; font-size: inherit; }
 .home-footer-top { gap: 44px; }
 .home-footer-top p { line-height: 1.7; }
 

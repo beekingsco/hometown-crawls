@@ -93,7 +93,7 @@
       <div class="wrap">
         <div class="footer-grid">
           <div>
-            <a class="wordmark footer-wordmark" href="${base}index.html" aria-label="Hometown Crawls home"><img src="/assets/home/wordmark-phone.png" alt="Hometown Crawls" width="2048" height="768" /></a>
+            <a class="wordmark footer-wordmark" href="${base}index.html" aria-label="Hometown Crawls home"><img src="/assets/home/wordmark-footer.png" alt="Hometown Crawls" width="2048" height="768" /></a>
             <p class="small" style="opacity:.75;max-width:32ch">Coffee, pubs, restaurants, gift shops, and more.</p>
           </div>
           <div class="footer-col">

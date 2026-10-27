@@ -338,7 +338,7 @@
     }
     if (input) input.value = "";
     consent.checked = false;
-    note(okId, errId, "Uploaded. It stays pending until an organizer or contributor approves it. Your stamp is unchanged.", "");
+    note(okId, errId, "Uploaded. It stays pending until an organizer or contributor approves it. It does not add a prize entry, and your stamp is unchanged.", "");
     loadLivePhotos();
   }
 
