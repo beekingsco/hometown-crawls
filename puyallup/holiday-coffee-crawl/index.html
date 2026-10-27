@@ -178,6 +178,9 @@
           <div class="hc-stamp"><div><b>Free</b>passport<br />Nov–Dec</div></div>
         </div>
       </div>
+      <div class="wrap">
+        <div id="crawl-video" class="hc-video hidden" hidden></div>
+      </div>
     </section>
 
     <section class="hc-section">
@@ -329,6 +332,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="/assets/video-embed.js"></script>
   <script src="/assets/crawl.js"></script>
   <script src="/assets/guest-hub.js"></script>
   <script>
@@ -437,12 +441,14 @@
         if (site) links.push('<a href="' + esc(site) + '" target="_blank" rel="noopener noreferrer">Website</a>');
         var ig = instagramUrl(s.instagram);
         if (ig) links.push('<a href="' + esc(ig) + '" target="_blank" rel="noopener noreferrer">Instagram</a>');
+        var clip = window.HCVideo ? HCVideo.frame(s.video_url) : "";
         return '<article class="card shop-card">' + media +
           '<div class="body"><h3>' + esc(s.display_name) + "</h3>" +
           (s.address ? '<p class="muted small">' + esc(s.address) + "</p>" : "") +
           (s.postal_code ? '<p class="muted small">Zip ' + esc(s.postal_code) + "</p>" : "") +
           (s.hours ? '<p class="small"><strong>Hours</strong> · ' + esc(s.hours) + "</p>" : "") +
           (s.blurb ? "<p>" + esc(s.blurb) + "</p>" : "") +
+          (clip ? '<div class="hc-video">' + clip + "</div>" : "") +
           (links.length ? '<p class="row shop-links">' + links.join("") + "</p>" : "") +
           "</div></article>";
       }).join("");
@@ -528,6 +534,8 @@
       try {
         var named = await HCCrawl.client().from("crawls").select("name").eq("id", CRAWL).maybeSingle();
         if (named.data && named.data.name && $("crawl-display-name")) $("crawl-display-name").textContent = named.data.name;
+        var clip = await HCCrawl.client().from("crawls").select("video_url").eq("id", CRAWL).maybeSingle();
+        if (clip && !clip.error) HCCrawl.renderVideo($("crawl-video"), clip.data && clip.data.video_url);
       } catch (ignore) {}
 
       var countEl = $("location-count");

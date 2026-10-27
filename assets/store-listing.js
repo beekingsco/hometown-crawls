@@ -30,6 +30,7 @@
       description: base.description || "",
       website: base.website || "",
       instagram: base.instagram || "",
+      video: base.video || "",
       cover: "",
       logo: "",
       stamp: "",
@@ -42,7 +43,7 @@
     try {
       var saved = JSON.parse(localStorage.getItem(KEY) || "null");
       if (saved && typeof saved === "object") {
-        ["name", "stampLabel", "address", "postal", "phone", "hours", "description", "website", "instagram", "cover", "logo", "stamp"].forEach(function (key) {
+        ["name", "stampLabel", "address", "postal", "phone", "hours", "description", "website", "instagram", "video", "cover", "logo", "stamp"].forEach(function (key) {
           if (typeof saved[key] === "string") listing[key] = saved[key];
         });
         if (Array.isArray(saved.gallery)) listing.gallery = saved.gallery.filter(function (item) { return typeof item === "string"; }).slice(0, 8);
@@ -102,7 +103,8 @@
       "list-hours": listing.hours,
       "list-description": listing.description,
       "list-website": listing.website,
-      "list-instagram": listing.instagram
+      "list-instagram": listing.instagram,
+      "list-video": listing.video
     };
     Object.keys(map).forEach(function (id) {
       var el = document.getElementById(id);
@@ -128,6 +130,7 @@
     listing.description = document.getElementById("list-description").value.trim();
     listing.website = document.getElementById("list-website").value.trim();
     listing.instagram = document.getElementById("list-instagram").value.trim().replace(/^@/, "");
+    listing.video = document.getElementById("list-video").value.trim();
     return listing;
   }
 
@@ -141,6 +144,7 @@
     if (listing.website && !/^https?:\/\//i.test(listing.website)) return "Website must start with http:// or https://.";
     if (listing.website.length > 300) return "Website needs to be 300 characters or fewer.";
     if (listing.instagram.length > 100) return "Instagram needs to be 100 characters or fewer.";
+    if (window.HCVideo && HCVideo.problem(listing.video)) return HCVideo.problem(listing.video);
     if (listing.phone.length > 40) return "Phone needs to be 40 characters or fewer.";
     if ((listing.gallery || []).length > 8) return "You can keep up to 8 photos.";
     return "";
@@ -265,7 +269,8 @@
         "list-hours": listing.hours || "",
         "list-description": listing.blurb || "",
         "list-website": listing.website || "",
-        "list-instagram": listing.instagram || ""
+        "list-instagram": listing.instagram || "",
+        "list-video": listing.video_url || ""
       };
       Object.keys(map).forEach(function (id) {
         var el = document.getElementById(id);
@@ -329,7 +334,8 @@
         hours: document.getElementById("list-hours").value.trim(),
         description: document.getElementById("list-description").value.trim(),
         website: document.getElementById("list-website").value.trim(),
-        instagram: document.getElementById("list-instagram").value.trim().replace(/^@/, "")
+        instagram: document.getElementById("list-instagram").value.trim().replace(/^@/, ""),
+        video: document.getElementById("list-video").value.trim()
       };
       var problem = validate(draft);
       if (problem) { showErr(problem); return; }
@@ -343,7 +349,8 @@
         p_blurb: draft.description,
         p_website: draft.website,
         p_instagram: draft.instagram,
-        p_stamp_label: draft.stampLabel
+        p_stamp_label: draft.stampLabel,
+        p_video_url: draft.video
       });
       if (saved.error) {
         var message = saved.error.message || "Could not save the listing.";
@@ -354,6 +361,7 @@
       listing.display_name = draft.name;
       listing.stamp_label = draft.stampLabel;
       listing.postal_code = draft.postal;
+      listing.video_url = draft.video;
       if (ok) { ok.textContent = "Listing saved."; ok.classList.add("show"); }
       if (window.HC) HC.toast("Listing saved");
     });

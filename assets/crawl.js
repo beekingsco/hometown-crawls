@@ -382,6 +382,17 @@
     return `${photo}<b>${escapeHtml(shop.name)}</b><br><span style="color:#6b6558">${escapeHtml(shop.address || "")}</span>${zip}`;
   }
 
+  function renderVideo(container, url) {
+    if (!container) return;
+    if (!window.HCVideo || typeof HCVideo.mount !== "function") {
+      container.innerHTML = "";
+      container.hidden = true;
+      container.classList.add("hidden");
+      return;
+    }
+    HCVideo.mount(container, url);
+  }
+
   function escapeHtml(str) {
     return String(str || "")
       .replace(/&/g, "&amp;")
@@ -488,6 +499,7 @@
     stampLabel,
     demoMode,
     initMap,
+    renderVideo,
     escapeHtml,
     claimOrganizer,
     dashboardRoles,
