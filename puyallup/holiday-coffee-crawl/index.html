@@ -249,8 +249,8 @@
           </div>
           <div id="stamp-grid" class="mt-2"></div>
           <form class="mt-3" id="crawl-photo-form">
-            <h3>Add a photo</h3>
-            <p class="muted small mt-1">Optional. It does not change your stamp. PNG, JPG, or WebP, up to 5 MB.</p>
+            <h3>Show us a photo</h3>
+            <p class="muted small mt-1">Share a picture from the crawl if you'd like. A photo does not add a prize entry, and it does not change your stamp. PNG, JPG, or WebP, up to 5 MB.</p>
             <label class="field mt-2"><span>Photo</span>
               <input class="input" id="crawl-photo-file" type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" />
             </label>
@@ -261,7 +261,15 @@
           </form>
         </div>
         <div class="card">
-          <h3>Enter a counter code</h3>
+          <h3>Scan QR</h3>
+          <p class="muted small mt-1">Point your camera at the shop counter QR, or type the code below. Sign in with email. You need to be at the shop.</p>
+          <div class="row mt-2">
+            <button class="btn btn-primary" type="button" id="btn-scan-qr">Scan QR</button>
+            <button class="btn btn-ghost hidden" type="button" id="btn-scan-stop">Stop camera</button>
+          </div>
+          <div id="reader" class="mt-2"></div>
+          <p class="form-note">The camera stays off until you tap Scan QR. Video stays on your device.</p>
+          <h3 class="mt-3">Enter a counter code</h3>
           <p class="muted small mt-1">At the register, pick the shop and type the code on the tent card.</p>
           <form id="code-form" class="mt-2">
             <label class="field"><span>Shop</span>
@@ -320,6 +328,7 @@
   <script src="/assets/site.js?v=4"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="/assets/crawl.js"></script>
   <script src="/assets/guest-hub.js"></script>
   <script>
@@ -618,6 +627,97 @@
           showBox($("passport-err"), true);
         }
       };
+
+      function parseQr(raw) {
+        var text = String(raw || "").trim();
+        var path = text.match(/stamp\/([^/]+)\/([^/]+)\/([^/?#]+)/i);
+        if (path) {
+          return {
+            crawl: decodeURIComponent(path[1]),
+            business: decodeURIComponent(path[2]),
+            code: decodeURIComponent(path[3])
+          };
+        }
+        var shopParam = text.match(/(?:shop|business)=([^&#]+)/i);
+        var codeParam = text.match(/(?:^|[?&])code=([^&#]+)/i);
+        if (shopParam && codeParam) {
+          return {
+            crawl: CRAWL,
+            business: decodeURIComponent(shopParam[1]),
+            code: decodeURIComponent(codeParam[1])
+          };
+        }
+        var selected = $("code-shop").value;
+        if (selected && text) return { crawl: CRAWL, business: selected, code: text };
+        return null;
+      }
+
+      var startScan = $("btn-scan-qr");
+      var stopScan = $("btn-scan-stop");
+      var qrReader = null;
+      var cameraOn = false;
+      var scanBusy = false;
+      async function stopCamera() {
+        if (qrReader && cameraOn) {
+          try { await qrReader.stop(); } catch (e) {}
+        }
+        cameraOn = false;
+        scanBusy = false;
+        if (stopScan) stopScan.classList.add("hidden");
+        if (startScan) startScan.classList.remove("hidden");
+      }
+      async function claimFromQr(raw) {
+        if (scanBusy) return;
+        scanBusy = true;
+        var parsed = parseQr(raw);
+        showBox($("passport-err"), false);
+        showBox($("passport-ok"), false);
+        if (!parsed || !parsed.business || !parsed.code) {
+          $("passport-err").textContent = "That QR didn't include a shop code. Type the counter code instead.";
+          showBox($("passport-err"), true);
+          await stopCamera();
+          return;
+        }
+        try {
+          var existing = await HCCrawl.getSession();
+          if (existing) {
+            try { await HCCrawl.client().rpc("hc_link_account"); } catch (e) {}
+          }
+          await HCCrawl.claimStamp({ crawl: parsed.crawl, business: parsed.business, code: parsed.code });
+          $("passport-ok").textContent = "Stamp claimed.";
+          showBox($("passport-ok"), true);
+          if (window.HC) HC.toast("Stamp claimed");
+          await refreshStamps(parsed.business);
+          await stopCamera();
+        } catch (e) {
+          if (needsSignIn(e)) showMagic();
+          $("passport-err").textContent = e.message || "Could not claim that stamp.";
+          showBox($("passport-err"), true);
+          await stopCamera();
+        }
+      }
+      if (startScan) {
+        startScan.addEventListener("click", async function () {
+          if (!window.Html5Qrcode || cameraOn) {
+            if (!window.Html5Qrcode && window.HC) HC.toast("Camera scanner didn't load. Type the counter code instead.");
+            return;
+          }
+          try {
+            qrReader = qrReader || new Html5Qrcode("reader");
+            await qrReader.start(
+              { facingMode: "environment" },
+              { fps: 8, qrbox: 220 },
+              function (txt) { claimFromQr(txt); }
+            );
+            cameraOn = true;
+            startScan.classList.add("hidden");
+            if (stopScan) stopScan.classList.remove("hidden");
+          } catch (e) {
+            if (window.HC) HC.toast("Camera did not start. You can type the counter code instead.");
+          }
+        });
+      }
+      if (stopScan) stopScan.addEventListener("click", stopCamera);
 
       $("magic-form").onsubmit = async function (ev) {
         ev.preventDefault();

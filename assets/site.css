@@ -730,13 +730,13 @@ textarea.input { min-height: 100px; resize: vertical; }
 }
 .site-footer a { color: #FBF6ED; opacity: 0.92; }
 .site-footer a:hover { opacity: 1; }
+.site-footer a.footer-wordmark { opacity: 1; }
 .footer-wordmark {
   width: 200px;
   max-width: 70vw;
   height: auto;
   max-height: none;
   margin-bottom: 0.7rem;
-  filter: brightness(0) invert(94%) sepia(14%) saturate(330%);
 }
 .footer-wordmark img {
   width: 100%;

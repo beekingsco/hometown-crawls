@@ -206,7 +206,6 @@ body:not(.home-page) .footer-wordmark {
   height: auto;
   max-height: none;
   margin-bottom: 0.7rem;
-  filter: brightness(0) invert(94%) sepia(14%) saturate(330%);
 }
 body:not(.home-page) .footer-wordmark img {
   width: 100%;
