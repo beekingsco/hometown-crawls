@@ -30,6 +30,7 @@
           if (row.title) match.title = String(row.title).slice(0, 120);
           if (row.starts) match.starts = row.starts;
           if (row.ends) match.ends = row.ends;
+          if (typeof row.videoUrl === "string") match.videoUrl = row.videoUrl.slice(0, 500);
           if (Array.isArray(row.stores)) {
             row.stores.forEach(function (saved) {
               var shop = (match.stores || []).filter(function (item) { return item.name === saved.name; })[0];
@@ -53,6 +54,7 @@
           title: c.title,
           starts: c.starts,
           ends: c.ends,
+          videoUrl: c.videoUrl || "",
           stores: (c.stores || []).map(function (row) { return { name: row.name, visible: row.visible !== false }; })
         };
       }),
@@ -93,6 +95,8 @@
     if (title && document.activeElement !== title) title.value = crawl.title || "";
     if (start && document.activeElement !== start) start.value = crawl.starts || "";
     if (end && document.activeElement !== end) end.value = crawl.ends || "";
+    var video = document.getElementById("org-video");
+    if (video && document.activeElement !== video) video.value = crawl.videoUrl || "";
     var who = document.getElementById("org-who");
     if (who) who.textContent = person.name + " · " + person.email + " · " + person.role;
 
@@ -172,6 +176,7 @@
         var title = document.getElementById("org-title").value.trim();
         var start = document.getElementById("org-start").value;
         var end = document.getElementById("org-end").value;
+        var videoUrl = document.getElementById("org-video") ? document.getElementById("org-video").value.trim() : "";
         var err = document.getElementById("org-err");
         var ok = document.getElementById("org-ok");
         if (err) { err.textContent = ""; err.classList.remove("show"); }
@@ -184,9 +189,14 @@
           if (err) { err.textContent = "End date needs to be on or after the start date."; err.classList.add("show"); }
           return;
         }
+        if (window.HCVideo && HCVideo.problem(videoUrl)) {
+          if (err) { err.textContent = HCVideo.problem(videoUrl); err.classList.add("show"); }
+          return;
+        }
         crawl.title = title;
         crawl.starts = start;
         crawl.ends = end;
+        crawl.videoUrl = videoUrl;
         saveState(state);
         render(state, base.person);
         if (ok) { ok.textContent = "DEMO DATA. Title and dates saved in this browser only."; ok.classList.add("show"); }
@@ -280,6 +290,8 @@
       if (title && document.activeElement !== title) title.value = crawl.name || "";
       if (start && document.activeElement !== start) start.value = dateOnly(crawl.starts_at);
       if (end && document.activeElement !== end) end.value = dateOnly(crawl.ends_at);
+      var video = document.getElementById("org-video");
+      if (video && document.activeElement !== video) video.value = crawl.video_url || "";
       var who = document.getElementById("org-who");
       if (who) who.textContent = (crawl.role || "organizer") + " · shop fees are not split";
       var scans = shops.reduce(function (sum, row) { return sum + Number(row.scans || 0); }, 0);
@@ -354,22 +366,28 @@
         var title = document.getElementById("org-title").value.trim();
         var start = document.getElementById("org-start").value;
         var end = document.getElementById("org-end").value;
+        var videoUrl = document.getElementById("org-video") ? document.getElementById("org-video").value.trim() : "";
         if (!title || !start || !end || end < start) {
           if (err) { err.textContent = "Title and dates need an end date on or after the start."; err.classList.add("show"); }
+          return;
+        }
+        if (window.HCVideo && HCVideo.problem(videoUrl)) {
+          if (err) { err.textContent = HCVideo.problem(videoUrl); err.classList.add("show"); }
           return;
         }
         var saved = await HCCrawl.client().rpc("organizer_update_crawl", {
           p_crawl: active,
           p_name: title,
           p_starts: start,
-          p_ends: end
+          p_ends: end,
+          p_video_url: videoUrl
         });
         if (saved.error) {
           if (err) { err.textContent = saved.error.message || "Could not save the crawl."; err.classList.add("show"); }
           return;
         }
         var crawl = current();
-        if (crawl) { crawl.name = title; crawl.starts_at = start; crawl.ends_at = end; }
+        if (crawl) { crawl.name = title; crawl.starts_at = start; crawl.ends_at = end; crawl.video_url = videoUrl; }
         renderLive();
         if (ok) { ok.textContent = "Crawl details saved."; ok.classList.add("show"); }
       });
@@ -437,7 +455,8 @@
         "org-shop-hours": row.hours || "",
         "org-shop-description": row.blurb || "",
         "org-shop-website": row.website || "",
-        "org-shop-instagram": row.instagram || ""
+        "org-shop-instagram": row.instagram || "",
+        "org-shop-video": row.video_url || ""
       };
       Object.keys(fields).forEach(function (id) {
         var el = document.getElementById(id);
@@ -529,11 +548,13 @@
           hours: document.getElementById("org-shop-hours").value.trim(),
           description: document.getElementById("org-shop-description").value.trim(),
           website: document.getElementById("org-shop-website").value.trim(),
-          instagram: document.getElementById("org-shop-instagram").value.trim().replace(/^@/, "")
+          instagram: document.getElementById("org-shop-instagram").value.trim().replace(/^@/, ""),
+          video: document.getElementById("org-shop-video").value.trim()
         };
         if (!draft.name || draft.name.length > 200) { shopMessage("org-shop-err", "Shop name needs to be 1–200 characters."); return; }
         if (draft.postal && !/^\d{5}(?:-\d{4})?$/.test(draft.postal)) { shopMessage("org-shop-err", "Zip code needs to be 5 digits."); return; }
         if (draft.website && !/^https?:\/\//i.test(draft.website)) { shopMessage("org-shop-err", "Website must start with http:// or https://."); return; }
+        if (window.HCVideo && HCVideo.problem(draft.video)) { shopMessage("org-shop-err", HCVideo.problem(draft.video)); return; }
         var saved = await HCCrawl.client().rpc("shop_save_listing", {
           p_listing: editing.listing_id,
           p_name: draft.name,
@@ -544,12 +565,14 @@
           p_blurb: draft.description,
           p_website: draft.website,
           p_instagram: draft.instagram,
-          p_stamp_label: draft.stampLabel
+          p_stamp_label: draft.stampLabel,
+          p_video_url: draft.video
         });
         if (saved.error) { shopMessage("org-shop-err", saved.error.message || "Could not save the shop."); return; }
         editing.display_name = draft.name;
         editing.postal_code = draft.postal;
         editing.stamp_label = draft.stampLabel;
+        editing.video_url = draft.video;
         var listed = shops.filter(function (row) { return row.listing_id === editing.listing_id; })[0];
         if (listed) listed.display_name = draft.name;
         renderLive();

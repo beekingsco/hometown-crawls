@@ -84,6 +84,7 @@
           </div>
           <h2>Your passport</h2>
           <p class="muted mt-1" id="crawl-blurb">Independent coffee shops across downtown Puyallup.</p>
+          <div id="crawl-video" class="hc-video hidden" hidden></div>
           <div id="passport-area" class="mt-2"></div>
           <div class="row mt-2">
             <a class="btn btn-soft" href="../../prizes.html">Prizes</a>
@@ -136,6 +137,7 @@
   
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../../assets/video-embed.js"></script>
   <script src="../../assets/crawl.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", async () => {
@@ -149,6 +151,7 @@
         const crawl = await HCCrawl.loadCrawl("puy-coffee");
         if (crawl) {
           blurbEl.textContent = crawl.blurb || blurbEl.textContent;
+          HCCrawl.renderVideo(document.getElementById("crawl-video"), crawl.video_url);
           const now = Date.now();
           const a = crawl.starts_at ? Date.parse(crawl.starts_at) : 0;
           const b = crawl.ends_at ? Date.parse(crawl.ends_at) : Infinity;

@@ -969,3 +969,35 @@ table.data th {
   line-height: 1.45;
 }
 .age-gate strong { font-weight: 700; }
+
+/* Official social video players. Empty or unknown links stay hidden. */
+.hc-video {
+  width: 100%;
+  margin-top: 0.85rem;
+}
+.hc-video-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #1a1a17;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.hc-video-frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.hc-video-frame.is-portrait {
+  aspect-ratio: 9 / 16;
+  max-width: 325px;
+  margin-inline: auto;
+}
+.hc-video-frame.is-post {
+  aspect-ratio: 4 / 5;
+  max-width: 540px;
+  margin-inline: auto;
+}
+.shop-card .hc-video { margin-top: 0.35rem; }

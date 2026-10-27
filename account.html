@@ -347,6 +347,10 @@
           <label class="field"><span>Instagram</span>
             <input class="input" id="list-instagram" maxlength="100" placeholder="@yourshop" />
           </label>
+          <label class="field"><span>Video link <span class="opt">optional</span></span>
+            <input class="input" id="list-video" type="url" inputmode="url" maxlength="500" placeholder="https://" autocomplete="off" spellcheck="false" />
+            <span class="small muted">Paste a YouTube, Instagram, or TikTok video URL.</span>
+          </label>
           <div class="stamp-art-grid mt-2">
             <div>
               <p class="eyebrow">Cover</p>
@@ -401,7 +405,7 @@
         <div class="card">
           <p class="eyebrow">Organizer</p>
           <p id="org-who"></p>
-          <p class="muted small">Set the title and dates, mark stores paid or hidden, and invite someone to help. <a href="/organize">Start another crawl</a>.</p>
+          <p class="muted small">Set the title, dates, and an optional video. Mark stores paid or hidden, and invite someone to help. <a href="/organize">Start another crawl</a>.</p>
           <div class="row mt-2">
             <a class="btn btn-primary" id="organizer-help-link" href="/account/organizer/help">Instructions</a>
             <a class="btn btn-ghost" href="/support">Support</a>
@@ -421,6 +425,10 @@
           </label>
           <label class="field"><span>Ends</span>
             <input class="input" id="org-end" type="date" required />
+          </label>
+          <label class="field"><span>Video link <span class="opt">optional</span></span>
+            <input class="input" id="org-video" type="url" inputmode="url" maxlength="500" placeholder="https://" autocomplete="off" spellcheck="false" />
+            <span class="small muted">Paste a YouTube, Instagram, or TikTok video URL.</span>
           </label>
           <button class="btn btn-primary" type="submit">Save crawl</button>
           <p class="form-success mt-2" id="org-ok" role="status"></p>
@@ -467,6 +475,10 @@
             </label>
             <label class="field"><span>Instagram</span>
               <input class="input" id="org-shop-instagram" maxlength="100" placeholder="@yourshop" />
+            </label>
+            <label class="field"><span>Video link <span class="opt">optional</span></span>
+              <input class="input" id="org-shop-video" type="url" inputmode="url" maxlength="500" placeholder="https://" autocomplete="off" spellcheck="false" />
+              <span class="small muted">Paste a YouTube, Instagram, or TikTok video URL.</span>
             </label>
             <div class="stamp-art-grid mt-2">
               <div>
@@ -553,6 +565,7 @@
   
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="assets/video-embed.js"></script>
   <script src="assets/crawl.js"></script>
   <script src="assets/store-demo.js"></script>
   <script src="assets/stamp-art.js"></script>
