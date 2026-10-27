@@ -353,7 +353,7 @@
         var note = document.getElementById("paper-counter-note");
         if (!note) return;
         note.classList.remove("hidden");
-        note.textContent = demoOn() ? TURN_IN : await turnInCopy(crawlId());
+        note.textContent = (demoOn() ? TURN_IN : await turnInCopy(crawlId())) + " Completed paper cards must be turned in by end of day December 31, 2026 (Pacific).";
       });
     }
   }
