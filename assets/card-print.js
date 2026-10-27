@@ -203,7 +203,7 @@
     root.classList.toggle("holiday-preview-scroll", !!holiday);
     var instructions = document.getElementById("card-print-instructions");
     if (instructions) instructions.textContent = holiday
-      ? "Print at actual size on one portrait US Letter page, or choose Download print-ready PDF. The eligible paid-shop list refreshes before printing. The QR code opens hometowncrawls.com/puyallup/holiday-coffee-crawl. More than 30 shops use numbered continuation pages."
+      ? "Print at actual size on one portrait US Letter page, or choose Download print-ready PDF. The eligible paid-shop list refreshes before printing. The QR code opens hometowncrawls.com/puyallup/holiday-coffee-crawl. Completed paper cards must be turned in by end of day December 31, 2026 (Pacific). More than 30 shops use numbered continuation pages."
       : "Print on one portrait letter page, or choose Save as PDF in the print dialog. The eligible paid-shop list refreshes before printing.";
     if (holiday) HCHolidayCard.render(root, model);
     else root.replaceChildren(sheet(model));

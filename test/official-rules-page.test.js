@@ -62,6 +62,13 @@ test("embedded config matches config.json and drives every field", () => {
   assert.match(page, /a court in <span data-field="venue_county">Kaufman<\/span> County, <span data-field="governing_state">Texas<\/span>/);
 });
 
+test("paper passports have a Pacific turn-in deadline and entry math stays 1 plus 3", () => {
+  assert.match(page, /Completed paper passports must be turned in by end of day December 31, 2026 \(Pacific\)\./);
+  assert.match(page, /<strong>1 entry for each Stop you check in at\.<\/strong>/);
+  assert.match(page, /you get <strong><span data-field="completion_bonus">3<\/span> bonus entries<\/strong>/);
+  assert.equal(config.completion_bonus, 3);
+});
+
 test("official rules page is indexable and has no raw placeholders", () => {
   assert.doesNotMatch(page, /\{\{[^}]+\}\}/);
   assert.doesNotMatch(page, /noindex/i);

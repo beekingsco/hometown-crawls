@@ -186,5 +186,7 @@ test("shop query matches a listing id or a business id", () => {
   assert.equal(sandbox.HCPaper.matchShop(rows, "9bf4ca90-be90-421d-8325-752c595c36f7").business_id, "anthem");
   assert.equal(sandbox.HCPaper.matchShop(rows, ""), null);
   assert.match(sandbox.HCPaper.TURN_IN, /Holiday Cafe, Anthem/);
+  assert.match(paper, /paper-counter-note/);
+  assert.match(paper, /Completed paper cards must be turned in by end of day December 31, 2026 \(Pacific\)\./);
 });
 
