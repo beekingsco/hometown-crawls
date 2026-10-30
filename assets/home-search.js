@@ -8,7 +8,8 @@
   const EMPTY_HREF = "/organize";
   const KNOWN_PAGES = {
     "puy-coffee": "/puyallup/holiday-coffee-crawl",
-    "puy-pub": "/puyallupwa/pub"
+    "puy-pub": "/puyallupwa/pub",
+    "arl-coffee": "/arlington/holiday-coffee-crawl"
   };
 
   function miles(lat1, lng1, lat2, lng2) {
