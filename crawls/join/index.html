@@ -130,7 +130,7 @@
         gate = { ok: false, reason: "This page could not load its Supabase settings." };
       }
       if (!gate.ok) {
-        document.getElementById("join-block-text").textContent = gate.reason;
+        document.getElementById("join-block-text").textContent = "This join link isn't ready yet. Email hello@hometowncrawls.com and we'll help.";
         show(block);
         return;
       }

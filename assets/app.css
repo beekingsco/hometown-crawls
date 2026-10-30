@@ -221,9 +221,10 @@ body:not(.home-page) .start-hero {
   padding: 1.5rem 0 0.5rem;
 }
 body:not(.home-page) .start-mascot {
-  width: min(100%, 280px);
+  width: auto;
+  height: auto;
+  max-width: min(260px, 70%);
   margin-inline: auto;
-  aspect-ratio: 1;
   object-fit: contain;
 }
 body:not(.home-page) .start-points {

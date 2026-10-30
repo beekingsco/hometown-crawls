@@ -204,7 +204,7 @@ async function handleRequest(req, deps) {
     return { status: 503, body: { error: "Invite email is not set up yet. Add RESEND_API_KEY on this deploy." } };
   }
   if (!deps.supabaseUrl || !deps.anonKey) {
-    return { status: 503, body: { error: "This preview needs SUPABASE_URL and SUPABASE_ANON_KEY for staging." } };
+    return { status: 503, body: { error: "We couldn't send those invites just yet. Email hello@hometowncrawls.com and we'll help." } };
   }
 
   const getUser = deps.getUser || ((token) => defaultGetUser(deps, token));

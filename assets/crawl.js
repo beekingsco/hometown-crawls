@@ -61,17 +61,12 @@
     const host = location.hostname;
     const productionSite = host === "www.hometowncrawls.com" || host === "hometowncrawls.com";
     const url = String((cfg.configured && cfg.supabaseUrl) || "");
+    const held = "We couldn't finish that just yet. Email hello@hometowncrawls.com and we'll help.";
     if (!productionSite && !cfg.configured) {
-      return {
-        ok: false,
-        reason: "Set SUPABASE_URL and SUPABASE_ANON_KEY on this preview for a staging Supabase project. This page will not write to the live Puyallup database."
-      };
+      return { ok: false, reason: held };
     }
     if (!productionSite && url.indexOf("tatwbjuwufeqynpufodq") !== -1) {
-      return {
-        ok: false,
-        reason: "This preview is pointed at the live Puyallup Supabase project. Use a separate staging project before creating crawls or sending invites."
-      };
+      return { ok: false, reason: held };
     }
     return { ok: true };
   }

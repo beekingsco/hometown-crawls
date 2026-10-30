@@ -89,6 +89,11 @@ test("migration keeps seats paid, pins required, and owner control", () => {
 });
 
 test("pages create a crawl and join by crawl id or invite token", () => {
+  assert.match(organize, /phone-mascot\.png/);
+  assert.match(organize, /width="571" height="720"/);
+  assert.doesNotMatch(organize, /\/mascot\.png/);
+  assert.doesNotMatch(organize, /Staging setup|SUPABASE_URL|will not write to the live/);
+  assert.doesNotMatch(organize, /aspect-ratio:\s*1/);
   assert.match(organize, /organizer_create_crawl/);
   assert.match(organize, /id="organize-crawl-name"/);
   assert.match(organize, /id="organize-city"/);
