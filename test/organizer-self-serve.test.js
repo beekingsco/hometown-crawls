@@ -111,6 +111,7 @@ test("pages create a crawl and join by crawl id or invite token", () => {
   assert.match(organize, /saves you as the owner/);
   assert.match(organize, /hello@hometowncrawls\.com/);
   assert.doesNotMatch(organize, /start-points|A passport they can finish/);
+  assert.doesNotMatch(organize, /prize/i);
   assert.doesNotMatch(organize + join + account + invitesApi, /no free shop/i);
   assert.match(account, /id="shop-invite-send"/);
   assert.match(account, /id="org-shop-pin"/);
