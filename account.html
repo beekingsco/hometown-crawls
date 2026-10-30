@@ -405,7 +405,7 @@
         <div class="card">
           <p class="eyebrow">Organizer</p>
           <p id="org-who"></p>
-          <p class="muted small">Set the title, dates, and an optional video. Mark stores paid or hidden, and invite someone to help. <a href="/organize">Start another crawl</a>.</p>
+          <p class="muted small">Set the title, dates, and an optional video. Only the crawl owner and organizers can show a shop, and only after it has a map pin. <a href="/organize">Start another crawl</a>.</p>
           <div class="row mt-2">
             <a class="btn btn-primary" id="organizer-help-link" href="/account/organizer/help">Instructions</a>
             <a class="btn btn-ghost" href="/support">Support</a>
@@ -442,6 +442,7 @@
             <article class="card"><p class="eyebrow">Unpaid</p><p class="stat-value" id="org-total-unpaid">—</p></article>
             <article class="card"><p class="eyebrow">Scans</p><p class="stat-value" id="org-total-scans">—</p></article>
           </div>
+          <p class="form-error mt-2" id="org-stores-err" role="alert"></p>
           <div class="stack mt-2" id="org-stores"></div>
           <form class="card mt-2 hidden" id="org-shop-form" hidden>
             <div class="row" style="justify-content:space-between">
@@ -458,6 +459,8 @@
             <label class="field"><span>Address</span>
               <input class="input" id="org-shop-address" maxlength="300" />
             </label>
+            <button class="btn btn-soft mt-1" type="button" id="org-shop-pin">Save map pin from this address</button>
+            <p class="muted small">A shop cannot show on the passport until this pin is saved. Only the crawl owner or an organizer can turn that on.</p>
             <label class="field"><span>Zip code</span>
               <input class="input" id="org-shop-postal" maxlength="10" inputmode="numeric" placeholder="98371" autocomplete="postal-code" />
             </label>
@@ -538,6 +541,26 @@
           </form>
           <p class="form-error mt-2" id="area-opt-in-err" role="alert"></p>
           <div class="stack mt-2" id="area-opt-in-results"></div>
+        </div>
+        <div class="card" id="shop-invite-card">
+          <h3>Invite shops</h3>
+          <p class="muted small mt-1">Paste shop emails, one per line or separated by commas. Send invites emails each address a unique join link. A seat is $49.99. There is no free shop. Stripe Checkout is not in this version: save a Payment Link here, or share it yourself. The shop stays off the passport until the seat is paid and an owner or organizer saves a map pin.</p>
+          <p class="small mt-2" id="shop-signup-url"></p>
+          <label class="field mt-2"><span>Stripe Payment Link <span class="opt">optional</span></span>
+            <input class="input" id="org-payment-link" type="url" inputmode="url" maxlength="400" placeholder="https://buy.stripe.com/..." autocomplete="off" />
+          </label>
+          <button class="btn btn-soft" type="button" id="org-payment-save">Save payment link</button>
+          <label class="field mt-2"><span>Shop emails</span>
+            <textarea class="input" id="shop-invite-emails" maxlength="8000" placeholder="ada@shop.com&#10;blair@shop.com"></textarea>
+          </label>
+          <div class="row">
+            <button class="btn btn-soft" type="button" id="shop-invite-save">Save invite list</button>
+            <button class="btn btn-primary" type="button" id="shop-invite-send">Send invites</button>
+          </div>
+          <p class="form-success mt-2" id="shop-invite-ok" role="status"></p>
+          <p class="form-error mt-2" id="shop-invite-err" role="alert"></p>
+          <div class="stack mt-2" id="shop-invite-list"></div>
+          <div class="stack mt-2" id="planned-shops"></div>
         </div>
         <div class="card">
           <div class="row" style="justify-content:space-between">

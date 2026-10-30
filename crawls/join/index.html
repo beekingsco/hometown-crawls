@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Join a crawl as a shop · Hometown Crawls</title>
+  <meta name="theme-color" content="#f8f2e7" />
+  <meta name="robots" content="noindex" />
+  <meta name="description" content="Reserve a shop seat on a hometown crawl. Each seat is $49.99." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/site.css" />
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+  <main>
+    <div class="wrap-narrow page-hero">
+      <p class="eyebrow">Shop seat</p>
+      <h1 id="join-title">Join this crawl</h1>
+      <p class="lead" id="join-lead">Each shop seat is $49.99. There is no free shop.</p>
+      <p class="muted" id="join-meta"></p>
+    </div>
+    <div class="wrap-narrow">
+      <div class="card hidden" id="join-block">
+        <p id="join-block-text"></p>
+      </div>
+      <form class="card hidden" id="join-form">
+        <h3>Your shop</h3>
+        <p class="muted small mt-1" id="join-price">$49.99 for this crawl, one-time. A shop stays off the map until the seat is paid and the crawl has a map pin.</p>
+        <label class="field"><span>Business name</span>
+          <input class="input" name="business_name" required maxlength="200" autocomplete="organization" placeholder="Main Street Espresso" />
+        </label>
+        <label class="field"><span>Street address</span>
+          <input class="input" name="address" required maxlength="300" autocomplete="street-address" placeholder="123 Main St" />
+        </label>
+        <label class="field"><span>Website <span class="opt">optional</span></span>
+          <input class="input" name="website" maxlength="300" inputmode="url" autocomplete="url" placeholder="https://yourshop.com" />
+        </label>
+        <label class="field"><span>Hours <span class="opt">optional</span></span>
+          <input class="input" name="hours" maxlength="500" placeholder="Mon–Fri 7am–4pm" />
+        </label>
+        <label class="field"><span>Contact name</span>
+          <input class="input" name="contact_name" required maxlength="200" autocomplete="name" />
+        </label>
+        <label class="field"><span>Email</span>
+          <input class="input" type="email" name="email" id="join-email" required maxlength="254" autocomplete="email" />
+        </label>
+        <label class="field"><span>Phone</span>
+          <input class="input" type="tel" name="phone" required maxlength="40" autocomplete="tel" />
+        </label>
+        <button class="btn btn-primary" type="submit" id="join-submit">Save this shop</button>
+        <p class="muted small mt-2" id="join-pay-note"></p>
+        <p class="form-error mt-2" id="join-error" role="alert"></p>
+      </form>
+      <div class="card hidden" id="join-thanks">
+        <h3 id="join-thanks-title">Signup saved</h3>
+        <p id="join-thanks-body"></p>
+        <p class="mt-2"><a class="btn btn-primary" href="/account?tab=store">Open the shop portal</a></p>
+      </div>
+    </div>
+  </main>
+  <footer class="site-footer" id="site-footer"></footer>
+  <script src="/assets/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/site.js"></script>
+  <script src="/assets/crawl.js"></script>
+  <script>
+  (function () {
+    var form = document.getElementById("join-form");
+    var thanks = document.getElementById("join-thanks");
+    var block = document.getElementById("join-block");
+    var err = document.getElementById("join-error");
+    var target = null;
+
+    function show(el) { if (el) el.classList.remove("hidden"); }
+    function hide(el) { if (el) el.classList.add("hidden"); }
+    function fail(message) {
+      err.textContent = message;
+      err.classList.add("show");
+    }
+    function money(cents) {
+      var amount = Number(cents);
+      if (!Number.isFinite(amount)) amount = 4999;
+      return "$" + (amount / 100).toFixed(2);
+    }
+    function uuid() {
+      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+        var r = crypto.getRandomValues(new Uint8Array(1))[0] & 15;
+        return (c === "x" ? r : (r & 3) | 8).toString(16);
+      });
+    }
+    function dates(row) {
+      if (!row || !row.starts_at || !row.ends_at) return "";
+      var start = String(row.starts_at).slice(0, 10);
+      var end = String(row.ends_at).slice(0, 10);
+      return start + " – " + end;
+    }
+    function paint(row) {
+      target = row;
+      document.getElementById("join-title").textContent = row.name || "Join this crawl";
+      var place = [row.city, row.state].filter(Boolean).join(", ");
+      document.getElementById("join-lead").textContent = place
+        ? "Reserve your shop's seat on this crawl in " + place + "."
+        : "Reserve your shop's seat on this crawl.";
+      document.getElementById("join-meta").textContent = dates(row);
+      document.getElementById("join-price").textContent = money(row.price_cents) + " for this crawl, one-time. There is no free shop. A shop stays off the map until the seat is paid and an owner or organizer saves a map pin.";
+      if (row.invite_email) document.getElementById("join-email").value = row.invite_email;
+      var note = document.getElementById("join-pay-note");
+      note.textContent = row.payment_link
+        ? "After this saves, you'll continue to the organizer's Stripe Payment Link."
+        : "The organizer has not added a Stripe Payment Link yet. We'll save your shop, and they can send the $49.99 payment link next. Checkout is not built into this page.";
+      document.title = (row.name || "Join a crawl") + " · Shop signup · Hometown Crawls";
+      show(form);
+    }
+    function paintThanks(message) {
+      hide(form);
+      document.getElementById("join-thanks-body").textContent = message;
+      show(thanks);
+    }
+
+    document.addEventListener("DOMContentLoaded", async function () {
+      var params = new URLSearchParams(location.search);
+      var gate;
+      try {
+        await HCCrawl.whenConfigured();
+        gate = HCCrawl.selfServeWritesAllowed();
+      } catch (e) {
+        gate = { ok: false, reason: "This page could not load its Supabase settings." };
+      }
+      if (!gate.ok) {
+        document.getElementById("join-block-text").textContent = gate.reason;
+        show(block);
+        return;
+      }
+      var client = HCCrawl.client();
+      if (!client) {
+        document.getElementById("join-block-text").textContent = "Supabase is not available in this browser.";
+        show(block);
+        return;
+      }
+      var saved = params.get("saved") === "1";
+      var looked = await client.rpc("shop_signup_target", {
+        p_crawl: params.get("crawl") || null,
+        p_invite: params.get("invite") || null
+      });
+      if (looked.error || !looked.data || !looked.data.length) {
+        document.getElementById("join-block-text").textContent = (looked.error && looked.error.message) || "That join link does not match a crawl.";
+        show(block);
+        return;
+      }
+      if (saved) {
+        paint(looked.data[0]);
+        hide(form);
+        paintThanks("If Stripe sent a receipt, your seat is being marked paid. Add a photo in the shop portal. The shop stays off the passport until it is paid and has a map pin.");
+        return;
+      }
+      paint(looked.data[0]);
+    });
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      err.classList.remove("show");
+      if (!target) return fail("Choose a crawl from your invite link.");
+      var gate = HCCrawl.selfServeWritesAllowed();
+      if (!gate.ok) return fail(gate.reason);
+      var fd = new FormData(form);
+      var row = {
+        id: uuid(),
+        crawl: target.signup_key || target.crawl_id,
+        business_name: String(fd.get("business_name") || "").trim(),
+        address: String(fd.get("address") || "").trim(),
+        contact_name: String(fd.get("contact_name") || "").trim(),
+        email: String(fd.get("email") || "").trim().toLowerCase(),
+        phone: String(fd.get("phone") || "").trim(),
+        status: "started",
+        amount_cents: 4999
+      };
+      var website = String(fd.get("website") || "").trim();
+      var hours = String(fd.get("hours") || "").trim();
+      if (website) row.website = website;
+      if (hours) row.hours = hours;
+      if (!row.business_name || !row.contact_name || !row.email || !row.phone || !row.address) {
+        return fail("Please fill in business name, street address, contact name, email, and phone.");
+      }
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(row.email)) return fail("Please enter a valid email address.");
+      if (website && !/^https?:\/\/\S+$/i.test(website)) return fail("Website must start with http:// or https://, or leave it blank.");
+      var env = window.__HC_ENV__ || {};
+      var btn = document.getElementById("join-submit");
+      btn.disabled = true;
+      try {
+        var res = await fetch(env.SUPABASE_URL + "/rest/v1/crawl_signups", {
+          method: "POST",
+          headers: {
+            apikey: env.SUPABASE_ANON_KEY,
+            Authorization: "Bearer " + env.SUPABASE_ANON_KEY,
+            "Content-Type": "application/json",
+            Prefer: "return=minimal"
+          },
+          body: JSON.stringify(row)
+        });
+        if (!res.ok) throw new Error("save failed");
+        try { localStorage.setItem("hc-shop-signup", JSON.stringify({ id: row.id, crawl: target.crawl_id, business: row.business_name })); } catch (_) {}
+        if (target.payment_link) {
+          var next = new URL(target.payment_link);
+          next.searchParams.set("client_reference_id", row.id);
+          next.searchParams.set("prefilled_email", row.email);
+          location.href = next.toString();
+          return;
+        }
+        paintThanks("Your shop is saved for " + (target.name || "this crawl") + ". The seat is still unpaid. Each shop is " + money(target.price_cents) + ". Ask the organizer for the Stripe Payment Link, or come back after they add one to this page. The shop stays off the map until that seat is paid and a map pin is saved.");
+      } catch (ex) {
+        btn.disabled = false;
+        fail("Sorry, we couldn't save your signup. Please try again, or email hello@hometowncrawls.com.");
+      }
+    });
+  })();
+  </script>
+</body>
+</html>
