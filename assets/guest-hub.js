@@ -346,7 +346,10 @@
     }
     if (input) input.value = "";
     consent.checked = false;
-    note(okId, errId, "Uploaded. It stays pending until an organizer or contributor approves it. It does not add a prize entry, and your stamp is unchanged.", "");
+    var savedNote = guestCrawl() === "arl-coffee"
+      ? "Uploaded. It stays pending until an organizer or contributor approves it. It does not change your stamp."
+      : "Uploaded. It stays pending until an organizer or contributor approves it. It does not add a prize entry, and your stamp is unchanged.";
+    note(okId, errId, savedNote, "");
     loadLivePhotos();
   }
 
