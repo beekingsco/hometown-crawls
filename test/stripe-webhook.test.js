@@ -175,8 +175,13 @@ test("formats the charged amount and crawl dates from data", () => {
   assert.match(email.html, /#1f3a24/);
   assert.match(email.html, /#f4efe6/);
   assert.match(email.html, /\$49\.99/);
-  assert.match(email.html, /https:\/\/www\.hometowncrawls\.com\/puyallup\/coffee-crawl\/shop/);
-  assert.match(email.html, /https:\/\/www\.hometowncrawls\.com\/puyallup\/holiday-coffee-crawl/);
+  assert.match(email.html, new RegExp(_test.MANAGE_LISTING_URL.replace(/[.]/g, "\\.")));
+  assert.equal(_test.MANAGE_LISTING_URL, "https://www.hometowncrawls.com/account");
+  assert.doesNotMatch(email.html + email.text, /puyallup\/|shop portal|holiday-coffee-crawl|—/i);
+  const unnamed = _test.buildEmail({ dates: "Nov 1 – Dec 31, 2026", amount: "$49.99" });
+  assert.equal(unnamed.subject, "You're in");
+  assert.match(unnamed.text, /Thanks for joining\. We received your payment of \$49\.99\./);
+  assert.doesNotMatch(unnamed.html + unnamed.text, /Puyallup|Arlington|shop portal|—/);
 });
 
 test("payment link matches a crawl URL or the allowlist, not a foreign link", () => {
@@ -292,15 +297,13 @@ test("marks the signup and listing paid and emails once", async () => {
   assert.equal(
     emails[0].body.text,
     [
-      "You're in — Anthem Coffee.",
+      "You're in: Anthem Coffee.",
       "",
-      "Thanks for joining Puyallup Holiday Coffee Crawl. We received your payment of $25.00.",
+      "Thanks for joining Puyallup Holiday Coffee Crawl for Anthem Coffee. We received your payment of $25.00.",
       "The crawl runs Nov 1 – Dec 31, 2026.",
       "",
-      "Next step: sign in to the shop portal and add a photo and your shop details:",
-      "https://www.hometowncrawls.com/puyallup/coffee-crawl/shop",
-      "",
-      "Your shop will appear on the map at https://www.hometowncrawls.com/puyallup/holiday-coffee-crawl.",
+      "Next step: sign in to your account and add a photo and your shop details:",
+      "https://www.hometowncrawls.com/account",
     ].join("\n")
   );
   assert.equal(
@@ -318,11 +321,10 @@ test("marks the signup and listing paid and emails once", async () => {
               <h1 style="margin:0 0 16px;font-size:32px;line-height:1.15;font-weight:700;color:#1a1a17;">You're in.</h1>
               <p style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#2c2a24;">Thanks for joining <strong>Puyallup Holiday Coffee Crawl</strong> for Anthem Coffee. We received your payment of <strong>$25.00</strong>.</p>
               <p style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#2c2a24;">The crawl runs <strong>Nov 1 – Dec 31, 2026</strong>. Crawlers can stop in during your normal business hours.</p>
-              <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#2c2a24;">Next step: sign in to the shop portal and add a photo and your shop details.</p>
+              <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#2c2a24;">Next step: sign in to your account and add a photo and your shop details.</p>
               <p style="margin:0 0 22px;">
-                <a href="https://www.hometowncrawls.com/puyallup/coffee-crawl/shop" style="display:inline-block;background:#1f3a24;color:#f4efe6;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-weight:700;padding:12px 18px;border-radius:999px;">Open the shop portal</a>
+                <a href="https://www.hometowncrawls.com/account" style="display:inline-block;background:#1f3a24;color:#f4efe6;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-weight:700;padding:12px 18px;border-radius:999px;">Manage your listing</a>
               </p>
-              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#2c2a24;">Your shop will appear on the map at <a href="https://www.hometowncrawls.com/puyallup/holiday-coffee-crawl" style="color:#1f3a24;">www.hometowncrawls.com/puyallup/holiday-coffee-crawl</a>.</p>
             </td>
           </tr>
         </table>
@@ -340,6 +342,78 @@ test("marks the signup and listing paid and emails once", async () => {
   const second = await handleEvent(event, deps);
   assert.equal(second.status, 200);
   assert.equal(emails.length, 1);
+});
+
+test("shared payment link emails the account page for each crawl", async () => {
+  const ARL_ID = "3184b52b-0bce-47bf-a929-2d46329b2ba1";
+  const OAK_ID = "3184b52b-0bce-47bf-a929-2d46329b2ba2";
+  const db = memorySupabase({
+    crawls: [
+      crawlRow(),
+      {
+        id: "arl-coffee",
+        name: "Arlington Holiday Coffee Crawl",
+        starts_at: "2026-11-01T07:00:00.000Z",
+        ends_at: "2027-01-01T07:59:00.000Z",
+        payment_link: PAYMENT_URL,
+        price_cents: 4999,
+        signup_key: "arl-coffee-nov-2026",
+      },
+      {
+        id: "oak-harbor-coffee",
+        name: "Oak Harbor Coffee Crawl",
+        starts_at: "2027-06-01T07:00:00.000Z",
+        ends_at: "2027-08-01T07:00:00.000Z",
+        payment_link: PAYMENT_URL,
+        price_cents: 4999,
+        signup_key: "oak-harbor-coffee-2027",
+      },
+    ],
+    signups: [
+      signupRow(),
+      signupRow({
+        id: ARL_ID,
+        crawl: "arl-coffee-nov-2026",
+        crawl_id: null,
+        business_name: "Hang Time Play Cafe",
+        email: "info@hangtimeplaycafe.com",
+      }),
+      signupRow({
+        id: OAK_ID,
+        crawl: "oak-harbor-coffee-2027",
+        crawl_id: null,
+        business_name: "Harbor Mug",
+        email: "hi@harbor.example",
+      }),
+    ],
+  });
+  const { deps, emails } = depsFor(db);
+  const cases = [
+    { id: SIGNUP_ID, sessionId: "cs_puy", crawlId: "puy-coffee", name: "Puyallup Holiday Coffee Crawl", forbid: [] },
+    { id: ARL_ID, sessionId: "cs_arl", crawlId: "arl-coffee", name: "Arlington Holiday Coffee Crawl", forbid: ["Puyallup", "Oak Harbor"] },
+    { id: OAK_ID, sessionId: "cs_oak", crawlId: "oak-harbor-coffee", name: "Oak Harbor Coffee Crawl", forbid: ["Puyallup", "Arlington"] },
+  ];
+  for (const row of cases) {
+    const result = await handleEvent(
+      {
+        type: "checkout.session.completed",
+        data: { object: session({ id: row.sessionId, client_reference_id: row.id }) },
+      },
+      deps
+    );
+    assert.equal(result.status, 200);
+  }
+  assert.equal(emails.length, 3);
+  cases.forEach((row, index) => {
+    const email = emails[index].body;
+    const body = email.html + "\n" + email.text;
+    assert.equal(email.subject, `You're in: ${row.name}`);
+    assert.match(body, /https:\/\/www\.hometowncrawls\.com\/account/);
+    assert.doesNotMatch(body, /puyallup\/coffee-crawl\/shop|holiday-coffee-crawl|\/arlington\/|shop portal|—/i);
+    for (const word of row.forbid) assert.doesNotMatch(body, new RegExp(word));
+    const listing = db.state.listings.find((item) => item.signup_id === row.id);
+    assert.equal(listing.crawl_id, row.crawlId);
+  });
 });
 
 test("creates a missing listing the same way the signup trigger does", async () => {

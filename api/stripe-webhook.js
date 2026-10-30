@@ -18,8 +18,7 @@ const HANDLED_EVENTS = new Set([
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const SHOP_PORTAL_URL = "https://www.hometowncrawls.com/puyallup/coffee-crawl/shop";
-const MAP_URL = "https://www.hometowncrawls.com/puyallup/holiday-coffee-crawl";
+const MANAGE_LISTING_URL = "https://www.hometowncrawls.com/account";
 const FROM_ADDRESS = "Hometown Crawls <hello@hometowncrawls.com>";
 const REPLY_TO = "chris@beekings.com";
 
@@ -137,23 +136,46 @@ function escapeHtml(value) {
     .replace(/"/g, "&quot;");
 }
 
+function thanksLine({ crawlName, businessName, amount, html }) {
+  const name = String(crawlName || "").trim();
+  const business = String(businessName || "").trim();
+  const paid = html
+    ? `We received your payment of <strong>${escapeHtml(amount)}</strong>.`
+    : `We received your payment of ${amount}.`;
+  if (name && business) {
+    const joined = html
+      ? `Thanks for joining <strong>${escapeHtml(name)}</strong> for ${escapeHtml(business)}.`
+      : `Thanks for joining ${name} for ${business}.`;
+    return `${joined} ${paid}`;
+  }
+  if (name) {
+    const joined = html
+      ? `Thanks for joining <strong>${escapeHtml(name)}</strong>.`
+      : `Thanks for joining ${name}.`;
+    return `${joined} ${paid}`;
+  }
+  if (business) {
+    const joined = html
+      ? `Thanks for joining <strong>${escapeHtml(business)}</strong>.`
+      : `Thanks for joining ${business}.`;
+    return `${joined} ${paid}`;
+  }
+  return `Thanks for joining. ${paid}`;
+}
+
 function buildEmail({ crawlName, dates, amount, businessName }) {
-  const name = crawlName || "Puyallup Holiday Coffee Crawl";
-  const shop = businessName ? ` for ${escapeHtml(businessName)}` : "";
-  const safeName = escapeHtml(name);
+  const name = String(crawlName || "").trim();
+  const business = String(businessName || "").trim();
   const safeDates = escapeHtml(dates);
-  const safeAmount = escapeHtml(amount);
-  const subject = `You're in: ${name}`;
+  const subject = name ? `You're in: ${name}` : "You're in";
   const text = [
-    `You're in${businessName ? ` — ${businessName}` : ""}.`,
+    business ? `You're in: ${business}.` : "You're in.",
     ``,
-    `Thanks for joining ${name}. We received your payment of ${amount}.`,
+    thanksLine({ crawlName: name, businessName: business, amount, html: false }),
     `The crawl runs ${dates}.`,
     ``,
-    `Next step: sign in to the shop portal and add a photo and your shop details:`,
-    SHOP_PORTAL_URL,
-    ``,
-    `Your shop will appear on the map at ${MAP_URL}.`,
+    `Next step: sign in to your account and add a photo and your shop details:`,
+    MANAGE_LISTING_URL,
   ].join("\n");
 
   const html = `<!DOCTYPE html>
@@ -167,13 +189,12 @@ function buildEmail({ crawlName, dates, amount, businessName }) {
             <td style="padding:32px 28px;font-family:Georgia,'Times New Roman',serif;color:#1a1a17;">
               <p style="margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#1f3a24;font-weight:700;">Hometown Crawls</p>
               <h1 style="margin:0 0 16px;font-size:32px;line-height:1.15;font-weight:700;color:#1a1a17;">You're in.</h1>
-              <p style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#2c2a24;">Thanks for joining <strong>${safeName}</strong>${shop}. We received your payment of <strong>${safeAmount}</strong>.</p>
+              <p style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#2c2a24;">${thanksLine({ crawlName: name, businessName: business, amount, html: true })}</p>
               <p style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#2c2a24;">The crawl runs <strong>${safeDates}</strong>. Crawlers can stop in during your normal business hours.</p>
-              <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#2c2a24;">Next step: sign in to the shop portal and add a photo and your shop details.</p>
+              <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#2c2a24;">Next step: sign in to your account and add a photo and your shop details.</p>
               <p style="margin:0 0 22px;">
-                <a href="${SHOP_PORTAL_URL}" style="display:inline-block;background:#1f3a24;color:#f4efe6;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-weight:700;padding:12px 18px;border-radius:999px;">Open the shop portal</a>
+                <a href="${MANAGE_LISTING_URL}" style="display:inline-block;background:#1f3a24;color:#f4efe6;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-weight:700;padding:12px 18px;border-radius:999px;">Manage your listing</a>
               </p>
-              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#2c2a24;">Your shop will appear on the map at <a href="${MAP_URL}" style="color:#1f3a24;">${MAP_URL.replace("https://", "")}</a>.</p>
             </td>
           </tr>
         </table>
@@ -527,6 +548,7 @@ module.exports._test = {
   formatAmount,
   formatCrawlDates,
   escapeHtml,
+  MANAGE_LISTING_URL,
   buildEmail,
   wasUnpaid,
   readRawBody,

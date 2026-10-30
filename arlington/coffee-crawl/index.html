@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Arlington Holiday Coffee Crawl · Nov 1 – Dec 31, 2026 · Shop Signup · Hometown Crawls</title>
+  <meta name="theme-color" content="#f8f2e7" />
+  <meta name="description" content="Crawl your way through the coffee wonderland of Arlington. Shops on the passport are the ones that have paid and been confirmed." />
+  <link rel="canonical" href="https://www.hometowncrawls.com/arlington/coffee-crawl" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Hometown Crawls" />
+  <meta property="og:title" content="Join the Arlington Holiday Coffee Crawl · Nov 1 – Dec 31, 2026" />
+  <meta property="og:description" content="Crawl your way through the coffee wonderland of Arlington." />
+  <meta property="og:url" content="https://www.hometowncrawls.com/arlington/coffee-crawl" />
+  <meta property="og:image" content="https://www.hometowncrawls.com/assets/home/coffee.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:description" content="Crawl your way through the coffee wonderland of Arlington." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/site.css" />
+  <style>
+    .pc-hero {
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(1200px 400px at 85% -10%, rgba(47,90,56,.18), transparent 60%),
+        radial-gradient(800px 300px at -10% 110%, rgba(243,234,212,.9), transparent 60%),
+        var(--bg);
+      border-bottom: 1px solid var(--line);
+      padding: 2.5rem 0 2.25rem;
+    }
+    .pc-hero-grid { display: grid; gap: 1.75rem; align-items: center; }
+    .pc-hero h1 { font-size: clamp(2.2rem, 8vw, 4rem); margin: .6rem 0 .8rem; }
+    .pc-hero h1 em { font-style: normal; color: var(--green); }
+    .pc-hero .lead { font-size: 1.1rem; color: var(--ink-soft); max-width: 46ch; }
+    .pc-dates {
+      display: inline-flex; align-items: flex-start; gap: .55rem; max-width: 100%;
+      white-space: normal;
+      background: var(--paper); border: 1px solid var(--line-strong);
+      border-radius: var(--radius-pill); padding: .45rem .95rem .45rem .5rem;
+      font-weight: 600; font-size: .92rem; color: var(--green);
+      box-shadow: var(--shadow-sm);
+    }
+    .pc-dates .dot {
+      width: 26px; height: 26px; border-radius: 50%; background: var(--green); color: #fff;
+      display: grid; place-items: center; font-size: .8rem;
+    }
+    .pc-cta-row { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1.4rem; align-items: center; }
+    .pc-cta-row .note { font-size: .88rem; color: var(--muted); }
+    .pc-photo {
+      border-radius: 22px; overflow: hidden; box-shadow: var(--shadow);
+      border: 1px solid var(--line); aspect-ratio: 1 / 1; background: #fff; position: relative;
+    }
+    .pc-photo img { width: 100%; height: 100%; object-fit: cover; }
+    .pc-section { padding: 2.75rem 0; }
+    .pc-section h2 { margin: .35rem 0 .5rem; }
+    .pc-benefits { display: grid; gap: .9rem; margin-top: 1.5rem; }
+    .pc-benefit { display: flex; gap: .9rem; align-items: flex-start; }
+    .pc-ico {
+      flex-shrink: 0; width: 44px; height: 44px; border-radius: 12px; background: var(--soft);
+      color: var(--green); display: grid; place-items: center; font-size: 1.25rem;
+    }
+    .pc-benefit h3 { font-size: 1.08rem; margin-bottom: .15rem; }
+    .pc-benefit p { color: var(--muted); font-size: .95rem; }
+    .pc-signup-grid { display: grid; gap: 1.25rem; align-items: start; }
+    .pc-price {
+      background: var(--green); color: #f4efe6; border-radius: 20px; padding: 1.6rem 1.5rem;
+      box-shadow: var(--shadow); position: relative; overflow: hidden;
+    }
+    .pc-price::after {
+      content: ""; position: absolute; right: -60px; top: -60px; width: 200px; height: 200px; border-radius: 50%;
+      background: rgba(255,255,255,.06);
+    }
+    .pc-price .eyebrow { color: #cfe0c9; }
+    .pc-price .amount { font-family: var(--font-display); font-size: 3.2rem; line-height: 1; margin: .5rem 0 .25rem; color: #fff; }
+    .pc-price .amount small { font-family: var(--font-body); font-size: 1rem; color: #cfe0c9; font-weight: 500; }
+    .pc-price .sub { color: #dfe8da; font-size: .95rem; }
+    .pc-price ul { list-style: none; margin-top: 1.1rem; display: grid; gap: .5rem; }
+    .pc-price li { display: flex; gap: .55rem; font-size: .95rem; }
+    .pc-price li::before { content: "✓"; color: #b9d7b0; font-weight: 700; }
+    .pc-price .fine { margin-top: 1.1rem; font-size: .8rem; color: #b9c9b4; }
+    .pc-form { padding: 1.5rem 1.35rem; }
+    .pc-form h3 { font-size: 1.4rem; }
+    .pc-form .field { display: block; margin-top: .9rem; }
+    .pc-form .field span { display: block; font-size: .85rem; font-weight: 600; color: var(--ink-soft); margin-bottom: .3rem; }
+    .pc-form .input { font-size: 16px; padding: .85rem .9rem; }
+    .pc-form .btn { width: 100%; margin-top: 1.2rem; white-space: normal; }
+    .pc-secure { display: flex; gap: .45rem; align-items: center; justify-content: center; margin-top: .7rem; font-size: .82rem; color: var(--muted); }
+    .pc-organizer {
+      display: flex; gap: 1rem; align-items: center; background: var(--paper); border: 1px solid var(--line);
+      border-radius: var(--radius); padding: 1.1rem 1.2rem; box-shadow: var(--shadow-sm);
+    }
+    .pc-organizer .avatar {
+      width: 52px; height: 52px; border-radius: 50%; background: var(--gold-soft); color: var(--gold-ink);
+      display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; flex-shrink: 0;
+    }
+    .pc-organizer a { color: var(--green); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+    .pc-faq summary { font-weight: 600; cursor: pointer; }
+    .pc-faq p { margin-top: .5rem; color: var(--muted); }
+    .pc-sticky {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: .7rem 1rem calc(.7rem + env(safe-area-inset-bottom));
+      background: rgba(255,253,248,.96); border-top: 1px solid var(--line); backdrop-filter: blur(8px);
+      display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between;
+      transform: translateY(110%); transition: transform .25s ease;
+    }
+    .pc-sticky.show { transform: translateY(0); }
+    .pc-sticky strong { font-family: var(--font-display); color: var(--green); font-size: 1.15rem; }
+    .pc-sticky span { font-size: .8rem; color: var(--muted); display: block; }
+    .btn[disabled] { opacity: .65; cursor: wait; transform: none; }
+    @media (min-width: 860px) {
+      .pc-hero { padding: 4rem 0 3.5rem; }
+      .pc-hero-grid { grid-template-columns: 1.1fr .9fr; gap: 3rem; }
+      .pc-benefits { grid-template-columns: 1fr 1fr; gap: 1.4rem 2rem; }
+      .pc-signup-grid { grid-template-columns: .85fr 1.15fr; gap: 1.75rem; }
+      .pc-price { position: sticky; top: calc(var(--header-h) + 20px); }
+      .pc-sticky { display: none; }
+      .pc-section { padding: 4rem 0; }
+    }
+    @media (max-width: 859px) {
+      main { padding-bottom: 6rem; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+  <main>
+    <section class="pc-hero">
+      <div class="wrap pc-hero-grid">
+        <div>
+          <span class="pc-dates"><span class="dot">☕</span><span id="pc-dates-label">Arlington Holiday Coffee Crawl · Starts November 1 · runs through December 31, 2026</span></span>
+          <h1>2 months. The shops on the passport.</h1>
+          <p class="lead">Crawl your way through the coffee wonderland of Arlington.</p>
+          <div class="pc-cta-row">
+            <a class="btn btn-primary btn-lg" href="#signup">Reserve your spot · $49.99</a>
+            <span class="note">$49.99 for the 2026 holiday season, one-time.</span>
+          </div>
+        </div>
+        <div class="pc-photo">
+          <img src="/assets/home/coffee.jpg" alt="Three cups of coffee raised together at a cafe table" width="1000" height="667" loading="eager" />
+        </div>
+      </div>
+    </section>
+
+    <section class="pc-section">
+      <div class="wrap">
+        <p class="eyebrow">What your shop gets</p>
+        <h2>New faces at your counter through December 31</h2>
+        <p class="muted" style="max-width:60ch">Coffee lovers plan their route around the trail. Every stamp is a visit, and every visit is a chance to win a regular.</p>
+        <div class="pc-benefits">
+          <div class="pc-benefit"><div class="pc-ico">📍</div><div><h3>A spot on the trail map</h3><p>Your shop is pinned on the interactive Arlington Coffee Crawl map with your address and a short blurb.</p></div></div>
+          <div class="pc-benefit"><div class="pc-ico">🎟️</div><div><h3>A stop in the digital passport</h3><p>Crawlers see your shop in their passport, no app download needed. It works right in the phone's browser.</p></div></div>
+          <div class="pc-benefit"><div class="pc-ico">🔳</div><div><h3>QR and counter-code stamps</h3><p>We send a print-ready QR sign and a counter code so guests can stamp in seconds without slowing your line.</p></div></div>
+          <div class="pc-benefit"><div class="pc-ico">🚶</div><div><h3>Local foot traffic</h3><p>Crawlers are out to try new places. They walk in ready to order, and many come back.</p></div></div>
+          <div class="pc-benefit"><div class="pc-ico">📣</div><div><h3>Promotion across town</h3><p>You get included in crawl promotion on social media, on hometowncrawls.com, and in local outreach during November and December.</p></div></div>
+          <div class="pc-benefit"><div class="pc-ico">🤝</div><div><h3>Simple for your team</h3><p>No hardware and no POS changes. Just put the QR sign by the register and you're set.</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pc-section" id="signup" style="background:var(--cream);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+      <div class="wrap">
+        <p class="eyebrow">Sign up</p>
+        <h2>Reserve your shop's spot</h2>
+        <p class="muted mb-2" style="max-width:56ch">Fill this out, then finish with secure Stripe checkout. It takes about a minute.</p>
+        <div class="pc-signup-grid">
+          <aside class="pc-price" aria-label="Price">
+            <p class="eyebrow">Location entry</p>
+            <div class="amount">$49.99</div>
+            <p class="sub">$49.99 for the 2026 holiday season, one-time. Per location, November 1 through December 31, 2026. No subscription and no per-guest fees.</p>
+            <ul>
+              <li>Trail map listing</li>
+              <li>Digital passport stop</li>
+              <li>QR sign + counter code</li>
+              <li>November–December promotion</li>
+            </ul>
+            <p class="fine">Have more than one location? Submit one signup per location.</p>
+          </aside>
+
+          <form class="card pc-form" id="pc-form" novalidate>
+            <h3>Your shop</h3>
+            <label class="field"><span>Business name</span>
+              <input class="input" name="business_name" required maxlength="200" autocomplete="organization" placeholder="e.g. Main Street Espresso" />
+            </label>
+            <label class="field"><span>Street address</span>
+              <input class="input" name="address" required maxlength="300" autocomplete="street-address" placeholder="123 Main St, Arlington, WA" />
+            </label>
+            <label class="field"><span>Website <span class="muted">(optional)</span></span>
+              <input class="input" name="website" maxlength="300" inputmode="url" autocomplete="url" placeholder="https://yourshop.com" />
+            </label>
+            <label class="field"><span>Hours <span class="muted">(optional)</span></span>
+              <input class="input" name="hours" maxlength="500" placeholder="Mon–Fri 7am–4pm" />
+            </label>
+            <label class="field"><span>Contact name</span>
+              <input class="input" name="contact_name" required maxlength="200" autocomplete="name" placeholder="Your full name" />
+            </label>
+            <label class="field"><span>Email</span>
+              <input class="input" type="email" name="email" required maxlength="254" autocomplete="email" inputmode="email" placeholder="you@yourshop.com" />
+            </label>
+            <label class="field"><span>Phone</span>
+              <input class="input" type="tel" name="phone" required maxlength="40" autocomplete="tel" inputmode="tel" placeholder="(360) 555-0100" />
+            </label>
+            <button class="btn btn-primary btn-lg" type="submit" id="pc-submit">Save &amp; continue to secure checkout →</button>
+            <div class="pc-secure">🔒 Payments processed securely by Stripe</div>
+            <div class="form-error mt-2" id="pc-error" role="alert"></div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="pc-section">
+      <div class="wrap-narrow">
+        <div class="pc-organizer">
+          <div class="avatar">HC</div>
+          <div>
+            <p class="eyebrow" style="margin-bottom:.15rem">Hometown Crawls</p>
+            <p><strong>Questions about your shop signup?</strong></p>
+            <p class="small muted">Email <a href="mailto:hello@hometowncrawls.com">hello@hometowncrawls.com</a></p>
+          </div>
+        </div>
+
+        <h2 class="mt-3" style="margin-top:2.5rem">Questions</h2>
+        <div class="faq pc-faq mt-2">
+          <details><summary>When is the crawl?</summary><p>The Arlington Holiday Coffee Crawl starts November 1, 2026 and runs through December 31. Crawlers can visit stops any time during your normal business hours.</p></details>
+          <details><summary>What is the $49.99 for?</summary><p>$49.99 for the 2026 holiday season, one-time. It covers your map pin, passport slot, counter card, and crawl marketing.</p></details>
+          <details><summary>Is the $49.99 a subscription?</summary><p>No. It is $49.99 for the 2026 holiday season, one-time. You will not be charged again for this season.</p></details>
+          <details><summary>What do I need to do at my shop?</summary><p>Display the QR sign we send you near the register, and let your team know the counter code. Guests scan or type the code to collect their stamp. You don't need to change your POS or add any hardware.</p></details>
+          <details><summary>Do guests have to buy something?</summary><p>Show some love if you can and buy something at the shop. A purchase is not required to get a stamp.</p></details>
+          <details><summary>What happens after I pay?</summary><p>You'll get a Stripe receipt right away. Then open your account and use the Store tab to add your address, photo, hours, and offer, and print your counter card when it is ready.</p></details>
+          <details><summary>Who do I contact with questions?</summary><p>Email <a href="mailto:hello@hometowncrawls.com" style="color:var(--green);text-decoration:underline">hello@hometowncrawls.com</a>, or reply to your Stripe receipt.</p></details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="pc-sticky" id="pc-sticky">
+    <div><strong>$49.99</strong><span>2026 holiday season, one-time</span></div>
+    <a class="btn btn-primary" href="#signup">Reserve spot</a>
+  </div>
+
+  <footer class="site-footer" id="site-footer"></footer>
+  <script src="/assets/config.js"></script>
+  <script src="/assets/site.js?v=2"></script>
+  <script>
+  (function () {
+    /* ---- Crawl config: edit here ---- */
+    var CRAWL = {
+      id: "arl-coffee-nov-2026",
+      // Stripe Payment Link for the $49.99 one-time entry.
+      paymentLink: "https://buy.stripe.com/8x214n6gm4Op89Ja9ngQE0e",
+      thanksUrl: "/arlington/coffee-crawl/thanks"
+    };
+
+    var env = window.__HC_ENV__ || {};
+    var form = document.getElementById("pc-form");
+    var btn = document.getElementById("pc-submit");
+    var err = document.getElementById("pc-error");
+
+    function uuid() {
+      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+        var r = (crypto.getRandomValues(new Uint8Array(1))[0] & 15);
+        return (c === "x" ? r : (r & 3) | 8).toString(16);
+      });
+    }
+    function showError(msg) { err.textContent = msg; err.classList.add("show"); }
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      err.classList.remove("show");
+      var fd = new FormData(form);
+      var row = {
+        id: uuid(),
+        crawl: CRAWL.id,
+        business_name: String(fd.get("business_name") || "").trim(),
+        address: String(fd.get("address") || "").trim(),
+        contact_name: String(fd.get("contact_name") || "").trim(),
+        email: String(fd.get("email") || "").trim().toLowerCase(),
+        phone: String(fd.get("phone") || "").trim()
+      };
+      var website = String(fd.get("website") || "").trim();
+      var hours = String(fd.get("hours") || "").trim();
+      if (website) row.website = website;
+      if (hours) row.hours = hours;
+      if (!row.business_name || !row.contact_name || !row.email || !row.phone || !row.address) {
+        return showError("Please fill in business name, street address, contact name, email, and phone.");
+      }
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(row.email)) return showError("Please enter a valid email address.");
+      if (row.address.length > 300) return showError("Street address needs to be 300 characters or fewer.");
+      if (website && !/^https?:\/\/\S+$/i.test(website)) return showError("Website must start with http:// or https://, or leave it blank.");
+      if (hours.length > 500) return showError("Hours need to be 500 characters or fewer.");
+
+      btn.disabled = true;
+      var label = btn.innerHTML;
+      btn.textContent = "Saving…";
+      try {
+        await insertSignup(row);
+        try { localStorage.setItem("hc-pc-signup", JSON.stringify({ id: row.id, business: row.business_name, email: row.email })); } catch (_) {}
+        if (CRAWL.paymentLink) {
+          btn.textContent = "Opening secure checkout…";
+          var u = new URL(CRAWL.paymentLink);
+          u.searchParams.set("client_reference_id", row.id);
+          u.searchParams.set("prefilled_email", row.email);
+          location.href = u.toString();
+        } else {
+          location.href = CRAWL.thanksUrl + "?saved=1";
+        }
+      } catch (ex) {
+        btn.disabled = false;
+        btn.innerHTML = label;
+        showError("Sorry, we couldn't save your signup. Please try again, or email hello@hometowncrawls.com.");
+      }
+    });
+
+    async function insertSignup(row) {
+      var body = Object.assign({}, row);
+      for (var attempt = 0; attempt < 6; attempt++) {
+        var res = await fetch(env.SUPABASE_URL + "/rest/v1/crawl_signups", {
+          method: "POST",
+          headers: {
+            "apikey": env.SUPABASE_ANON_KEY,
+            "Authorization": "Bearer " + env.SUPABASE_ANON_KEY,
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal"
+          },
+          body: JSON.stringify(body)
+        });
+        if (res.ok) return;
+        var text = "";
+        try { text = await res.text(); } catch (_) {}
+        var missing = text.match(/Could not find the '([a-z0-9_]+)' column/i)
+          || text.match(/column "([a-z0-9_]+)" of relation/i);
+        if (res.status === 400 && missing && Object.prototype.hasOwnProperty.call(body, missing[1])) {
+          delete body[missing[1]];
+          continue;
+        }
+        throw new Error("save failed (" + res.status + ")");
+      }
+      throw new Error("save failed");
+    }
+
+    // Mobile sticky price bar: show after the hero, hide once the signup section is visible
+    var sticky = document.getElementById("pc-sticky");
+    var signup = document.getElementById("signup");
+    function onScroll() {
+      var r = signup.getBoundingClientRect();
+      var inSignup = r.top < window.innerHeight && r.bottom > 0;
+      sticky.classList.toggle("show", window.scrollY > 420 && !inSignup);
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+  })();
+  </script>
+</body>
+</html>
