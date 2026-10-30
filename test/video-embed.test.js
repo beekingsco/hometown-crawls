@@ -68,6 +68,16 @@ test("embed markup uses the official src and not the pasted string", () => {
   assert.doesNotMatch(tiktok, /anthemcoffee/);
 });
 
+test("video url check is executable by the roles that write shop and crawl rows", () => {
+  const grant = read("migrations/20261030182000_grant_video_url_is_embeddable.sql");
+  assert.match(grant, /grant execute on function private\.video_url_is_embeddable\(text\) to authenticated/i);
+  assert.match(grant, /grant execute on function private\.video_url_is_embeddable\(text\) to anon/i);
+  assert.doesNotMatch(grant, /security definer/i);
+  assert.doesNotMatch(grant, /service_role/);
+  assert.doesNotMatch(grant, /grant execute on function private\.video_url_is_embeddable\(text\) to public/i);
+  assert.ok(migration.indexOf("revoke all on function private.video_url_is_embeddable(text) from public, anon, authenticated") >= 0);
+});
+
 test("migration stores video_url and keeps embeds off the anon write path", () => {
   assert.match(migration, /alter table public\.shop_listings\s+add column if not exists video_url text/);
   assert.match(migration, /alter table public\.crawls\s+add column if not exists video_url text/);
