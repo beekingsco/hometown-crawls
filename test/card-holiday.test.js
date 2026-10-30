@@ -33,7 +33,8 @@ test('15 live shops produce one printable page and preserve fields', () => {
   assert.equal((html.match(/class="holiday-sheet"/g)||[]).length,1);
   assert.equal((html.match(/class="holiday-stamp"/g)||[]).length,15);
   assert.equal((html.match(/class="holiday-key-row"/g)||[]).length,15);
-  for (const value of ['Sample Player','sample@example.invalid','Sample Cafe','Sample Counter','NO PURCHASE NECESSARY.','Each stamped stop is one prize entry. A finished card adds 3 bonus entries.','Completed paper cards must be turned in by end of day December 31, 2026 (Pacific).']) assert.ok(html.includes(value));
+  for (const value of ['Sample Player','sample@example.invalid','Sample Cafe','Sample Counter','Paper stamps count the same as stamps in the web app. You can switch to the web app anytime.','Completed paper cards must be turned in by end of day December 31, 2026 (Pacific).']) assert.ok(html.includes(value));
+  assert.doesNotMatch(html, /prize entry|bonus entries|NO PURCHASE NECESSARY/i);
   assert.match(html,/winter-hat-passport\.png/); assert.match(html,/wordmark-phone\.png/);
 });
 test('22 shops stay on one page and 70 paginate without losing or renumbering stamp/key pairs', () => {

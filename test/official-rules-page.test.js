@@ -28,61 +28,38 @@ const FILLED = {
 
 const STILL_TBA = ["start_time", "end_time", "time_zone", "num_winners", "prize_description", "total_arv"];
 
-test("official rules config fills the owner values and leaves prize and clock facts unannounced", () => {
+test("drawing stays off and stored owner values are not published as a drawing", () => {
+  assert.equal(config.drawing_offered, false);
   for (const [key, value] of Object.entries(FILLED)) assert.equal(config[key], value, key);
   assert.equal(config.registration_notice, "");
   for (const key of STILL_TBA) assert.equal(config[key], null, key);
   for (const key of Object.keys(config)) {
-    if (key in FILLED || key === "registration_notice" || STILL_TBA.includes(key)) continue;
+    if (key in FILLED || key === "registration_notice" || key === "drawing_offered" || STILL_TBA.includes(key)) continue;
     assert.fail("unexpected config key " + key);
   }
+  assert.doesNotMatch(page, /id="crawl-rules-config"/);
+  assert.doesNotMatch(page, /Monday, January 4, 2027|bonus entries|prize drawing|raffle|winner|To be announced/i);
+  assert.match(page, /This crawl does not include a drawing or awards\./);
 });
 
-test("embedded config matches config.json and drives every field", () => {
-  const embedded = page.match(/<script type="application\/json" id="crawl-rules-config">([\s\S]*?)<\/script>/);
-  assert.ok(embedded, "missing embedded config");
-  assert.deepEqual(JSON.parse(embedded[1]), config);
-
-  const fields = [...page.matchAll(/data-field="([a-z_]+)"[^>]*>([\s\S]*?)<\/(?:span|p)>/g)];
-  assert.ok(fields.length > 0);
-  const seen = new Set();
-  for (const [, key, raw] of fields) {
-    seen.add(key);
-    assert.ok(Object.prototype.hasOwnProperty.call(config, key), key);
-    const val = config[key];
-    if (key === "rules_contact") {
-      assert.equal(raw, `<a href="mailto:${val}">${val}</a>`, key);
-      continue;
-    }
-    if (val == null) assert.equal(raw, "To be announced", key);
-    else assert.equal(raw, String(val), key);
-  }
-  for (const key of Object.keys(config)) assert.ok(seen.has(key), "missing field " + key);
-  assert.match(page, /legal residents of <span data-field="eligible_states">the United States<\/span> who are at least <span data-field="min_age">18<\/span> years old/);
-  assert.match(page, /a court in <span data-field="venue_county">Kaufman<\/span> County, <span data-field="governing_state">Texas<\/span>/);
-});
-
-test("paper passports have a Pacific turn-in deadline and entry math stays 1 plus 3", () => {
-  assert.match(page, /Completed paper passports must be turned in by end of day December 31, 2026 \(Pacific\)\./);
-  assert.match(page, /<strong>1 entry for each Stop you check in at\.<\/strong>/);
-  assert.match(page, /you get <strong><span data-field="completion_bonus">3<\/span> bonus entries<\/strong>/);
-  assert.equal(config.completion_bonus, 3);
-});
-
-test("official rules page is indexable and has no raw placeholders", () => {
+test("official rules page is indexable, links privacy, and does not promise a drawing", () => {
   assert.doesNotMatch(page, /\{\{[^}]+\}\}/);
   assert.doesNotMatch(page, /noindex/i);
   assert.match(page, /content="index, follow"/);
   assert.match(page, /rel="canonical" href="https:\/\/www\.hometowncrawls\.com\/puyallup\/holiday-coffee-crawl\/rules"/);
   assert.match(page, /<a href="\/privacy">Hometown Crawls Privacy Policy<\/a>/);
-  assert.doesNotMatch(page, /Privacy policy link will go here/);
-  assert.doesNotMatch(page, /href="[^"]*privacy[-.]/i);
-  assert.match(page, /All prizes are owned, sourced and provided by the Sponsor\./);
-  assert.doesNotMatch(page, /does not supply prizes/i);
-  assert.doesNotMatch(page, /not responsible for prize delivery/i);
-  assert.doesNotMatch(page, /revenue share|splits each shop/i);
+  assert.match(page, /href="mailto:chris@beekings\.com"/);
+  assert.match(page, /Miracle Studios, Inc\./);
+  assert.doesNotMatch(page, /prize/i);
   assert.doesNotMatch(page, /hello@|privacy@hometowncrawls\.com/i);
   assert.doesNotMatch(page, /application\/ld\+json/);
+  assert.doesNotMatch(page, /revenue share|splits each shop/i);
+});
+
+test("paper passports keep the Pacific turn-in deadline without entry math", () => {
+  assert.match(page, /Completed paper cards must be turned in by end of day December 31, 2026 \(Pacific\)\./);
+  assert.match(page, /Paper stamps count the same as stamps in the web app\. You can switch to the web app anytime\./);
+  assert.doesNotMatch(page, /1 entry for each Stop|completion bonus|mail-in/i);
 });
 
 test("crawl page structured data does not state unannounced prize or clock facts", () => {
@@ -101,10 +78,12 @@ test("sitemap, rewrite, crawl-page link, and footer link point at the rules", ()
   const crawl = fs.readFileSync(path.join(root, "puyallup/holiday-coffee-crawl/index.html"), "utf8");
   const siteJs = fs.readFileSync(path.join(root, "assets/site.js"), "utf8");
   assert.match(sitemap, /https:\/\/www\.hometowncrawls\.com\/puyallup\/holiday-coffee-crawl\/rules/);
+  assert.doesNotMatch(sitemap, /https:\/\/www\.hometowncrawls\.com\/prizes/);
   assert.match(vercel, /"source": "\/puyallup\/holiday-coffee-crawl\/rules"/);
   assert.match(vercel, /"destination": "\/puyallup\/holiday-coffee-crawl\/rules\/index.html"/);
   assert.match(crawl, /href="\/puyallup\/holiday-coffee-crawl\/rules"/);
   assert.match(siteJs, /puyallup\/holiday-coffee-crawl\/rules/);
-  assert.match(crawl, /site\.js\?v=4/);
+  assert.doesNotMatch(siteJs, /prizes\.html/);
+  assert.match(crawl, /site\.js\?v=5/);
   assert.match(siteJs, /link\("privacy", "Privacy"\)/);
 });

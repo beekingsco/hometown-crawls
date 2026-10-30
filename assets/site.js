@@ -100,7 +100,6 @@
             <h4>Explore</h4>
             <a href="${base}puyallup/holiday-coffee-crawl">Holiday coffee trail</a>
             <a href="${base}map.html">Map</a>
-            <a href="${base}prizes.html">Prizes</a>
             <a href="${base}rules.html">Rules</a>
             ${link("puyallup/holiday-coffee-crawl/rules", "Official Rules")}
             ${link("privacy", "Privacy")}

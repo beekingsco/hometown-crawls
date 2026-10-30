@@ -58,6 +58,8 @@
   }
 
   function paintEntries(shopCount, stampedCount) {
+    var card = document.getElementById("entries-card");
+    if (card && card.hidden) return;
     var line = document.getElementById("entries-line");
     if (!line) return;
     var stops = stopsCount(shopCount);
@@ -119,7 +121,7 @@
     shownActionId = bonus.id || "";
     var copy = document.getElementById("bonus-copy");
     if (copy) {
-      copy.textContent = bonus.label + (bonus.entries ? " · " + bonus.entries + " entries." : "") + " Optional, and it does not change the stamp.";
+      copy.textContent = bonus.label + " Optional, and it does not change the stamp.";
     }
     var link = document.getElementById("bonus-link");
     if (link) {
@@ -338,7 +340,7 @@
     }
     if (input) input.value = "";
     consent.checked = false;
-    note(okId, errId, "Uploaded. It stays pending until an organizer or contributor approves it. It does not add a prize entry, and your stamp is unchanged.", "");
+    note(okId, errId, "Uploaded. It stays pending until an organizer or contributor approves it. Your stamp is unchanged.", "");
     loadLivePhotos();
   }
 

@@ -76,7 +76,9 @@ test("copy uses paid locations, golden rules, three steps, and 50 meters", () =>
   assert.doesNotMatch(read("index.html"), /Four simple steps/);
   assert.match(holiday, /Sign in with your email and join the crawl\./);
   assert.match(holiday, /Visit shops and scan or enter the code to stamp your passport\./);
-  assert.match(holiday, /Fill your passport to enter the prize drawing\./);
+  assert.match(holiday, /Fill your passport\./);
+  assert.match(holiday, /Paper stamps count the same as stamps in the web app\. You can switch to the web app anytime\./);
+  assert.doesNotMatch(holiday, /prize drawing|Prizes are TBA|enter the prize|completer prize/i);
   for (const rel of ["index.html", "puyallup/holiday-coffee-crawl/index.html", "rules.html", "faqs.html", "organize.html"]) {
     assert.doesNotMatch(read(rel), /A few plain rules/);
   }
@@ -162,7 +164,7 @@ test("guest entries, bonus actions, and photo consent are present", () => {
   assert.match(holiday, /guest-hub\.js/);
   assert.match(holiday, /id="crawl-photo-form"/);
   assert.match(holiday, /<h3>Show us a photo<\/h3>/);
-  assert.match(holiday, /does not add a prize entry/);
+  assert.doesNotMatch(holiday, /prize entry/);
   assert.match(holiday, /does not change your stamp/);
   assert.match(holiday, /PNG, JPG, or WebP, up to 5 MB/);
   assert.match(holiday, /id="crawl-photo-consent"/);

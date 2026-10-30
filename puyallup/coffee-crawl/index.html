@@ -46,6 +46,13 @@
       width: 26px; height: 26px; border-radius: 50%; background: var(--green); color: #fff;
       display: grid; place-items: center; font-size: .8rem;
     }
+    .pc-crawler-banner {
+      background: var(--green); color: #f4efe6;
+      padding: .85rem 0;
+    }
+    .pc-crawler-banner .wrap { display: flex; flex-wrap: wrap; gap: .75rem 1.25rem; align-items: center; justify-content: space-between; }
+    .pc-crawler-banner p { margin: 0; font-weight: 600; }
+    .pc-crawler-banner .btn { background: #fff; color: var(--green); }
     .pc-cta-row { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1.4rem; align-items: center; }
     .pc-cta-row .note { font-size: .88rem; color: var(--muted); }
     .pc-photo {
@@ -125,6 +132,12 @@
 <body>
   <header class="site-header" id="site-header"></header>
   <main>
+    <div class="pc-crawler-banner">
+      <div class="wrap">
+        <p>Here to collect stamps? This page is shop signup.</p>
+        <a class="btn btn-primary" href="/puyallup/holiday-coffee-crawl">Crawling? Get your passport</a>
+      </div>
+    </div>
     <section class="pc-hero">
       <div class="wrap pc-hero-grid">
         <div>
@@ -240,7 +253,7 @@
 
   <footer class="site-footer" id="site-footer"></footer>
   <script src="/assets/config.js"></script>
-  <script src="/assets/site.js?v=2"></script>
+  <script src="/assets/site.js?v=5"></script>
   <script>
   (function () {
     /* ---- Crawl config: edit here ---- */

@@ -26,8 +26,8 @@ Open http://localhost:8080
 
 | Path | Crawl id | Shop seat |
 |------|----------|-----------|
-| `/puyallup/holiday-coffee-crawl` | `puy-coffee` | $49.99 for the 2026 holiday season, one-time |
-| `/puyallup/coffee-crawl` | shop signup | same fee; inserts `crawl_signups` |
+| `/puyallup/holiday-coffee-crawl` | `puy-coffee` | guest passport. `/puyallup` redirects here |
+| `/puyallup/coffee-crawl` | shop signup | $49.99 for the 2026 holiday season, one-time; inserts `crawl_signups`. Guests who land here see “Crawling? Get your passport” |
 | `/puyallupwa/pub/` | `puy-pub` | hidden until 2027; redirects to the holiday coffee trail; noindex; not in the sitemap |
 
 ## Supabase
