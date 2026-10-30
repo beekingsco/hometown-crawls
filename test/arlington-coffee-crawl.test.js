@@ -63,13 +63,28 @@ test("Vercel rewrites serve the Arlington signup and thanks pages", () => {
   );
 });
 
+test("post-pay manage links use the account page", () => {
+  for (const rel of [
+    "puyallup/coffee-crawl/thanks/index.html",
+    "arlington/coffee-crawl/thanks/index.html",
+    "emails/shop-welcome.html",
+    "api/stripe-webhook.js",
+  ]) {
+    const text = read(rel);
+    assert.match(text, /https:\/\/www\.hometowncrawls\.com\/account|href="\/account"/);
+    assert.doesNotMatch(text, /coffee-crawl\/shop|holiday-coffee-crawl/);
+    assert.doesNotMatch(text, /—/);
+  }
+});
+
 test("Puyallup shop signup is unchanged", () => {
   const crawl = crawlConfig(puyallup);
   assert.equal(crawl.id, "puy-coffee-nov-2026");
   assert.equal(crawl.paymentLink, "https://buy.stripe.com/8x214n6gm4Op89Ja9ngQE0e");
   assert.equal(crawl.thanksUrl, "/puyallup/coffee-crawl/thanks");
   assert.match(puyallup, /coffee wonderland of Puyallup/);
-  assert.match(puyallupThanks, /href="\/puyallup\/coffee-crawl\/shop"/);
+  assert.match(puyallupThanks, /href="\/account"/);
+  assert.doesNotMatch(puyallupThanks, /coffee-crawl\/shop/);
   assert.match(puyallupThanks, /Puyallup Holiday Coffee Crawl/);
 });
 
