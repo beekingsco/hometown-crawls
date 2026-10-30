@@ -138,6 +138,9 @@
       }).join("");
       people.innerHTML = mine + pending;
     }
+    if (window.HCFeatures && HCFeatures.syncOrganizer) {
+      HCFeatures.syncOrganizer({ crawlId: crawl.id, role: person.role, demo: true });
+    }
   }
 
   document.addEventListener("DOMContentLoaded", function () {
@@ -318,6 +321,9 @@
           return '<article class="record-card"><b class="record-name">' + esc(row.name || row.email) + '</b><p class="record-email">' +
             esc(row.email) + '</p><span class="chip">' + esc(row.role) + "</span></article>";
         }).join("") || '<p class="muted small">No teammates loaded.</p>';
+      }
+      if (window.HCFeatures && HCFeatures.syncOrganizer) {
+        HCFeatures.syncOrganizer({ crawlId: crawl.crawl_id, role: crawl.role || "", demo: false });
       }
     }
 
