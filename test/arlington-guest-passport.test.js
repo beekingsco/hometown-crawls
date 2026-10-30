@@ -115,6 +115,18 @@ test("Arlington guest passport is its own page and never names Puyallup", () => 
   assert.ok(crawlSet > -1 && crawlSet < hubAt);
 });
 
+test("Arlington guest copy fills the passport without promising a prize", () => {
+  assert.match(page, /<h3>Fill your passport\.<\/h3>/);
+  assert.match(page, /A photo does not change your stamp\./);
+  assert.doesNotMatch(page, /prize drawing|prize entry|Prizes are TBA|What are the prizes\?/i);
+  assert.match(puyallup, /Fill your passport to enter the prize drawing\./);
+  assert.match(puyallup, /What are the prizes\?/);
+  assert.match(puyallup, /does not add a prize entry/);
+  assert.match(guest, /It does not add a prize entry, and your stamp is unchanged\./);
+  assert.match(guest, /guestCrawl\(\) === "arl-coffee"/);
+  assert.match(guest, /It does not change your stamp\./);
+});
+
 test("Puyallup holiday passport is unchanged", () => {
   assert.match(puyallup, /var CRAWL = "puy-coffee"/);
   assert.match(puyallup, /You're on the Puyallup Holiday Coffee Crawl passport\./);
