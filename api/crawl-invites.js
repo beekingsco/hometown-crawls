@@ -94,7 +94,7 @@ function inviteMail({ crawlName, city, price, link }) {
     `You've been invited to a crawl.`,
     ``,
     `${name}${where} has a seat for your shop.`,
-    `Each shop seat is ${seat}. There is no free shop.`,
+    `Each shop seat is ${seat}.`,
     ``,
     `Open your join link:`,
     link,
@@ -117,7 +117,7 @@ function inviteMail({ crawlName, city, price, link }) {
             <td style="padding:28px 24px;font-family:Georgia,'Times New Roman',serif;color:#302119;">
               <p style="margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#1f3a24;font-weight:700;">Hometown Crawls</p>
               <h1 style="margin:0 0 16px;font-size:28px;line-height:1.15;">You've been invited to a crawl.</h1>
-              <p style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.5;">${safeName}${safeWhere} has a seat for your shop. Each shop seat is <strong>${safeSeat}</strong>. There is no free shop.</p>
+              <p style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.5;">${safeName}${safeWhere} has a seat for your shop. Each shop seat is <strong>${safeSeat}</strong>.</p>
               <p style="margin:0 0 18px;">
                 <a href="${safeLink}" style="display:inline-block;background:#1f3a24;color:#fffdf8;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-weight:700;padding:12px 18px;border-radius:999px;">Open your join link</a>
               </p>

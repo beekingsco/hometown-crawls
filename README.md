@@ -18,7 +18,7 @@ Open http://localhost:8080
 
 ## Organizer self-serve
 
-Signed-in organizers start a crawl at `/organize`, then paste shop emails on the Organizer tab in `/account`. Send invites uses Resend. Each shop gets a unique link at `/crawls/join?invite=…`. A seat is $49.99. There is no free shop. Stripe Checkout is not built: save a Payment Link on the crawl, or share the signup URL.
+Signed-in organizers start a crawl at `/organize`, then paste shop emails on the Organizer tab in `/account`. Send invites uses Resend. Each shop gets a unique link at `/crawls/join?invite=…`. A seat is $49.99. Stripe Checkout is not built: save a Payment Link on the crawl, or share the signup URL.
 
 Preview deploys must point `SUPABASE_URL` and `SUPABASE_ANON_KEY` at a staging project. They must not use the live Puyallup database. Apply `migrations/20261030160000_organizer_self_serve.sql` on that staging database before testing. The full checklist is `docs/organizer-self-serve.md`.
 

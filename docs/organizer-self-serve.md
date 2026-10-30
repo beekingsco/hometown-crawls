@@ -2,7 +2,7 @@
 
 Organizers start a crawl without emailing Chris, then invite shops. This is for the Vercel preview of the pull request. Do not merge it to production, and do not apply the migration to the live Puyallup Supabase project, until Chris has tested it on staging.
 
-A shop seat is **$49.99**. There is no free shop. Stripe Checkout is not part of this version.
+A shop seat is **$49.99**. Stripe Checkout is not part of this version.
 
 ## What the preview does
 

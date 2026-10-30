@@ -18,7 +18,7 @@
     <div class="wrap-narrow page-hero">
       <p class="eyebrow">Shop seat</p>
       <h1 id="join-title">Join this crawl</h1>
-      <p class="lead" id="join-lead">Each shop seat is $49.99. There is no free shop.</p>
+      <p class="lead" id="join-lead">Each shop seat is $49.99.</p>
       <p class="muted" id="join-meta"></p>
     </div>
     <div class="wrap-narrow">
@@ -105,7 +105,7 @@
         ? "Reserve your shop's seat on this crawl in " + place + "."
         : "Reserve your shop's seat on this crawl.";
       document.getElementById("join-meta").textContent = dates(row);
-      document.getElementById("join-price").textContent = money(row.price_cents) + " for this crawl, one-time. There is no free shop. A shop stays off the map until the seat is paid and an owner or organizer saves a map pin.";
+      document.getElementById("join-price").textContent = money(row.price_cents) + " for this crawl, one-time. A shop stays off the map until the seat is paid and an owner or organizer saves a map pin.";
       if (row.invite_email) document.getElementById("join-email").value = row.invite_email;
       var note = document.getElementById("join-pay-note");
       note.textContent = row.payment_link

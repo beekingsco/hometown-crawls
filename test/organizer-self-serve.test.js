@@ -106,7 +106,8 @@ test("pages create a crawl and join by crawl id or invite token", () => {
   assert.match(join, /\/rest\/v1\/crawl_signups/);
   assert.match(join, /client_reference_id/);
   assert.match(join, /\$49\.99/);
-  assert.match(join, /no free shop/i);
+  assert.match(organize, /\$49\.99/);
+  assert.doesNotMatch(organize + join + account + invitesApi, /no free shop/i);
   assert.match(account, /id="shop-invite-send"/);
   assert.match(account, /id="org-shop-pin"/);
   assert.match(panel, /organizer_save_shop_invites/);
@@ -165,7 +166,7 @@ test("invite mail uses a unique join link and does not echo the token in the API
   assert.match(mail.text, /You've been invited to a crawl/);
   assert.match(mail.html, /https:\/\/preview\.example\.com\/crawls\/join\?invite=token-ada/);
   assert.match(mail.text, /\$49\.99/);
-  assert.match(mail.text, /no free shop/i);
+  assert.doesNotMatch(mail.text + mail.html, /no free shop/i);
 
   const { emails, marked, deps: sendDeps } = deps();
   const result = await handleRequest(

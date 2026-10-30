@@ -7,7 +7,7 @@
 -- New shop signups on every crawl, including Puyallup, start hidden.
 -- An owner or organizer can show a shop on the passport only after it has a
 -- map pin. Shops that are already visible stay visible.
--- A seat stays $49.99 (amount_cents 4999). There is no free shop.
+-- A seat stays $49.99 (amount_cents 4999).
 --
 -- Rollback (run only after review; not automatic):
 --   drop function if exists public.organizer_create_crawl(text, text, date, date, text, text, text, text, double precision, double precision);
