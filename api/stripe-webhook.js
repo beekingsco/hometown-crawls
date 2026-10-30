@@ -137,8 +137,23 @@ function escapeHtml(value) {
     .replace(/"/g, "&quot;");
 }
 
-function buildEmail({ crawlName, dates, amount, businessName }) {
+function crawlPublicUrls(crawl, appOrigin) {
+  const origin = String(appOrigin || "https://www.hometowncrawls.com").replace(/\/$/, "");
+  if (!crawl || crawl.id === "puy-coffee" || crawl.signup_key === "puy-coffee-nov-2026") {
+    return { shopPortalUrl: SHOP_PORTAL_URL, mapUrl: MAP_URL };
+  }
+  const id = encodeURIComponent(crawl.id || "");
+  return {
+    shopPortalUrl: `${origin}/account?tab=store`,
+    mapUrl: `${origin}/crawls/join?crawl=${id}`,
+  };
+}
+
+function buildEmail({ crawlName, dates, amount, businessName, shopPortalUrl, mapUrl }) {
   const name = crawlName || "Puyallup Holiday Coffee Crawl";
+  const portal = shopPortalUrl || SHOP_PORTAL_URL;
+  const map = mapUrl || MAP_URL;
+  const hometownTrail = portal === SHOP_PORTAL_URL && map === MAP_URL;
   const shop = businessName ? ` for ${escapeHtml(businessName)}` : "";
   const safeName = escapeHtml(name);
   const safeDates = escapeHtml(dates);
@@ -151,9 +166,11 @@ function buildEmail({ crawlName, dates, amount, businessName }) {
     `The crawl runs ${dates}.`,
     ``,
     `Next step: sign in to the shop portal and add a photo and your shop details:`,
-    SHOP_PORTAL_URL,
+    portal,
     ``,
-    `Your shop will appear on the map at ${MAP_URL}.`,
+    hometownTrail
+      ? `Your shop will appear on the map at ${map}.`
+      : `Your shop will appear on the crawl page at ${map}. A shop stays hidden until it is paid and has a map pin.`,
   ].join("\n");
 
   const html = `<!DOCTYPE html>
@@ -171,9 +188,11 @@ function buildEmail({ crawlName, dates, amount, businessName }) {
               <p style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#2c2a24;">The crawl runs <strong>${safeDates}</strong>. Crawlers can stop in during your normal business hours.</p>
               <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#2c2a24;">Next step: sign in to the shop portal and add a photo and your shop details.</p>
               <p style="margin:0 0 22px;">
-                <a href="${SHOP_PORTAL_URL}" style="display:inline-block;background:#1f3a24;color:#f4efe6;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-weight:700;padding:12px 18px;border-radius:999px;">Open the shop portal</a>
+                <a href="${portal}" style="display:inline-block;background:#1f3a24;color:#f4efe6;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-weight:700;padding:12px 18px;border-radius:999px;">Open the shop portal</a>
               </p>
-              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#2c2a24;">Your shop will appear on the map at <a href="${MAP_URL}" style="color:#1f3a24;">${MAP_URL.replace("https://", "")}</a>.</p>
+              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#2c2a24;">${hometownTrail
+                ? `Your shop will appear on the map at <a href="${map}" style="color:#1f3a24;">${map.replace("https://", "")}</a>.`
+                : `Your shop will appear on the crawl page at <a href="${map}" style="color:#1f3a24;">${map.replace("https://", "")}</a> after it is paid and has a map pin.`}</p>
             </td>
           </tr>
         </table>
@@ -437,11 +456,14 @@ async function handleEvent(event, deps) {
   if (wasUnpaid(signup, listing)) {
     const to = customerEmail(session, signup);
     if (to) {
+      const urls = crawlPublicUrls(crawl, deps.appOrigin);
       const email = buildEmail({
         crawlName: crawl && crawl.name,
         dates: formatCrawlDates(crawl && crawl.starts_at, crawl && crawl.ends_at),
         amount: formatAmount(amountCents, session.currency),
         businessName: signup.business_name,
+        shopPortalUrl: urls.shopPortalUrl,
+        mapUrl: urls.mapUrl,
       });
       await sendConfirmation(deps, { to, email, sessionId: session.id });
     } else {
@@ -472,6 +494,7 @@ function envDeps() {
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
     allowlist: process.env.HC_PAYMENT_LINK_IDS || "",
     resendKey: process.env.RESEND_API_KEY,
+    appOrigin: process.env.HC_APP_URL || "https://www.hometowncrawls.com",
     fetch,
   };
 }
@@ -528,6 +551,7 @@ module.exports._test = {
   formatCrawlDates,
   escapeHtml,
   buildEmail,
+  crawlPublicUrls,
   wasUnpaid,
   readRawBody,
   canonicalUrl,

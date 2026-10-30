@@ -273,6 +273,22 @@
       return crawls.filter(function (row) { return row.crawl_id === active; })[0] || crawls[0];
     }
 
+    function canManage() {
+      var role = (current() && current().role) || "";
+      return role === "owner" || role === "organizer";
+    }
+
+    function inviteNote(id, text, bad) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = text || "";
+      el.classList.toggle("show", !!text);
+      if (!bad && text) {
+        var other = document.getElementById(id === "shop-invite-ok" ? "shop-invite-err" : "shop-invite-ok");
+        if (other) { other.textContent = ""; other.classList.remove("show"); }
+      }
+    }
+
     function renderLive() {
       var crawl = current();
       if (!crawl) return;
@@ -293,7 +309,20 @@
       var video = document.getElementById("org-video");
       if (video && document.activeElement !== video) video.value = crawl.video_url || "";
       var who = document.getElementById("org-who");
-      if (who) who.textContent = (crawl.role || "organizer") + " · shop fees are not split";
+      if (who) who.textContent = (crawl.role || "organizer") + " · shop fees are not split · seats are $49.99";
+      var signup = document.getElementById("shop-signup-url");
+      if (signup) {
+        var href = location.origin + "/crawls/join?crawl=" + encodeURIComponent(crawl.crawl_id);
+        signup.textContent = "";
+        var label = document.createElement("span");
+        label.textContent = "Shop signup URL: ";
+        var link = document.createElement("a");
+        link.href = href;
+        link.textContent = href;
+        signup.append(label, link);
+      }
+      var payment = document.getElementById("org-payment-link");
+      if (payment && document.activeElement !== payment) payment.value = crawl.payment_link || "";
       var scans = shops.reduce(function (sum, row) { return sum + Number(row.scans || 0); }, 0);
       var paid = shops.filter(function (row) { return row.is_paid; }).length;
       ["org-total-stores", "org-total-paid", "org-total-unpaid", "org-total-scans"].forEach(function (id, index) {
@@ -305,11 +334,14 @@
       if (list) {
         list.innerHTML = shops.map(function (row) {
           var pay = row.is_paid ? '<span class="pill pill-ok">Paid</span>' : '<span class="pill pill-wait">Unpaid</span>';
+          var toggle = canManage()
+            ? ""
+            : " disabled title=\"Only the crawl owner or an organizer can show or hide a shop\"";
           return '<article class="record-card"><b class="record-name">' + esc(row.display_name) + '</b><p class="record-email">' +
             esc(row.scans || 0) + ' scans</p><div class="record-chips">' + pay +
             '</div><div class="row mt-1"><button class="btn btn-soft" type="button" data-edit-shop="' + esc(row.listing_id) +
             '">Edit</button></div><label class="check"><input type="checkbox" data-listing="' +
-            esc(row.listing_id) + '"' + (row.is_visible ? " checked" : "") + "> Show on the passport</label></article>";
+            esc(row.listing_id) + '"' + (row.is_visible ? " checked" : "") + toggle + "> Show on the passport</label></article>";
         }).join("") || '<p class="muted small">No stores yet.</p>';
       }
       var people = document.getElementById("co-list");
@@ -525,7 +557,17 @@
           p_listing: box.getAttribute("data-listing"),
           p_visible: box.checked
         });
-        if (saved.error) box.checked = !box.checked;
+        if (saved.error) {
+          box.checked = !box.checked;
+          var storeErr = document.getElementById("org-stores-err");
+          if (storeErr) {
+            storeErr.textContent = saved.error.message || "Could not update that shop.";
+            storeErr.classList.add("show");
+          }
+        } else {
+          var cleared = document.getElementById("org-stores-err");
+          if (cleared) { cleared.textContent = ""; cleared.classList.remove("show"); }
+        }
       });
     }
 
@@ -753,5 +795,205 @@
         if (ok) { ok.textContent = "Co-organizer added. No email was sent. They sign in with that address."; ok.classList.add("show"); }
       });
     }
+
+    var invites = [];
+    var planned = [];
+
+    function paintInvites() {
+      var list = document.getElementById("shop-invite-list");
+      if (!list) return;
+      list.replaceChildren();
+      if (!invites.length) {
+        var empty = document.createElement("p");
+        empty.className = "muted small";
+        empty.textContent = "No shop invites yet.";
+        list.append(empty);
+      } else invites.forEach(function (row) {
+        var article = document.createElement("article");
+        article.className = "record-card";
+        var name = document.createElement("b");
+        name.className = "record-name";
+        name.textContent = row.email;
+        var detail = document.createElement("p");
+        detail.className = "small";
+        var href = location.origin + "/crawls/join?invite=" + encodeURIComponent(row.token || "");
+        detail.textContent = (row.status || "pending") + (row.sent_at ? " · sent" : "");
+        var link = document.createElement("a");
+        link.href = href;
+        link.textContent = href;
+        link.style.overflowWrap = "anywhere";
+        article.append(name, detail, link);
+        list.append(article);
+      });
+      var plannedEl = document.getElementById("planned-shops");
+      if (!plannedEl) return;
+      plannedEl.replaceChildren();
+      if (!planned.length) return;
+      var heading = document.createElement("p");
+      heading.className = "muted small";
+      heading.textContent = "Shop names from the start form. They are not seats until someone joins and pays.";
+      plannedEl.append(heading);
+      planned.forEach(function (row) {
+        var item = document.createElement("p");
+        item.textContent = row.name;
+        plannedEl.append(item);
+      });
+    }
+
+    async function loadInvites() {
+      invites = [];
+      planned = [];
+      if (!active || demoOn()) {
+        paintInvites();
+        return;
+      }
+      if (canManage()) {
+        var listed = await HCCrawl.client().rpc("organizer_list_shop_invites", { p_crawl: active });
+        if (!listed.error) invites = listed.data || [];
+      }
+      var names = await HCCrawl.client().rpc("organizer_list_planned_shops", { p_crawl: active });
+      if (!names.error) planned = names.data || [];
+      paintInvites();
+    }
+
+    async function geocodeAddress(query) {
+      var response = await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=us&q=" + encodeURIComponent(query), { headers: { Accept: "application/json" } });
+      if (!response.ok) throw new Error("Could not find that address.");
+      var hits = await response.json();
+      var hit = Array.isArray(hits) ? hits[0] : null;
+      var lat = hit ? Number(hit.lat) : NaN;
+      var lng = hit ? Number(hit.lon) : NaN;
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) throw new Error("Could not find that address.");
+      return { lat: lat, lng: lng };
+    }
+
+    var pinButton = document.getElementById("org-shop-pin");
+    if (pinButton) {
+      pinButton.addEventListener("click", async function () {
+        if (demoOn()) return;
+        shopMessage("org-shop-ok", "");
+        shopMessage("org-shop-err", "");
+        if (!editing) { shopMessage("org-shop-err", "Choose a shop from the list."); return; }
+        var address = document.getElementById("org-shop-address").value.trim();
+        var postal = document.getElementById("org-shop-postal").value.trim();
+        if (!address) { shopMessage("org-shop-err", "Add a street address before saving a map pin."); return; }
+        var writes = HCCrawl.selfServeWritesAllowed();
+        if (!writes.ok) { shopMessage("org-shop-err", writes.reason); return; }
+        try {
+          var place = await geocodeAddress([address, postal].filter(Boolean).join(", "));
+          var saved = await HCCrawl.client().rpc("shop_set_pin", {
+            p_listing: editing.listing_id,
+            p_lat: place.lat,
+            p_lng: place.lng
+          });
+          if (saved.error) throw saved.error;
+          shopMessage("org-shop-ok", "Map pin saved. The shop stays hidden until an owner or organizer shows it on the passport.");
+        } catch (e) {
+          shopMessage("org-shop-err", (e && e.message) || "Could not save that map pin.");
+        }
+      });
+    }
+
+    var paymentSave = document.getElementById("org-payment-save");
+    if (paymentSave) {
+      paymentSave.addEventListener("click", async function () {
+        if (demoOn()) return;
+        inviteNote("shop-invite-ok", "");
+        inviteNote("shop-invite-err", "");
+        if (!canManage()) {
+          inviteNote("shop-invite-err", "Only the crawl owner or an organizer can save the payment link.", true);
+          return;
+        }
+        var writes = HCCrawl.selfServeWritesAllowed();
+        if (!writes.ok) { inviteNote("shop-invite-err", writes.reason, true); return; }
+        var link = document.getElementById("org-payment-link").value.trim();
+        var saved = await HCCrawl.client().rpc("organizer_set_payment_link", {
+          p_crawl: active,
+          p_link: link
+        });
+        if (saved.error) {
+          inviteNote("shop-invite-err", saved.error.message || "Could not save that payment link.", true);
+          return;
+        }
+        var crawl = current();
+        if (crawl) crawl.payment_link = saved.data || link || null;
+        inviteNote("shop-invite-ok", link ? "Payment link saved. Shop signup will open it after the seat is stored." : "Payment link cleared. Share the signup URL until you add one.");
+      });
+    }
+
+    var inviteSave = document.getElementById("shop-invite-save");
+    if (inviteSave) {
+      inviteSave.addEventListener("click", async function () {
+        if (demoOn()) return;
+        inviteNote("shop-invite-ok", "");
+        inviteNote("shop-invite-err", "");
+        if (!canManage()) {
+          inviteNote("shop-invite-err", "Only the crawl owner or an organizer can invite shops.", true);
+          return;
+        }
+        var writes = HCCrawl.selfServeWritesAllowed();
+        if (!writes.ok) { inviteNote("shop-invite-err", writes.reason, true); return; }
+        var emails = document.getElementById("shop-invite-emails").value.trim();
+        var saved = await HCCrawl.client().rpc("organizer_save_shop_invites", {
+          p_crawl: active,
+          p_emails: emails
+        });
+        if (saved.error) {
+          inviteNote("shop-invite-err", saved.error.message || "Could not save those emails.", true);
+          return;
+        }
+        document.getElementById("shop-invite-emails").value = "";
+        await loadInvites();
+        inviteNote("shop-invite-ok", "Invite list saved. Nothing has been emailed until you send invites.");
+      });
+    }
+
+    var inviteSend = document.getElementById("shop-invite-send");
+    if (inviteSend) {
+      inviteSend.addEventListener("click", async function () {
+        if (demoOn()) return;
+        inviteNote("shop-invite-ok", "");
+        inviteNote("shop-invite-err", "");
+        if (!canManage()) {
+          inviteNote("shop-invite-err", "Only the crawl owner or an organizer can send shop invites.", true);
+          return;
+        }
+        var writes = HCCrawl.selfServeWritesAllowed();
+        if (!writes.ok) { inviteNote("shop-invite-err", writes.reason, true); return; }
+        var session = await HCCrawl.getSession();
+        var token = session && session.access_token;
+        if (!token) { inviteNote("shop-invite-err", "Sign in again, then send the invites.", true); return; }
+        inviteSend.disabled = true;
+        try {
+          var response = await fetch("/api/crawl-invites", {
+            method: "POST",
+            headers: {
+              Authorization: "Bearer " + token,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ crawlId: active })
+          });
+          var body = {};
+          try { body = await response.json(); } catch (ignore) {}
+          if (!response.ok || body.ok === false) {
+            inviteNote("shop-invite-err", body.error || "Could not send those invites.", true);
+          } else if (!body.sent) {
+            inviteNote("shop-invite-ok", body.message || "No unsent invites.");
+          } else {
+            inviteNote("shop-invite-ok", "Sent " + body.sent + " invite" + (body.sent === 1 ? "" : "s") + (body.failed ? ". " + body.failed + " failed." : "."));
+          }
+          await loadInvites();
+        } catch (e) {
+          inviteNote("shop-invite-err", "Could not reach the invite sender.", true);
+        }
+        inviteSend.disabled = false;
+      });
+    }
+
+    var originalLoad = loadShops;
+    loadShops = async function () {
+      await originalLoad();
+      await loadInvites();
+    };
   });
 })();

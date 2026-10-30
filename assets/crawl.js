@@ -31,11 +31,57 @@
     return sb;
   }
 
+  let serverConfigReady = null;
+
+  function whenConfigured() {
+    if (!serverConfigReady) {
+      serverConfigReady = fetch("/api/public-config", { headers: { Accept: "application/json" } })
+        .then(function (res) { return res.ok ? res.json() : null; })
+        .then(function (data) {
+          const cfg = data && typeof data === "object" ? data : { configured: false, preview: false };
+          window.__HC_SERVER_CONFIG__ = cfg;
+          if (cfg.configured && cfg.supabaseUrl && cfg.supabaseAnonKey) {
+            env.SUPABASE_URL = cfg.supabaseUrl;
+            env.SUPABASE_ANON_KEY = cfg.supabaseAnonKey;
+            if (cfg.appUrl) env.APP_URL = cfg.appUrl;
+            sb = null;
+          }
+          return cfg;
+        })
+        .catch(function () {
+          window.__HC_SERVER_CONFIG__ = { configured: false, preview: false };
+          return window.__HC_SERVER_CONFIG__;
+        });
+    }
+    return serverConfigReady;
+  }
+
+  function selfServeWritesAllowed() {
+    const cfg = window.__HC_SERVER_CONFIG__ || {};
+    const host = location.hostname;
+    const productionSite = host === "www.hometowncrawls.com" || host === "hometowncrawls.com";
+    const url = String((cfg.configured && cfg.supabaseUrl) || "");
+    if (!productionSite && !cfg.configured) {
+      return {
+        ok: false,
+        reason: "Set SUPABASE_URL and SUPABASE_ANON_KEY on this preview for a staging Supabase project. This page will not write to the live Puyallup database."
+      };
+    }
+    if (!productionSite && url.indexOf("tatwbjuwufeqynpufodq") !== -1) {
+      return {
+        ok: false,
+        reason: "This preview is pointed at the live Puyallup Supabase project. Use a separate staging project before creating crawls or sending invites."
+      };
+    }
+    return { ok: true };
+  }
+
   function demoMode() {
     return new URLSearchParams(location.search).get("demo") === "1";
   }
 
   async function ensureAuth() {
+    await whenConfigured();
     const c = client();
     if (!c) throw new Error("Supabase not loaded");
     const { data } = await c.auth.getSession();
@@ -45,6 +91,7 @@
   }
 
   async function getSession() {
+    await whenConfigured();
     const c = client();
     if (!c) return null;
     const { data } = await c.auth.getSession();
@@ -71,6 +118,7 @@
   }
 
   async function magicLink(email) {
+    await whenConfigured();
     const c = client();
     if (!c) throw new Error("Supabase not loaded");
     const { error } = await c.auth.signInWithOtp({
@@ -483,6 +531,8 @@
     ready,
     ensureAuth,
     getSession,
+    whenConfigured,
+    selfServeWritesAllowed,
     authRedirect,
     watchSession,
     magicLink,

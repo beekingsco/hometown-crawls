@@ -7,6 +7,7 @@
     if (path === "/puyallup" || path.startsWith("/puyallup/")) return "/";
     // Nested account pages (/account/store/help) need root-absolute links.
     if (path.startsWith("/account/")) return "/";
+    if (path.startsWith("/crawls/")) return "/";
     if (path.includes("/puyallupwa/")) return "../../";
     if (path.includes("/shops/") || path.includes("/guides/")) return "../";
     return "";

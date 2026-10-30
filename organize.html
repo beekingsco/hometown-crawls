@@ -30,8 +30,8 @@
       <div>
         <p class="eyebrow">For organizers</p>
         <h1>Start a crawl</h1>
-        <p class="lead">Pick a town, invite the shops you already know, and give neighbors a free passport. You keep the guest list and the dates. We set up the page, the stamps, and the counter signs.</p>
-        <p class="muted">Send my application opens an email to <a href="mailto:hello@hometowncrawls.com">hello@hometowncrawls.com</a> with what you wrote.</p>
+        <p class="lead">Pick a town, invite the shops you already know, and give neighbors a free passport. You keep the guest list and the dates. Shop seats are $49.99. There is no free shop.</p>
+        <p class="muted">Sign in with the email you want on the crawl. Starting a crawl saves it for you as the owner. Questions can still go to <a href="mailto:hello@hometowncrawls.com">hello@hometowncrawls.com</a>.</p>
       </div>
       <img class="start-mascot" src="/assets/home/mascot.png" alt="Hometown Crawls coffee cup mascot" width="640" height="640" />
     </div>
@@ -55,31 +55,52 @@
         </article>
       </div>
 
-      <form class="card" id="organize-form" style="max-width:640px">
-        <h3>Tell us about your town</h3>
-        <p class="muted small mt-1 mb-2">We'll open an email to hello@hometowncrawls.com with your application.</p>
-        <label class="field"><span>Your name</span>
-          <input class="input" name="name" required placeholder="Alex Rivera" />
-        </label>
-        <label class="field"><span>Organization</span>
-          <input class="input" name="organization" required placeholder="Downtown association, chamber, or shop" />
-        </label>
+      <div class="card hidden" id="organize-block" style="max-width:640px">
+        <h3>Staging setup</h3>
+        <p id="organize-block-text"></p>
+      </div>
+
+      <form class="card hidden" id="organize-signin" style="max-width:640px">
+        <h3>Sign in to start a crawl</h3>
+        <p class="muted small mt-1 mb-2">We'll email a one-time link back to this page. No password.</p>
         <label class="field"><span>Email</span>
-          <input class="input" type="email" name="email" required placeholder="you@example.com" />
+          <input class="input" id="organize-email" type="email" required autocomplete="email" placeholder="you@example.com" />
         </label>
-        <label class="field"><span>Town</span>
-          <input class="input" name="town" required placeholder="Puyallup, WA" />
+        <button class="btn btn-primary" type="submit" id="organize-send-link">Email me a sign-in link</button>
+        <p class="form-success mt-2" id="organize-signin-ok" role="status"></p>
+        <p class="form-error mt-2" id="organize-signin-err" role="alert"></p>
+      </form>
+
+      <form class="card hidden" id="organize-form" style="max-width:640px">
+        <h3>Your crawl</h3>
+        <p class="muted small mt-1 mb-2" id="organize-signed-in"></p>
+        <label class="field"><span>Your name</span>
+          <input class="input" id="organize-person" name="person" required maxlength="200" placeholder="Alex Rivera" />
         </label>
-        <label class="field"><span>Phone</span>
-          <input class="input" type="tel" name="phone" placeholder="(253) 555-0100" />
+        <label class="field"><span>Organization <span class="opt">optional</span></span>
+          <input class="input" id="organize-org-name" name="organization" maxlength="200" placeholder="Downtown association or chamber" />
         </label>
-        <label class="field"><span>Notes</span>
-          <textarea class="input" name="notes" placeholder="Anything we should know about your town or the crawl."></textarea>
+        <label class="field"><span>Crawl name</span>
+          <input class="input" id="organize-crawl-name" name="name" required maxlength="120" placeholder="Tacoma Holiday Coffee Crawl" />
         </label>
-        <button class="btn btn-primary" type="submit">Send my application</button>
-        <div class="form-success mt-2" id="org-success">
-          Thanks — your email app should open with your application. If it didn't, email <a href="mailto:hello@hometowncrawls.com">hello@hometowncrawls.com</a>.
-        </div>
+        <label class="field"><span>City or area</span>
+          <input class="input" id="organize-city" name="city" required maxlength="80" placeholder="Tacoma" />
+        </label>
+        <label class="field"><span>State <span class="opt">optional</span></span>
+          <input class="input" id="organize-state" name="state" maxlength="2" placeholder="WA" />
+        </label>
+        <label class="field"><span>Starts</span>
+          <input class="input" id="organize-start" name="starts" type="date" required />
+        </label>
+        <label class="field"><span>Ends</span>
+          <input class="input" id="organize-end" name="ends" type="date" required />
+        </label>
+        <label class="field"><span>Shops to invite <span class="opt">optional</span></span>
+          <textarea class="input" id="organize-shops" name="shops" maxlength="4000" placeholder="One shop name per line. This list is a reminder. Shops are not on the crawl until they use a join link and pay $49.99."></textarea>
+        </label>
+        <button class="btn btn-primary" type="submit" id="organize-create">Start this crawl</button>
+        <p class="muted small mt-2">A shop seat is $49.99. Stripe Checkout is not part of this form. After the crawl exists, paste a Payment Link on the Organizer tab or share the shop signup link.</p>
+        <div class="form-success mt-2" id="org-success"></div>
         <div class="form-error mt-2" id="org-error"></div>
       </form>
     </div>
@@ -87,47 +108,125 @@
   </main>
   <footer class="site-footer" id="site-footer"></footer>
   <script src="assets/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/site.js"></script>
+  <script src="assets/crawl.js"></script>
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded", async () => {
+      const block = document.getElementById("organize-block");
+      const signin = document.getElementById("organize-signin");
       const form = document.getElementById("organize-form");
       const ok = document.getElementById("org-success");
       const err = document.getElementById("org-error");
-      const KEY = "hc-organizer-apps-v1";
-      form.addEventListener("submit", (e) => {
+      const signinOk = document.getElementById("organize-signin-ok");
+      const signinErr = document.getElementById("organize-signin-err");
+
+      function message(el, text) {
+        el.textContent = text || "";
+        el.classList.toggle("show", !!text);
+      }
+
+      let gate = { ok: false, reason: "This page could not load its Supabase settings." };
+      try {
+        await HCCrawl.whenConfigured();
+        gate = HCCrawl.selfServeWritesAllowed();
+      } catch (e) {}
+      if (!gate.ok) {
+        document.getElementById("organize-block-text").textContent = gate.reason;
+        block.classList.remove("hidden");
+        return;
+      }
+
+      async function showForSession(session) {
+        const signedIn = session && session.user && !session.user.is_anonymous && session.user.email;
+        signin.classList.toggle("hidden", !!signedIn);
+        form.classList.toggle("hidden", !signedIn);
+        if (signedIn) {
+          document.getElementById("organize-signed-in").textContent = "Signed in as " + session.user.email + ". You will be the crawl owner.";
+        }
+      }
+      showForSession(await HCCrawl.getSession());
+      HCCrawl.watchSession(function (session) { showForSession(session); });
+
+      signin.addEventListener("submit", async (e) => {
         e.preventDefault();
-        ok.classList.remove("show");
-        err.classList.remove("show");
-        const fd = new FormData(form);
-        const row = {
-          name: String(fd.get("name") || "").trim(),
-          organization: String(fd.get("organization") || "").trim(),
-          email: String(fd.get("email") || "").trim(),
-          town: String(fd.get("town") || "").trim(),
-          crawl_type: "coffee",
-          phone: String(fd.get("phone") || "").trim(),
-          notes: String(fd.get("notes") || "").trim(),
-          created_at: new Date().toISOString(),
-          status: "mailto-opened"
-        };
+        message(signinOk, "");
+        message(signinErr, "");
+        const email = document.getElementById("organize-email").value.trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          message(signinErr, "Enter a valid email address.");
+          return;
+        }
         try {
-          const prev = JSON.parse(localStorage.getItem(KEY) || "[]");
-          if (Array.isArray(prev)) {
-            prev.push(row);
-            localStorage.setItem(KEY, JSON.stringify(prev));
+          await HCCrawl.magicLink(email);
+          message(signinOk, "Check that inbox for a sign-in link. It opens this page.");
+        } catch (ex) {
+          message(signinErr, (ex && ex.message) || "Could not send the sign-in link.");
+        }
+      });
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        message(ok, "");
+        message(err, "");
+        const writes = HCCrawl.selfServeWritesAllowed();
+        if (!writes.ok) {
+          message(err, writes.reason);
+          return;
+        }
+        const name = document.getElementById("organize-crawl-name").value.trim();
+        const city = document.getElementById("organize-city").value.trim();
+        const starts = document.getElementById("organize-start").value;
+        const ends = document.getElementById("organize-end").value;
+        if (!name || !city || !starts || !ends || ends < starts) {
+          message(err, "Add a crawl name, a city, and an end date on or after the start.");
+          return;
+        }
+        const button = document.getElementById("organize-create");
+        button.disabled = true;
+        let place = null;
+        try {
+          const query = [city, document.getElementById("organize-state").value.trim()].filter(Boolean).join(", ");
+          const response = await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=us&q=" + encodeURIComponent(query), { headers: { Accept: "application/json" } });
+          if (response.ok) {
+            const hits = await response.json();
+            const hit = Array.isArray(hits) ? hits[0] : null;
+            const lat = hit ? Number(hit.lat) : NaN;
+            const lng = hit ? Number(hit.lon) : NaN;
+            if (Number.isFinite(lat) && Number.isFinite(lng)) place = { lat: lat, lng: lng };
           }
         } catch (_) {}
-        const subject = "Organize a crawl in " + row.town;
-        const body = [
-          "Name: " + row.name,
-          "Organization: " + row.organization,
-          "Town: " + row.town,
-          "Email: " + row.email,
-          "Phone: " + row.phone,
-          "Notes: " + row.notes
-        ].join("\n");
+        const saved = await HCCrawl.client().rpc("organizer_create_crawl", {
+          p_name: name,
+          p_city: city,
+          p_starts: starts,
+          p_ends: ends,
+          p_state: document.getElementById("organize-state").value.trim() || null,
+          p_shops: document.getElementById("organize-shops").value.trim() || null,
+          p_organizer_name: document.getElementById("organize-person").value.trim() || null,
+          p_organization: document.getElementById("organize-org-name").value.trim() || null,
+          p_lat: place ? place.lat : null,
+          p_lng: place ? place.lng : null
+        });
+        button.disabled = false;
+        if (saved.error) {
+          message(err, saved.error.message || "Could not start that crawl.");
+          return;
+        }
+        const row = saved.data || {};
+        const path = row.signup_path || ("/crawls/join?crawl=" + row.crawl_id);
+        const link = location.origin + path;
+        ok.innerHTML = "";
+        const line = document.createElement("span");
+        line.textContent = "Crawl saved. You are the owner. Shop signup: ";
+        const anchor = document.createElement("a");
+        anchor.href = link;
+        anchor.textContent = link;
+        ok.append(line, anchor);
+        const next = document.createElement("span");
+        next.textContent = " Invite shops from the Organizer tab. A seat is $49.99, and Stripe Checkout is still manual.";
+        ok.append(document.createElement("br"), next);
         ok.classList.add("show");
-        window.location.href = "mailto:hello@hometowncrawls.com?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
       });
     });
   </script>

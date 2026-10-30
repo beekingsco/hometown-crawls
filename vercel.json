@@ -49,6 +49,10 @@
     {
       "source": "/puyallup/coffee-crawl/organizer",
       "destination": "/puyallup/coffee-crawl/organizer/index.html"
+    },
+    {
+      "source": "/crawls/join",
+      "destination": "/crawls/join/index.html"
     }
   ],
   "headers": [
