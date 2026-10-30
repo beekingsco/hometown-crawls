@@ -19,6 +19,10 @@
       "destination": "/arlington/coffee-crawl/thanks/index.html"
     },
     {
+      "source": "/arlington/holiday-coffee-crawl",
+      "destination": "/arlington/holiday-coffee-crawl/index.html"
+    },
+    {
       "source": "/puyallup/holiday-coffee-crawl",
       "destination": "/puyallup/holiday-coffee-crawl/index.html"
     },
