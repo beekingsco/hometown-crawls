@@ -127,7 +127,8 @@
     const c = client();
     const id = crawlId || CRAWL;
     // Coffee pins are paid listings, not inactive membership seeds.
-    if (id === "puy-coffee") return loadPaidShops(id);
+    // oly-coffee is the unlisted staging crawl and uses paid seats too.
+    if (id === "puy-coffee" || id === "oly-coffee") return loadPaidShops(id);
     if (!c) return { shops: [], error: "no-client" };
 
     const { data: memberships, error: mErr } = await c
@@ -226,7 +227,8 @@
       "Code required",
       "Business not on this crawl",
       "Not authenticated",
-      "Unknown business"
+      "Unknown business",
+      "Map pin required"
     ];
     for (const line of known) {
       if (raw.toLowerCase().includes(line.toLowerCase())) return line;

@@ -434,6 +434,19 @@
           <p class="form-success mt-2" id="org-ok" role="status"></p>
           <p class="form-error mt-2" id="org-err" role="alert"></p>
         </form>
+        <form class="card" id="org-features">
+          <h3>Features</h3>
+          <p class="muted small mt-1" id="org-features-note">Off until you turn them on. Paid shop seats only.</p>
+          <label class="check mt-2"><input type="checkbox" id="feat-guest-reviews" /> Guest reviews</label>
+          <label class="check"><input type="checkbox" id="feat-peoples-choice" /> People's choice</label>
+          <label class="check"><input type="checkbox" id="feat-completion-badge" /> Completion badge</label>
+          <label class="check"><input type="checkbox" id="feat-completion-raffle" /> Completion list</label>
+          <button class="btn btn-primary mt-2" type="submit" id="org-features-save">Save features</button>
+          <p class="form-success mt-2" id="org-features-ok" role="status"></p>
+          <p class="form-error mt-2" id="org-features-err" role="alert"></p>
+          <div class="stack mt-2 hidden" id="org-review-queue"></div>
+          <div class="stack mt-2 hidden" id="org-completion-list"></div>
+        </form>
         <div class="card">
           <h3>Stores</h3>
           <div class="stat-grid mt-2">
@@ -570,6 +583,7 @@
   <script src="assets/store-demo.js"></script>
   <script src="assets/stamp-art.js"></script>
   <script src="assets/store-listing.js"></script>
+  <script src="assets/crawl-features.js"></script>
   <script src="assets/organizer-panel.js"></script>
   <script src="assets/guest-hub.js"></script>
   <script src="assets/paper-card.js"></script>

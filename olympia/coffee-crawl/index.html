@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Olympia Coffee Crawl · Hometown Crawls</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="description" content="Unlisted staging crawl for Olympia. It is not on the public crawl list." />
+  <link rel="stylesheet" href="/assets/site.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+  <main class="hc-section">
+    <div class="wrap">
+      <p class="eyebrow">Staging</p>
+      <h1>Olympia Coffee Crawl</h1>
+      <p class="muted">This crawl is unlisted. Paid shop seats only. Sign in to stamp. You need to be at the shop, within 50 meters, and the shop needs a map pin. A paper stamp counts the same as a phone stamp.</p>
+      <div class="map-frame mt-2" style="height:420px">
+        <div id="oly-map" class="leaflet-map"></div>
+      </div>
+      <p class="form-error mt-2" id="oly-err" role="alert"></p>
+      <div class="card mt-2">
+        <h2>Sign in</h2>
+        <p class="muted small mt-1" id="oly-auth">Checking your session.</p>
+        <form id="oly-auth-form" class="mt-2">
+          <label class="field"><span>Email</span>
+            <input class="input" id="oly-email" type="email" autocomplete="email" required />
+          </label>
+          <button class="btn btn-primary" type="submit">Email me a sign-in link</button>
+        </form>
+        <div class="row mt-2">
+          <button class="btn btn-soft" type="button" id="oly-join">Join this crawl</button>
+          <button class="btn btn-ghost" type="button" id="oly-signout">Sign out</button>
+        </div>
+        <p class="form-success mt-2" id="oly-ok" role="status"></p>
+      </div>
+      <div class="card mt-2">
+        <h2>Stamp</h2>
+        <label class="field mt-2"><span>Shop with a map pin</span>
+          <select class="input" id="oly-shop"></select>
+        </label>
+        <label class="field"><span>Counter code</span>
+          <input class="input" id="oly-code" autocomplete="off" />
+        </label>
+        <button class="btn btn-primary" type="button" id="oly-stamp">Claim stamp</button>
+        <div id="oly-stamps" class="mt-2"></div>
+        <div id="oly-unpinned" class="mt-2"></div>
+      </div>
+      <div id="oly-features" class="hidden" hidden></div>
+    </div>
+  </main>
+  <footer class="site-footer" id="site-footer"></footer>
+  <script src="/assets/config.js"></script>
+  <script src="/assets/site.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/crawl.js"></script>
+  <script src="/assets/crawl-features.js"></script>
+  <script>
+  (function () {
+    var CRAWL = "oly-coffee";
+    var CENTER = { lat: 47.0379, lng: -122.9007 };
+    var shops = [];
+    var mapReady = false;
+
+    function show(id, text, on) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = text || "";
+      el.classList.toggle("show", !!on);
+    }
+
+    function pinned(list) {
+      return (list || []).filter(function (shop) {
+        return shop && Number.isFinite(Number(shop.lat)) && Number.isFinite(Number(shop.lng));
+      });
+    }
+
+    async function paint() {
+      var session = await HCCrawl.getSession();
+      var signedIn = session && session.user && !session.user.is_anonymous && session.user.email;
+      var auth = document.getElementById("oly-auth");
+      if (auth) auth.textContent = signedIn ? "Signed in as " + session.user.email : "Sign in with email to stamp.";
+      var ready = pinned(shops);
+      var select = document.getElementById("oly-shop");
+      if (select) {
+        select.innerHTML = ready.length
+          ? ready.map(function (shop) {
+            return "<option value=\"" + HCCrawl.escapeHtml(shop.id) + "\">" + HCCrawl.escapeHtml(shop.name) + "</option>";
+          }).join("")
+          : "<option value=\"\">No pinned shops yet</option>";
+        select.disabled = !ready.length;
+      }
+      var stamps = signedIn ? await HCCrawl.myStamps(CRAWL) : [];
+      HCCrawl.renderStamps(document.getElementById("oly-stamps"), ready, stamps, "");
+      var missing = shops.filter(function (shop) { return ready.indexOf(shop) === -1; });
+      var unpinned = document.getElementById("oly-unpinned");
+      if (unpinned) {
+        unpinned.innerHTML = missing.length
+          ? "<p class=\"muted small\">These shops need a map pin before guests can stamp them: " +
+            missing.map(function (shop) { return HCCrawl.escapeHtml(shop.name); }).join(", ") + ".</p>"
+          : "";
+      }
+      if (window.L && !mapReady) {
+        mapReady = true;
+        HCCrawl.initMap(document.getElementById("oly-map"), ready, CENTER);
+      }
+      if (window.HCFeatures) {
+        try {
+          await HCFeatures.mountGuest({
+            root: document.getElementById("oly-features"),
+            crawlId: CRAWL,
+            shops: ready,
+            stamps: stamps,
+            onChange: paint
+          });
+        } catch (e) {
+          show("oly-err", (e && e.message) || "Features could not load.", true);
+        }
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", async function () {
+      var loaded = await HCCrawl.loadShops(CRAWL);
+      shops = loaded.shops || [];
+      if (loaded.error) show("oly-err", loaded.error, true);
+      await paint();
+      HCCrawl.watchSession(function () { paint(); });
+      document.getElementById("oly-auth-form").addEventListener("submit", async function (ev) {
+        ev.preventDefault();
+        show("oly-err", "", false);
+        show("oly-ok", "", false);
+        try {
+          await HCCrawl.magicLink(document.getElementById("oly-email").value.trim());
+          show("oly-ok", "Check your email for the sign-in link.", true);
+        } catch (e) {
+          show("oly-err", e.message || "Could not send the sign-in link.", true);
+        }
+      });
+      document.getElementById("oly-join").addEventListener("click", async function () {
+        show("oly-err", "", false);
+        try {
+          await HCCrawl.joinCrawl(CRAWL);
+          show("oly-ok", "You're on this crawl.", true);
+          await paint();
+        } catch (e) {
+          show("oly-err", e.message || "Could not join this crawl.", true);
+        }
+      });
+      document.getElementById("oly-signout").addEventListener("click", async function () {
+        await HCCrawl.signOut();
+        await paint();
+      });
+      document.getElementById("oly-stamp").addEventListener("click", async function () {
+        show("oly-err", "", false);
+        show("oly-ok", "", false);
+        try {
+          await HCCrawl.claimStamp({
+            crawl: CRAWL,
+            business: document.getElementById("oly-shop").value,
+            code: document.getElementById("oly-code").value.trim()
+          });
+          document.getElementById("oly-code").value = "";
+          show("oly-ok", "Stamp claimed.", true);
+          await paint();
+        } catch (e) {
+          show("oly-err", e.message || "Could not claim that stamp.", true);
+        }
+      });
+    });
+  })();
+  </script>
+</body>
+</html>
