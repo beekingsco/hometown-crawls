@@ -122,12 +122,32 @@
     },
     {
       "source": "/puyallup",
-      "destination": "/puyallup/coffee-crawl",
+      "destination": "/puyallup/holiday-coffee-crawl",
       "permanent": false
     },
     {
       "source": "/puyallup/",
-      "destination": "/puyallup/coffee-crawl",
+      "destination": "/puyallup/holiday-coffee-crawl",
+      "permanent": false
+    },
+    {
+      "source": "/faq",
+      "destination": "/faqs",
+      "permanent": false
+    },
+    {
+      "source": "/faq/",
+      "destination": "/faqs",
+      "permanent": false
+    },
+    {
+      "source": "/help",
+      "destination": "/support",
+      "permanent": false
+    },
+    {
+      "source": "/help/",
+      "destination": "/support",
       "permanent": false
     }
   ]
