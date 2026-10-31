@@ -112,6 +112,8 @@ test("dates use Pacific time and known crawls link to their pages", () => {
   assert.equal(home.formatDates(pub), "October 1 – November 30, 2026");
   assert.equal(home.crawlHref("puy-coffee"), "/puyallup/holiday-coffee-crawl");
   assert.equal(home.crawlHref("puy-pub"), "/puyallupwa/pub");
+  assert.equal(home.crawlHref("arl-coffee"), "/arlington/holiday-coffee-crawl");
+  assert.equal(home.typeArt("coffee", "arl-coffee"), "/assets/home/coffee.jpg");
   assert.equal(home.crawlHref("future"), "/account.html");
 });
 

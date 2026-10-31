@@ -7,6 +7,14 @@
   var MAX_BYTES = 5 * 1024 * 1024;
   var TYPES = ["image/png", "image/jpeg", "image/webp"];
 
+  // Pages set window.HC_GUEST_CRAWL before this file runs its loaders.
+  // Account and the Puyallup passport leave it unset and stay on puy-coffee.
+  function guestCrawl() {
+    var id = window.HC_GUEST_CRAWL;
+    if (typeof id === "string" && /^[a-z0-9][a-z0-9-]{0,40}$/.test(id)) return id;
+    return "puy-coffee";
+  }
+
   function demoOn() {
     return new URLSearchParams(location.search).get("demo") === "1";
   }
@@ -58,8 +66,6 @@
   }
 
   function paintEntries(shopCount, stampedCount) {
-    var card = document.getElementById("entries-card");
-    if (card && card.hidden) return;
     var line = document.getElementById("entries-line");
     if (!line) return;
     var stops = stopsCount(shopCount);
@@ -121,7 +127,7 @@
     shownActionId = bonus.id || "";
     var copy = document.getElementById("bonus-copy");
     if (copy) {
-      copy.textContent = bonus.label + " Optional, and it does not change the stamp.";
+      copy.textContent = bonus.label + (bonus.entries ? " · " + bonus.entries + " entries." : "") + " Optional, and it does not change the stamp.";
     }
     var link = document.getElementById("bonus-link");
     if (link) {
@@ -138,14 +144,14 @@
     if (demoOn() || !window.HCCrawl || !HCCrawl.getSession || !HCCrawl.client || !HCCrawl.myStamps) return;
     var session = await HCCrawl.getSession();
     if (!session || !session.user || session.user.is_anonymous || !session.user.email) return;
-    var stamps = await HCCrawl.myStamps("puy-coffee");
+    var stamps = await HCCrawl.myStamps(guestCrawl());
     var stamped = {};
     (stamps || []).forEach(function (row) { if (row && row.business_id) stamped[row.business_id] = true; });
     if (!Object.keys(stamped).length) return;
     var client = HCCrawl.client();
-    var actions = await client.from("bonus_actions").select("id, listing_id, kind, label, url, entries").eq("active", true).eq("crawl_id", "puy-coffee");
+    var actions = await client.from("bonus_actions").select("id, listing_id, kind, label, url, entries").eq("active", true).eq("crawl_id", guestCrawl());
     if (actions.error || !actions.data || !actions.data.length) return;
-    var shops = await client.rpc("get_public_crawl_shops", { p_crawl: "puy-coffee" });
+    var shops = await client.rpc("get_public_crawl_shops", { p_crawl: guestCrawl() });
     if (shops.error || !Array.isArray(shops.data)) return;
     var match = null;
     var shop = null;
@@ -203,7 +209,7 @@
   async function loadLivePhotos() {
     if (demoOn() || !window.HCCrawl || !HCCrawl.client) return;
     var client = HCCrawl.client();
-    var pub = await client.rpc("get_public_crawl_photos", { p_crawl: "puy-coffee" });
+    var pub = await client.rpc("get_public_crawl_photos", { p_crawl: guestCrawl() });
     if (!pub.error && Array.isArray(pub.data)) {
       liveGallery = await Promise.all(pub.data.map(async function (row) {
         return { id: row.id, src: await signedSrc(row.path), status: "approved" };
@@ -220,7 +226,7 @@
       paintMine();
     }
     if (!document.getElementById("org-photos")) return;
-    var mod = await client.rpc("organizer_list_guest_photos", { p_crawl: "puy-coffee" });
+    var mod = await client.rpc("organizer_list_guest_photos", { p_crawl: guestCrawl() });
     if (mod.error || !Array.isArray(mod.data)) return;
     liveModeration = await Promise.all(mod.data.map(async function (row) {
       return { id: row.id, src: await signedSrc(row.path), status: row.status, shop: row.shop_id || "Crawl photo" };
@@ -325,7 +331,7 @@
     var shop = shopId ? (document.getElementById(shopId) || {}).value : "";
     var inserted = await client.from("guest_photos").insert({
       user_id: session.user.id,
-      crawl_id: "puy-coffee",
+      crawl_id: guestCrawl(),
       shop_id: String(shop || "").trim() || null,
       path: path,
       consent_at: new Date().toISOString(),
@@ -340,7 +346,10 @@
     }
     if (input) input.value = "";
     consent.checked = false;
-    note(okId, errId, "Uploaded. It stays pending until an organizer or contributor approves it. Your stamp is unchanged.", "");
+    var savedNote = guestCrawl() === "arl-coffee"
+      ? "Uploaded. It stays pending until an organizer or contributor approves it. It does not change your stamp."
+      : "Uploaded. It stays pending until an organizer or contributor approves it. It does not add a prize entry, and your stamp is unchanged.";
+    note(okId, errId, savedNote, "");
     loadLivePhotos();
   }
 
@@ -355,14 +364,14 @@
     if (!demoOn()) loadLivePhotos();
 
     if (window.HCCrawl && HCCrawl.loadShops && !demoOn()) {
-      HCCrawl.loadShops("puy-coffee").then(function (res) {
+      HCCrawl.loadShops(guestCrawl()).then(function (res) {
         var count = (res.shops || []).length;
-        HCCrawl.myStamps("puy-coffee").then(function (rows) {
+        HCCrawl.myStamps(guestCrawl()).then(function (rows) {
           paintEntries(count, (rows || []).length);
         });
       }).catch(function () {});
     } else if (window.HCCrawl && HCCrawl.loadShops && demoOn()) {
-      HCCrawl.loadShops("puy-coffee").then(function (res) {
+      HCCrawl.loadShops(guestCrawl()).then(function (res) {
         var count = (res.shops || []).length || 15;
         paintEntries(count, stamped);
       }).catch(function () { paintEntries(15, stamped); });
@@ -440,5 +449,5 @@
     }
   });
 
-  window.HCGuest = { refreshBonus: refreshBonus };
+  window.HCGuest = { refreshBonus: refreshBonus, crawlId: guestCrawl };
 })();

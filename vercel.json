@@ -11,6 +11,18 @@
       "destination": "/puyallup/coffee-crawl/thanks/index.html"
     },
     {
+      "source": "/arlington/coffee-crawl",
+      "destination": "/arlington/coffee-crawl/index.html"
+    },
+    {
+      "source": "/arlington/coffee-crawl/thanks",
+      "destination": "/arlington/coffee-crawl/thanks/index.html"
+    },
+    {
+      "source": "/arlington/holiday-coffee-crawl",
+      "destination": "/arlington/holiday-coffee-crawl/index.html"
+    },
+    {
       "source": "/puyallup/holiday-coffee-crawl",
       "destination": "/puyallup/holiday-coffee-crawl/index.html"
     },
@@ -136,21 +148,6 @@
     {
       "source": "/help/",
       "destination": "/support",
-      "permanent": false
-    },
-    {
-      "source": "/prizes",
-      "destination": "/puyallup/holiday-coffee-crawl",
-      "permanent": false
-    },
-    {
-      "source": "/prizes/",
-      "destination": "/puyallup/holiday-coffee-crawl",
-      "permanent": false
-    },
-    {
-      "source": "/prizes.html",
-      "destination": "/puyallup/holiday-coffee-crawl",
       "permanent": false
     }
   ]

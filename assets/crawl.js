@@ -127,7 +127,7 @@
     const c = client();
     const id = crawlId || CRAWL;
     // Coffee pins are paid listings, not inactive membership seeds.
-    if (id === "puy-coffee") return loadPaidShops(id);
+    if (id === "puy-coffee" || id === "arl-coffee") return loadPaidShops(id);
     if (!c) return { shops: [], error: "no-client" };
 
     const { data: memberships, error: mErr } = await c

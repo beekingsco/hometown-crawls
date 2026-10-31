@@ -35,7 +35,7 @@ test("store checklist covers the host steps and does not add a bypass", () => {
     "Holiday Cafe",
     "/card?crawl=puy-coffee",
     "Completed paper cards must be turned in by end of day December 31, 2026 (Pacific).",
-    "Paper stamps count the same as stamps in the web app. Guests can switch to the web app anytime.",
+    "We'll have giveaways for participants through the end of the year.",
     "/account/organizer/help",
     "/support",
   ]) {
@@ -69,7 +69,7 @@ test("organizer checklist covers crawl setup, paper stamps, and the counter pilo
     "/card?crawl=puy-coffee",
     "blank=1",
     "Completed paper cards must be turned in by end of day December 31, 2026 (Pacific).",
-    "Paper stamps count the same as stamps in the web app. Guests can switch to the web app anytime.",
+    "We'll have giveaways for participants through the end of the year.",
     "/account/store/help",
     "/support",
     "puy-coffee",

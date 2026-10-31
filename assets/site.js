@@ -4,7 +4,7 @@
   const depth = path.split("/").filter(Boolean).length;
   // Root pages sit at /, shops/join at /shops/, crawl at /puyallupwa/coffee/
   function assetPrefix() {
-    if (path === "/puyallup" || path.startsWith("/puyallup/")) return "/";
+    if (path === "/puyallup" || path.startsWith("/puyallup/") || path.startsWith("/arlington/")) return "/";
     // Nested account pages (/account/store/help) need root-absolute links.
     if (path.startsWith("/account/")) return "/";
     if (path.includes("/puyallupwa/")) return "../../";
@@ -100,6 +100,7 @@
             <h4>Explore</h4>
             <a href="${base}puyallup/holiday-coffee-crawl">Holiday coffee trail</a>
             <a href="${base}map.html">Map</a>
+            <a href="${base}prizes.html">Prizes</a>
             <a href="${base}rules.html">Rules</a>
             ${link("puyallup/holiday-coffee-crawl/rules", "Official Rules")}
             ${link("privacy", "Privacy")}
