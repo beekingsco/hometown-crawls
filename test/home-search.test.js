@@ -93,6 +93,76 @@ test("newest crawls are the three active or upcoming rows, newest first", () => 
   assert.deepEqual(rows.map((row) => row.id), ["newer", "puy-coffee", "puy-pub"]);
 });
 
+const arlington = {
+  id: "arl-coffee",
+  name: "Arlington Holiday Coffee Crawl",
+  city: "Arlington",
+  type: "coffee",
+  lat: 48.1987,
+  lng: -122.1251,
+  starts_at: "2026-11-01T16:00:00Z",
+  ends_at: "2027-01-01T07:59:59Z",
+  created_at: "2026-10-30T16:02:31.025Z"
+};
+
+function cardText(node, found) {
+  const acc = found || [];
+  if (node && node.textContent) acc.push(node.textContent);
+  (node && node.children || []).forEach((child) => cardText(child, acc));
+  return acc;
+}
+
+test("new crawl cards place Arlington immediately after the Puyallup holiday crawl", () => {
+  const rows = home.newestCrawls([ended, arlington, coffee, pub], now);
+  assert.deepEqual(rows.map((row) => row.id), ["puy-coffee", "arl-coffee", "puy-pub"]);
+  const newer = Object.assign({}, coffee, { id: "newer", name: "Newer", created_at: "2026-10-31T00:00:00Z" });
+  const withNewer = home.newestCrawls([newer, arlington, coffee, pub], now);
+  assert.deepEqual(withNewer.map((row) => row.id), ["newer", "puy-coffee", "arl-coffee"]);
+  assert.deepEqual(
+    home.placeArlingtonAfterPuyallup([
+      { id: "arl-coffee" },
+      { id: "other" },
+      { id: "puy-coffee" }
+    ]).map((row) => row.id),
+    ["other", "puy-coffee", "arl-coffee"]
+  );
+});
+
+test("Arlington cards say starting soon and other crawls keep Active or Upcoming", () => {
+  assert.equal(home.crawlStatusLabel(arlington, now), "starting soon");
+  assert.equal(home.crawlStatusLabel(arlington, new Date("2026-11-02T18:00:00Z")), "starting soon");
+  assert.equal(home.crawlStatusLabel(coffee, now), "Upcoming");
+  assert.equal(home.crawlStatusLabel(pub, now), "Active");
+  assert.equal(home.crawlStatusLabel(ended, now), "");
+
+  const featured = home.renderCard(arlington, true, now);
+  const tag = featured.children[0].children.find((node) => String(node.className).includes("home-tag"));
+  assert.equal(tag.textContent, "starting soon");
+  assert.match(tag.className, /home-tag-soon/);
+  assert.equal(cardText(featured).includes("Upcoming"), false);
+  assert.equal(cardText(featured).includes("Active"), false);
+
+  const searched = home.renderCard(arlington, false, now);
+  assert.equal(cardText(searched).includes("starting soon"), true);
+  assert.equal(searched.children.some((node) => String(node.className).includes("home-tag")), false);
+
+  const puyallupCard = home.renderCard(coffee, true, now);
+  const puyTag = puyallupCard.children[0].children.find((node) => String(node.className).includes("home-tag"));
+  assert.equal(puyTag.textContent, "Upcoming");
+  assert.equal(puyTag.className, "home-tag");
+
+  const css = read("assets/home.css");
+  assert.match(css, /\.home-tag\.home-tag-soon \{ text-transform: none/);
+  assert.doesNotMatch(read("assets/home-search.js"), /Sunday go-live/);
+  assert.doesNotMatch(read("puyallup/holiday-coffee-crawl/index.html"), /Arlington|arl-coffee/);
+  assert.match(read("puyallup/holiday-coffee-crawl/index.html"), /Fill your passport to enter the prize drawing\./);
+});
+
+test("nearby search stays in distance order when Arlington is closer than Puyallup", () => {
+  const rows = home.nearbyCrawls([coffee, arlington], { lat: 48.1987, lng: -122.1251 }, now, 200);
+  assert.deepEqual(rows.map((row) => row.id), ["arl-coffee", "puy-coffee"]);
+});
+
 test("nearby crawls sort by distance and drop ended or far rows", () => {
   const far = Object.assign({}, coffee, { id: "far", name: "Far", lat: 43.615, lng: -116.2023 });
   const rows = home.nearbyCrawls([ended, far, coffee, pub], { lat: 47.2, lng: -122.3 }, now);

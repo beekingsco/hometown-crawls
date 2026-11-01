@@ -61,6 +61,7 @@
 .home-featured-content { padding: 34px 40px; }
 .home-event-meta { display: flex; align-items: center; gap: 15px; color: var(--home-muted); font-size: 11px; margin-bottom: 18px; }
 .home-tag { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: #9b3c1c; background: #f9e5d3; padding: 5px 9px; border-radius: 3px; }
+.home-tag.home-tag-soon { text-transform: none; letter-spacing: 0.01em; font-size: 12px; }
 .home-featured h3 { font-size: 32px; line-height: 1.1; letter-spacing: -.04em; margin-bottom: 13px; }
 .home-featured h3 a:hover { color: var(--home-orange); }
 .home-event-dates { font-size: 12px; font-weight: 600; color: var(--home-orange); margin-bottom: 12px; }
@@ -456,6 +457,7 @@
 .home-crawl-card h3 { font-size: 24px; letter-spacing: -.04em; line-height: 1.15; margin: 0; }
 .home-crawl-card h3 a:hover { color: var(--home-orange); }
 .home-crawl-meta { margin: 0; font-size: 13px; color: var(--home-muted); }
+.home-soon { margin: 0; font-size: 13px; font-weight: 600; color: #9b3c1c; }
 .home-crawl-card .home-event-dates { margin: 0; }
 .home-crawl-card .home-text-link { margin-top: 8px; width: fit-content; }
 .home-empty { margin: 4px 0 0; font-size: 16px; line-height: 1.5; }
