@@ -12,7 +12,7 @@ const paper = read("assets/paper-card.js");
 const cardJs = read("assets/card-print.js");
 const cardHtml = read("card.html");
 const sql = read("migrations/20261014260000_paper_cards.sql");
-const claim = read("migrations/20261101161000_claim_stamp_radius_100m.sql");
+const claim = read("migrations/20261101180000_claim_stamp_code_only.sql");
 
 const sandbox = {
   document: {
@@ -182,7 +182,7 @@ test("one account can join many crawls, with a region and an optional area opt-i
   assert.doesNotMatch(read("assets/organizer-panel.js"), /send_message|mailto:/);
 });
 
-test("manual stamps are staff-only and claim_stamp uses a 100 m radius", () => {
+test("manual stamps are staff-only and guest claim_stamp does not check distance", () => {
   assert.match(sql, /play_mode = 'paper'/);
   assert.match(sql, /signup_listing_id/);
   assert.match(sql, /private\.is_crawl_staff/);
@@ -193,7 +193,10 @@ test("manual stamps are staff-only and claim_stamp uses a 100 m radius", () => {
   assert.match(sql, /p_business, 'manual'/);
   const manual = sql.slice(sql.indexOf("function public.organizer_set_manual_stamp"));
   assert.doesNotMatch(manual, /claim_stamp|c_radius/);
-  assert.match(claim, /c_radius_m constant double precision := 100/);
+  assert.doesNotMatch(claim, /c_radius_m|Location required|You need to be at the shop/);
+  assert.match(claim, /raise exception 'Already stamped'/);
+  assert.match(claim, /raise exception 'Invalid code'/);
+  assert.match(claim, /insert into public\.stamps \(user_id, crawl_id, business_id, lat, lng\)/);
   assert.doesNotMatch(paper, /service_role/);
   assert.doesNotMatch(cardJs, /service_role/);
 });

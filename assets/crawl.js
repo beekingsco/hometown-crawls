@@ -257,23 +257,10 @@
     return data || [];
   }
 
-  function getPosition() {
-    return new Promise((resolve) => {
-      if (!navigator.geolocation) return resolve({ lat: null, lng: null });
-      navigator.geolocation.getCurrentPosition(
-        (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => resolve({ lat: null, lng: null }),
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
-      );
-    });
-  }
-
   function plainStampError(error) {
     const raw = String((error && error.message) || error || "");
     const known = [
       "Already stamped",
-      "Location required",
-      "You need to be at the shop",
       "Invalid code",
       "Code required",
       "Business not on this crawl",
@@ -286,6 +273,7 @@
     return raw.replace(/^ERROR:\s*/i, "").trim() || "Could not claim that stamp.";
   }
 
+  // Code or QR only. Never ask the browser for location.
   async function claimStamp({ crawl, business, code, lat, lng }) {
     if (demoMode()) throw new Error("Demo mode only shows sample data. It does not stamp.");
     const c = client();
@@ -293,17 +281,12 @@
     let s = await getSession();
     if (!s) s = await ensureAuth();
     if (!s) throw new Error("Please sign in with email to stamp.");
-    let coords = { lat, lng };
-    if (coords.lat == null || coords.lng == null) coords = await getPosition();
-    if (coords.lat == null || coords.lng == null) {
-      throw new Error("Location required");
-    }
     const { data, error } = await c.rpc("claim_stamp", {
       p_crawl: crawl || CRAWL,
       p_business: business,
       p_code: code,
-      p_lat: coords.lat,
-      p_lng: coords.lng
+      p_lat: lat == null ? null : lat,
+      p_lng: lng == null ? null : lng
     });
     if (error) throw new Error(plainStampError(error));
     return data;
@@ -547,7 +530,6 @@
     myStamps,
     myJoins,
     claimStamp,
-    getPosition,
     renderShopList,
     renderStamps,
     stampLabel,
