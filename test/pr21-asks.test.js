@@ -68,7 +68,7 @@ test("coupon stays off until the store turns it on", () => {
   assert.match(demo, /coupon-fields/);
 });
 
-test("copy uses paid locations, golden rules, three steps, and 50 meters", () => {
+test("copy uses paid locations, golden rules, three steps, and 100 meters", () => {
   assert.doesNotMatch(holiday, /20\+/);
   assert.doesNotMatch(coffee, /20\+/);
   assert.match(holiday, /Golden Rules of a Crawl/);
@@ -84,7 +84,7 @@ test("copy uses paid locations, golden rules, three steps, and 50 meters", () =>
   assert.match(holiday, /Your passport is saved to your account, so sign in on any device\./);
   assert.match(holiday, /Sign in with your email and join the crawl\./);
   assert.match(rules, /Show some love if you can and buy something at the shop\./);
-  assert.match(rules, /50 m/);
+  assert.match(rules, /100 m/);
   assert.match(faqs, /Show some love if you can and buy something at the shop\./);
   assert.match(holiday, /id="location-count"/);
   assert.match(holiday, /paid location/);
