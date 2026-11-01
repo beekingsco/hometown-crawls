@@ -723,18 +723,27 @@
         showBox($("passport-ok"), false);
         var email = $("magic-email").value.trim();
         if (!email) return;
+        var button = ev.currentTarget.querySelector("button");
+        if (button) {
+          button.disabled = true;
+          button.setAttribute("aria-busy", "true");
+          button.textContent = "Sending…";
+        }
         try {
-          var sb = HCCrawl.client();
-          var res = await sb.auth.signInWithOtp({
-            email: email,
-            options: { emailRedirectTo: window.location.origin + window.location.pathname + window.location.search }
-          });
-          if (res.error) throw res.error;
+          await HCCrawl.magicLink(email);
           $("passport-ok").textContent = "Check your email for the sign-in link. It brings you back to this page.";
           showBox($("passport-ok"), true);
+          if (HCCrawl.revealNotice) HCCrawl.revealNotice($("passport-ok"));
         } catch (e) {
-          $("passport-err").textContent = e.message || "Could not send the sign-in link.";
+          $("passport-err").textContent = HCCrawl.otpErrorMessage ? HCCrawl.otpErrorMessage(e) : (e.message || "Could not send the sign-in link.");
           showBox($("passport-err"), true);
+          if (HCCrawl.revealNotice) HCCrawl.revealNotice($("passport-err"));
+        } finally {
+          if (button) {
+            button.disabled = false;
+            button.setAttribute("aria-busy", "false");
+            button.textContent = "Email me a sign-in link";
+          }
         }
       };
     });

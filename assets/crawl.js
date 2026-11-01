@@ -70,14 +70,66 @@
     };
   }
 
+  const OTP_RATE_LIMIT_COPY = "Too many sign-in emails right now. Wait about a minute, then tap Send once.";
+
+  function authErrorText(error) {
+    if (error == null) return "";
+    if (typeof error === "string") return error;
+    if (typeof error.message === "string" && error.message) return error.message;
+    if (typeof error.msg === "string" && error.msg) return error.msg;
+    if (typeof error.error_description === "string" && error.error_description) return error.error_description;
+    if (typeof error.error === "string") return error.error;
+    return "";
+  }
+
+  function isEmailRateLimit(error) {
+    if (!error || typeof error === "string") {
+      return /email rate limit exceeded|over_email_send_rate_limit/i.test(String(error || ""));
+    }
+    const status = Number(error.status != null ? error.status : error.statusCode);
+    if (status === 429) return true;
+    const code = String(error.code || error.error_code || "");
+    if (code === "429" || /over_email_send_rate_limit/i.test(code)) return true;
+    const text = authErrorText(error);
+    return /email rate limit exceeded|over_email_send_rate_limit/i.test(text);
+  }
+
+  function otpErrorMessage(error) {
+    if (isEmailRateLimit(error)) return OTP_RATE_LIMIT_COPY;
+    return authErrorText(error) || "Could not send the sign-in link.";
+  }
+
+  function revealNotice(el) {
+    if (!el || typeof el.scrollIntoView !== "function") return;
+    if (typeof el.getClientRects === "function" && el.getClientRects().length === 0) return;
+    try {
+      el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    } catch (e) {
+      try { el.scrollIntoView(); } catch (e2) {}
+    }
+  }
+
   async function magicLink(email) {
     const c = client();
     if (!c) throw new Error("Supabase not loaded");
-    const { error } = await c.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: location.origin + location.pathname + location.search }
-    });
-    if (error) throw error;
+    let error = null;
+    try {
+      const result = await c.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: location.origin + location.pathname + location.search }
+      });
+      error = result && result.error;
+    } catch (thrown) {
+      error = thrown;
+    }
+    if (!error) return;
+    const failure = new Error(otpErrorMessage(error));
+    if (error.status != null) failure.status = error.status;
+    else if (error.statusCode != null) failure.status = error.statusCode;
+    if (error.code != null) failure.code = error.code;
+    else if (error.error_code != null) failure.code = error.error_code;
+    try { failure.cause = error; } catch (e) {}
+    throw failure;
   }
 
   async function signOut() {
@@ -486,6 +538,8 @@
     authRedirect,
     watchSession,
     magicLink,
+    otpErrorMessage,
+    revealNotice,
     signOut,
     loadShops,
     loadCrawl,

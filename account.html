@@ -80,8 +80,8 @@
             <a class="btn btn-soft hidden" id="paper-reprint" href="/card.html?crawl=puy-coffee">Print paper card</a>
           </div>
         </div>
-        <div class="form-success mt-2" id="auth-msg"></div>
-        <div class="form-error mt-2" id="auth-err"></div>
+        <div class="form-success mt-2" id="auth-msg" role="status"></div>
+        <div class="form-error mt-2" id="auth-err" role="alert"></div>
         <div id="paper-success" class="paper-success hidden">
           <div class="paper-hero">
             <img src="/assets/home/mascot.png" alt="" width="512" height="512" />
@@ -596,7 +596,14 @@
   <script src="assets/guest-hub.js"></script>
   <script src="assets/paper-card.js"></script>
   <script>
-    function show(el, on) { el.classList.toggle("show", !!on); el.style.display = on ? "block" : "none"; }
+    function show(el, on) {
+      if (!el) return;
+      el.classList.toggle("show", !!on);
+      el.style.display = on ? "block" : "none";
+      if (on && window.HCCrawl && HCCrawl.revealNotice && (el.id === "auth-msg" || el.id === "auth-err")) {
+        HCCrawl.revealNotice(el);
+      }
+    }
     async function refreshAuth() {
       const s = await HCCrawl.getSession();
       const status = document.getElementById("auth-status");
@@ -673,12 +680,23 @@
         }
         if (!email) { err.textContent = "Enter your email."; show(err, true); return; }
         if (!consent || !consent.checked) { err.textContent = "Check the box so stores and organizers can contact you about prizes and offers."; show(err, true); return; }
+        const button = document.getElementById("btn-magic");
+        button.disabled = true;
+        button.setAttribute("aria-busy", "true");
+        button.textContent = "Sending…";
         try { sessionStorage.setItem("hc-contact-consent", "1"); } catch (e) {}
         try {
           await HCCrawl.magicLink(email);
           msg.textContent = "Check your email for the magic link.";
           show(msg, true);
-        } catch (e) { err.textContent = e.message || String(e); show(err, true); }
+        } catch (e) {
+          err.textContent = HCCrawl.otpErrorMessage ? HCCrawl.otpErrorMessage(e) : (e.message || String(e));
+          show(err, true);
+        } finally {
+          button.disabled = false;
+          button.setAttribute("aria-busy", "false");
+          button.textContent = "Send magic link";
+        }
       };
       document.getElementById("btn-signout").onclick = async () => {
         await HCCrawl.signOut();

@@ -3,6 +3,7 @@
 (function () {
   var PENDING = "hc-paper-signup";
   var TURN_IN = "Bring your finished card to a co-organizer shop (e.g. Holiday Cafe, Anthem).";
+  var magicBusy = false;
 
   function demoOn() {
     return new URLSearchParams(location.search).get("demo") === "1";
@@ -89,6 +90,27 @@
     var el = document.getElementById(id);
     if (!el) return;
     el.classList.toggle("hidden", !on);
+  }
+
+  function reveal(el) {
+    if (window.HCCrawl && typeof HCCrawl.revealNotice === "function") HCCrawl.revealNotice(el);
+  }
+
+  function authFailureText(error) {
+    if (window.HCCrawl && typeof HCCrawl.otpErrorMessage === "function") return HCCrawl.otpErrorMessage(error);
+    return (error && error.message) || "Could not send the sign-in link.";
+  }
+
+  function sendButton() {
+    return document.getElementById("btn-magic");
+  }
+
+  function setSending(button, on) {
+    if (!button) return;
+    button.disabled = !!on;
+    button.setAttribute("aria-busy", on ? "true" : "false");
+    if (on) button.textContent = "Sending…";
+    else button.textContent = paperOn() ? "Join with a paper card" : "Send magic link";
   }
 
   function setText(id, text) {
@@ -183,6 +205,7 @@
   }
 
   async function submit(ui) {
+    if (magicBusy) return;
     var show = ui.show;
     var msg = ui.msg;
     var err = ui.err;
@@ -190,7 +213,7 @@
     show(err, false);
     var row = formSignup();
     var problem = signupError(row);
-    if (problem) { err.textContent = problem; show(err, true); return; }
+    if (problem) { err.textContent = problem; show(err, true); reveal(err); return; }
     writePending(row);
     try { sessionStorage.setItem("hc-contact-consent", "1"); } catch (e) {}
     var next = new URLSearchParams(location.search);
@@ -216,20 +239,32 @@
     history.replaceState(null, "", location.pathname + "?" + next.toString());
     if (demoOn()) {
       if (row.paper) showSuccess("Demo preview. No email was sent and no account was changed.");
-      else { msg.textContent = "Demo preview. No email was sent and no account was changed."; show(msg, true); }
+      else { msg.textContent = "Demo preview. No email was sent and no account was changed."; show(msg, true); reveal(msg); }
       return;
     }
-    var session = await HCCrawl.getSession();
-    var same = session && session.user && !session.user.is_anonymous && session.user.email &&
-      session.user.email.toLowerCase() === row.email.toLowerCase();
-    if (same) {
-      await finish();
-      if (!row.paper) { msg.textContent = "You're signed in."; show(msg, true); }
-      return;
+    var button = sendButton();
+    magicBusy = true;
+    setSending(button, true);
+    try {
+      var session = await HCCrawl.getSession();
+      var same = session && session.user && !session.user.is_anonymous && session.user.email &&
+        session.user.email.toLowerCase() === row.email.toLowerCase();
+      if (same) {
+        await finish();
+        if (!row.paper) { msg.textContent = "You're signed in."; show(msg, true); reveal(msg); }
+        return;
+      }
+      await HCCrawl.magicLink(row.email);
+      if (row.paper) showSuccess("Check your email for the sign-in link. Open it, then choose how to get the card.");
+      else { msg.textContent = "Check your email for the magic link."; show(msg, true); reveal(msg); }
+    } catch (e) {
+      err.textContent = authFailureText(e);
+      show(err, true);
+      reveal(err);
+    } finally {
+      magicBusy = false;
+      setSending(button, false);
     }
-    await HCCrawl.magicLink(row.email);
-    if (row.paper) showSuccess("Check your email for the sign-in link. Open it, then choose how to get the card.");
-    else { msg.textContent = "Check your email for the magic link."; show(msg, true); }
   }
 
   async function finish() {
@@ -262,6 +297,7 @@
         err.textContent = saved.error.message || "Signup did not save.";
         err.classList.add("show");
         err.style.display = "block";
+        reveal(err);
       }
       return;
     }
