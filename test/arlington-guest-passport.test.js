@@ -101,8 +101,8 @@ test("Arlington guest passport is its own page and never names Puyallup", () => 
   assert.match(page, /You're on the Arlington Holiday Coffee Crawl passport\./);
   assert.match(page, /Shops joining soon/);
   assert.match(page, /downtown Arlington/);
-  assert.match(page, /src="\/assets\/guest-hub\.js"/);
-  assert.match(page, /src="\/assets\/crawl\.js"/);
+  assert.match(page, /src="\/assets\/guest-hub\.js\?v=gps-off-2"/);
+  assert.match(page, /src="\/assets\/crawl\.js\?v=gps-off-2"/);
   assert.match(page, /HCCrawl\.claimStamp\(\{ crawl: CRAWL/);
   assert.match(page, /HCCrawl\.joinCrawl\(CRAWL\)/);
   assert.match(page, /HCCrawl\.myStamps\(CRAWL\)/);
@@ -110,7 +110,7 @@ test("Arlington guest passport is its own page and never names Puyallup", () => 
   assert.match(page, /eq\("crawl_id", CRAWL\)/);
   assert.doesNotMatch(page, /puy-coffee|Puyallup|puyallup|hc-holiday-claim|98371|47\.191/);
   assert.doesNotMatch(page, /holiday-coffee-crawl\/rules/);
-  const hubAt = page.indexOf('src="/assets/guest-hub.js"');
+  const hubAt = page.indexOf('src="/assets/guest-hub.js?v=gps-off-2"');
   const crawlSet = page.indexOf('window.HC_GUEST_CRAWL = "arl-coffee"');
   assert.ok(crawlSet > -1 && crawlSet < hubAt);
 });
