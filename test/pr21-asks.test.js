@@ -40,6 +40,11 @@ test("magic link returns to the page that sent it", () => {
   assert.match(account, /HCCrawl\.watchSession/);
   for (const rel of [
     "puyallup/holiday-coffee-crawl/index.html",
+    "arlington/holiday-coffee-crawl/index.html"
+  ]) {
+    assert.match(read(rel), /HCCrawl\.magicLink\(email\)/);
+  }
+  for (const rel of [
     "puyallup/coffee-crawl/shop/index.html",
     "puyallup/coffee-crawl/organizer/index.html",
     "puyallup/coffee-crawl/shop/card/index.html"

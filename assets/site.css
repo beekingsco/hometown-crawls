@@ -511,6 +511,7 @@ textarea.input { min-height: 100px; resize: vertical; }
   padding: 0.85rem 1rem;
   font-size: 0.9rem;
   display: none;
+  scroll-margin: calc(var(--header-h) + 12px) 0 1rem;
 }
 .form-success.show { display: block; }
 
@@ -521,6 +522,7 @@ textarea.input { min-height: 100px; resize: vertical; }
   padding: 0.85rem 1rem;
   font-size: 0.9rem;
   display: none;
+  scroll-margin: calc(var(--header-h) + 12px) 0 1rem;
 }
 .form-error.show { display: block; }
 
