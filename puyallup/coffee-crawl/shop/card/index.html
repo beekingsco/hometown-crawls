@@ -10,71 +10,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/assets/site.css" />
+  <link rel="stylesheet" href="/assets/counter-card.css" />
   <style>
-    .card-page { padding: 2rem 0 3rem; }
-    .tent-sheet {
-      width: min(100%, 720px);
-      margin: 1rem auto 0;
-      background: #fffdf8;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      overflow: hidden;
-    }
-    .tent-face {
-      min-height: 240px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 1rem 1.25rem;
-      padding: 1.25rem 1rem;
-      background: #f4efe6;
-      color: #1f3a24;
-    }
-    .tent-face.flip { transform: rotate(180deg); }
-    .fold-line {
-      border-top: 1px dashed #1f3a24;
-      height: 0;
-    }
-    .tent-copy { max-width: 16rem; text-align: center; }
-    .tent-copy .brand {
-      font-family: var(--font-body);
-      font-size: 0.72rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      font-weight: 700;
-    }
-    .tent-copy h2 { font-size: clamp(1.45rem, 5vw, 2rem); margin: .35rem 0; color: #1f3a24; }
-    .tent-copy .stamp-line { font-weight: 700; font-size: 1.05rem; }
-    .tent-copy .code-label { margin-top: .7rem; font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; }
-    .tent-copy .code { font-family: var(--font-display); font-size: clamp(1.4rem, 6vw, 2rem); letter-spacing: .08em; word-break: break-word; }
-    .tent-qr svg, .tent-qr img { width: min(168px, 42vw); height: auto; display: block; background: #fff; }
     @media print {
       @page { size: letter landscape; margin: 0; }
-      body { background: #fff; }
-      .site-header, .site-footer, .skip-link, .no-print { display: none !important; }
-      main { padding: 0 !important; }
-      .card-page { padding: 0; }
-      .tent-sheet {
-        width: 11in;
-        height: 8.5in;
-        margin: 0;
-        border: 0;
-        border-radius: 0;
-        display: flex;
-        flex-direction: column;
-      }
-      .tent-face {
-        height: 4.25in;
-        min-height: 0;
-        flex-wrap: nowrap;
-        padding: 0.35in 0.55in;
-      }
-      .tent-qr svg, .tent-qr img { width: 2.15in; }
     }
   </style>
 </head>
-<body>
+<body class="hc-counter-print">
   <header class="site-header" id="site-header"></header>
   <main>
     <div class="wrap card-page">
@@ -119,6 +62,7 @@
   <script src="/assets/site.js?v=2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+  <script src="/assets/counter-card.js"></script>
   <script src="/assets/crawl.js"></script>
   <script>
   (function () {
@@ -129,42 +73,15 @@
     function $(id) { return document.getElementById(id); }
     function showBox(el, on) { if (el) el.classList.toggle("show", !!on); }
 
-    function faceHtml(listing, qrHtml) {
-      var code = listing.store_code || "";
-      return '<div class="tent-qr">' + qrHtml + '</div>' +
-        '<div class="tent-copy">' +
-          '<p class="brand">Hometown Crawls</p>' +
-          '<h2>' + esc(listing.display_name || "Your shop") + '</h2>' +
-          '<p class="stamp-line">Get your passport stamped here</p>' +
-          '<p class="code-label">Counter code</p>' +
-          '<p class="code">' + esc(code || "—") + '</p>' +
-        '</div>';
-    }
-
-    function qrMarkup(listing) {
-      var url = new URL("https://www.hometowncrawls.com/puyallup/holiday-coffee-crawl");
-      url.searchParams.set("shop", listing.business_id);
-      url.searchParams.set("code", listing.qr_secret);
-      var qr = qrcode(0, "M");
-      qr.addData(url.toString());
-      qr.make();
-      return typeof qr.createSvgTag === "function" ? qr.createSvgTag(6, 0) : qr.createImgTag(6, 8);
-    }
-
     function render() {
-      var ready = current && current.business_id && current.qr_secret && typeof qrcode === "function";
+      var ready = !!(current && window.HCCounterCard && HCCounterCard.ready(current));
       $("prepared").classList.toggle("hidden", !!ready);
       $("tent").classList.toggle("hidden", !ready);
       $("card-lead").textContent = ready
         ? "Letter size. Fold on the dashed line to make a counter tent."
         : "Your counter card is being prepared.";
       if (!ready) return;
-      var markup = qrMarkup(current);
-      var inner = faceHtml(current, markup);
-      $("tent-sheet").innerHTML =
-        '<div class="tent-face flip">' + inner + '</div>' +
-        '<div class="fold-line"></div>' +
-        '<div class="tent-face">' + inner + '</div>';
+      $("tent-sheet").innerHTML = HCCounterCard.tentHtml(current);
     }
 
     function renderSwitch() {

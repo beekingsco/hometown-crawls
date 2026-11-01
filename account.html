@@ -22,6 +22,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/site.css" />
   <link rel="stylesheet" href="assets/app.css" />
+  <link rel="stylesheet" href="assets/counter-card.css" />
   
 </head>
 <body>
@@ -434,8 +435,9 @@
           <p class="form-success mt-2" id="org-ok" role="status"></p>
           <p class="form-error mt-2" id="org-err" role="alert"></p>
         </form>
-        <div class="card">
+        <div class="card" id="org-stores-card">
           <h3>Stores</h3>
+          <p class="muted small mt-1">Tap Counter card on a paid shop to see the QR and counter code, then print or download the tent. This works even when the host has not opened Store yet.</p>
           <div class="stat-grid mt-2">
             <article class="card"><p class="eyebrow">Stores</p><p class="stat-value" id="org-total-stores">—</p></article>
             <article class="card"><p class="eyebrow">Paid</p><p class="stat-value" id="org-total-paid">—</p></article>
@@ -502,6 +504,24 @@
             <p class="form-success mt-2" id="org-shop-ok" role="status"></p>
             <p class="form-error mt-2" id="org-shop-err" role="alert"></p>
           </form>
+          <section class="card mt-2 hidden" id="org-counter-card" hidden>
+            <div class="row no-print" style="justify-content:space-between;align-items:flex-start">
+              <div>
+                <p class="eyebrow">Counter card</p>
+                <h3 id="org-counter-name">Shop</h3>
+              </div>
+              <button class="btn btn-ghost" type="button" id="org-counter-close">Close</button>
+            </div>
+            <p class="muted small no-print mt-1" id="org-counter-lead"></p>
+            <p class="code-big no-print" id="org-counter-code" hidden></p>
+            <div class="row no-print mt-2 hidden" id="org-counter-actions">
+              <button class="btn btn-primary" type="button" id="org-counter-print">Print counter card</button>
+              <button class="btn btn-soft" type="button" id="org-counter-download">Download counter card</button>
+            </div>
+            <p class="muted small no-print mt-1 hidden" id="org-counter-print-note">Prints on letter paper, landscape. Fold in half on the dashed line so it stands as a tent. The top half is upside down on purpose.</p>
+            <p class="form-error mt-2 no-print" id="org-counter-err" role="alert"></p>
+            <div class="tent-sheet hidden" id="org-counter-tent"></div>
+          </section>
         </div>
         <div class="card">
           <h3>Guest photos</h3>
@@ -570,6 +590,8 @@
   <script src="assets/store-demo.js"></script>
   <script src="assets/stamp-art.js"></script>
   <script src="assets/store-listing.js"></script>
+  <script src="assets/qrcode-generator.js"></script>
+  <script src="assets/counter-card.js"></script>
   <script src="assets/organizer-panel.js"></script>
   <script src="assets/guest-hub.js"></script>
   <script src="assets/paper-card.js"></script>

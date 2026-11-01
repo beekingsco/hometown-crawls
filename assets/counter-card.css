@@ -1,0 +1,87 @@
+/* Counter tent shared by the host card page and the Organizer store list.
+   Screen rules always apply. Print sizing applies only while the page is in
+   counter-card print mode, so the account page keeps its own print layout. */
+.card-page { padding: 2rem 0 3rem; }
+.tent-sheet {
+  width: min(100%, 720px);
+  margin: 1rem auto 0;
+  background: #fffdf8;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.tent-face {
+  min-height: 240px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem 1.25rem;
+  padding: 1.25rem 1rem;
+  background: #f4efe6;
+  color: #1f3a24;
+}
+.tent-face.flip { transform: rotate(180deg); }
+.fold-line {
+  border-top: 1px dashed #1f3a24;
+  height: 0;
+}
+.tent-copy { max-width: 16rem; text-align: center; }
+.tent-copy .brand {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.tent-copy h2 { font-size: clamp(1.45rem, 5vw, 2rem); margin: .35rem 0; color: #1f3a24; }
+.tent-copy .stamp-line { font-weight: 700; font-size: 1.05rem; }
+.tent-copy .code-label { margin-top: .7rem; font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; }
+.tent-copy .code { font-family: var(--font-display); font-size: clamp(1.4rem, 6vw, 2rem); letter-spacing: .08em; word-break: break-word; }
+.tent-qr svg, .tent-qr img { width: min(168px, 42vw); height: auto; display: block; background: #fff; }
+
+@media print {
+  body.hc-counter-print { background: #fff; }
+  body.hc-counter-print .site-header,
+  body.hc-counter-print .site-footer,
+  body.hc-counter-print .skip-link,
+  body.hc-counter-print .no-print { display: none !important; }
+  body.hc-counter-print main { padding: 0 !important; }
+  body.hc-counter-print .card-page { padding: 0; }
+  body.hc-counter-print #account-app > *:not(#panel-organizer) { display: none !important; }
+  body.hc-counter-print #panel-organizer > *:not(#org-stores-card) { display: none !important; }
+  body.hc-counter-print #org-stores-card {
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+  }
+  body.hc-counter-print #org-stores-card > *:not(#org-counter-card) { display: none !important; }
+  body.hc-counter-print #org-counter-card {
+    display: block !important;
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+  }
+  body.hc-counter-print .tent-sheet {
+    width: 11in;
+    height: 8.5in;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  body.hc-counter-print #org-counter-tent.tent-sheet { display: flex !important; }
+  body.hc-counter-print .tent-face {
+    height: 4.25in;
+    min-height: 0;
+    flex-wrap: nowrap;
+    padding: 0.35in 0.55in;
+  }
+  body.hc-counter-print .tent-qr svg,
+  body.hc-counter-print .tent-qr img { width: 2.15in; }
+}
