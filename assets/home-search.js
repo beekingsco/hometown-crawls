@@ -38,12 +38,26 @@
     return String(a.name || "").localeCompare(String(b.name || ""));
   }
 
+  /* New-crawls cards: Arlington follows the Puyallup holiday crawl.
+     Anthem Coffee is a shop on that crawl, not a crawl of its own. */
+  function placeArlingtonAfterPuyallup(rows) {
+    const list = (rows || []).slice();
+    const arlAt = list.findIndex((row) => row && row.id === "arl-coffee");
+    const puyAt = list.findIndex((row) => row && row.id === "puy-coffee");
+    if (arlAt < 0 || puyAt < 0 || arlAt === puyAt + 1) return list;
+    const [arl] = list.splice(arlAt, 1);
+    const insertAt = list.findIndex((row) => row && row.id === "puy-coffee") + 1;
+    list.splice(insertAt, 0, arl);
+    return list;
+  }
+
   function newestCrawls(rows, now) {
-    return (rows || [])
+    const fresh = (rows || [])
       .filter((row) => crawlPhase(row, now) !== "ended")
       .slice()
       .sort(byCreatedThenName)
       .slice(0, 3);
+    return placeArlingtonAfterPuyallup(fresh);
   }
 
   function nearbyCrawls(rows, origin, now, radiusMiles) {
@@ -173,9 +187,19 @@
     container.replaceChildren(p);
   }
 
-  function card(crawl, withPhoto) {
+  function crawlStatusLabel(crawl, now) {
+    const phase = crawlPhase(crawl, now);
+    if (phase === "ended") return "";
+    if (crawl && crawl.id === "arl-coffee") return "starting soon";
+    if (phase === "active") return "Active";
+    if (phase === "upcoming") return "Upcoming";
+    return "";
+  }
+
+  function card(crawl, withPhoto, now) {
     const article = document.createElement("article");
     article.className = "home-crawl-card";
+    const label = crawlStatusLabel(crawl, now);
     if (withPhoto) {
       const photo = document.createElement("div");
       photo.className = "home-card-photo";
@@ -187,11 +211,10 @@
       img.height = holiday ? 1170 : 420;
       if (holiday) photo.className = "home-card-photo home-card-photo-square";
       photo.append(img);
-      const phase = crawlPhase(crawl);
-      if (phase === "active" || phase === "upcoming") {
+      if (label) {
         const tag = document.createElement("span");
-        tag.className = "home-tag";
-        tag.textContent = phase === "active" ? "Active" : "Upcoming";
+        tag.className = crawl.id === "arl-coffee" ? "home-tag home-tag-soon" : "home-tag";
+        tag.textContent = label;
         photo.append(tag);
       }
       article.append(photo);
@@ -217,7 +240,14 @@
     more.className = "home-text-link";
     more.setAttribute("href", href);
     more.textContent = "View crawl";
-    body.append(title, town, dates, more);
+    body.append(title, town);
+    if (!withPhoto && crawl && crawl.id === "arl-coffee" && label) {
+      const soon = document.createElement("p");
+      soon.className = "home-soon";
+      soon.textContent = label;
+      body.append(soon);
+    }
+    body.append(dates, more);
     article.append(body);
     return article;
   }
@@ -306,8 +336,11 @@
     EMPTY_HREF,
     miles,
     crawlPhase,
+    crawlStatusLabel,
+    placeArlingtonAfterPuyallup,
     newestCrawls,
     nearbyCrawls,
+    renderCard: card,
     crawlHref,
     formatDates,
     geocode,

@@ -27,6 +27,26 @@ const sandbox = {
 sandbox.window = sandbox;
 vm.runInNewContext(paper, sandbox, { filename: "assets/paper-card.js" });
 
+test("guest crawl picker puts Arlington after Puyallup and says starting soon", () => {
+  assert.equal(sandbox.HCPaper.guestCrawlStatus({ id: "arl-coffee" }), "starting soon");
+  assert.equal(sandbox.HCPaper.guestCrawlStatus({ id: "puy-coffee" }), "");
+  assert.equal(sandbox.HCPaper.crawlLink("arl-coffee"), "/arlington/holiday-coffee-crawl");
+  assert.equal(sandbox.HCPaper.crawlLink("puy-coffee"), "/puyallup/holiday-coffee-crawl");
+  assert.equal(sandbox.HCPaper.crawlLink("future"), "");
+  assert.deepEqual(sandbox.HCPaper.placeArlingtonAfterPuyallup([
+    { id: "arl-coffee", name: "Arlington Holiday Coffee Crawl" },
+    { id: "other", name: "Other" },
+    { id: "puy-coffee", name: "Downtown Puyallup Holiday Coffee Crawl" }
+  ]).map((row) => row.id), ["other", "puy-coffee", "arl-coffee"]);
+  assert.deepEqual(sandbox.HCPaper.placeArlingtonAfterPuyallup([
+    { id: "puy-coffee" },
+    { id: "arl-coffee" }
+  ]).map((row) => row.id), ["puy-coffee", "arl-coffee"]);
+  assert.match(paper, /guestCrawlStatus\(row\)/);
+  assert.match(paper, /textContent = soonText/);
+  assert.doesNotMatch(paper, /Sunday go-live/);
+});
+
 test("paper signup copy, terms, and consent stay on the guest form", () => {
   assert.match(account, /Play with a paper card/);
   assert.match(account, /id="paper-terms"/);

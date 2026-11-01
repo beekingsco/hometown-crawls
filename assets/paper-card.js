@@ -280,7 +280,32 @@
 
   function crawlLink(id) {
     if (id === "puy-coffee") return "/puyallup/holiday-coffee-crawl";
+    if (id === "arl-coffee") return "/arlington/holiday-coffee-crawl";
     return "";
+  }
+
+  function guestCrawlStatus(row) {
+    if (row && row.id === "arl-coffee") return "starting soon";
+    return "";
+  }
+
+  /* Same new-crawls order: Arlington follows the Puyallup holiday crawl. */
+  function placeArlingtonAfterPuyallup(rows) {
+    var list = (rows || []).slice();
+    var arlAt = -1;
+    var puyAt = -1;
+    list.forEach(function (row, index) {
+      if (row && row.id === "arl-coffee") arlAt = index;
+      if (row && row.id === "puy-coffee") puyAt = index;
+    });
+    if (arlAt < 0 || puyAt < 0 || arlAt === puyAt + 1) return list;
+    var arl = list.splice(arlAt, 1)[0];
+    var insertAt = 0;
+    list.forEach(function (row, index) {
+      if (row && row.id === "puy-coffee") insertAt = index + 1;
+    });
+    list.splice(insertAt, 0, arl);
+    return list;
   }
 
   async function refreshNearby() {
@@ -298,7 +323,7 @@
     }
     var res = await HCCrawl.client().rpc("guest_nearby_crawls");
     list.replaceChildren();
-    var rows = res.error ? [] : (res.data || []);
+    var rows = placeArlingtonAfterPuyallup(res.error ? [] : (res.data || []));
     if (!rows.length) {
       card.classList.add("hidden");
       return;
@@ -312,6 +337,7 @@
       var place = document.createElement("p");
       place.className = "small muted";
       place.textContent = row.region_label || row.city || "";
+      var soonText = guestCrawlStatus(row);
       var join = document.createElement("button");
       join.type = "button";
       join.className = "btn btn-primary";
@@ -328,7 +354,14 @@
         if (href) location.assign(href);
         else await refreshNearby();
       });
-      article.append(name, place, join);
+      if (soonText) {
+        var soon = document.createElement("p");
+        soon.className = "small";
+        soon.textContent = soonText;
+        article.append(name, place, soon, join);
+      } else {
+        article.append(name, place, join);
+      }
       list.append(article);
     });
     card.classList.remove("hidden");
@@ -520,6 +553,9 @@
     submit: submit,
     finish: finish,
     refreshNearby: refreshNearby,
-    cardHref: cardHref
+    cardHref: cardHref,
+    guestCrawlStatus: guestCrawlStatus,
+    placeArlingtonAfterPuyallup: placeArlingtonAfterPuyallup,
+    crawlLink: crawlLink
   };
 })();
