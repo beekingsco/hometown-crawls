@@ -73,7 +73,7 @@ test("coupon stays off until the store turns it on", () => {
   assert.match(demo, /coupon-fields/);
 });
 
-test("copy uses paid locations, golden rules, three steps, and 100 meters", () => {
+test("copy uses paid locations, golden rules, and three steps", () => {
   assert.doesNotMatch(holiday, /20\+/);
   assert.doesNotMatch(coffee, /20\+/);
   assert.match(holiday, /Golden Rules of a Crawl/);
@@ -89,7 +89,9 @@ test("copy uses paid locations, golden rules, three steps, and 100 meters", () =
   assert.match(holiday, /Your passport is saved to your account, so sign in on any device\./);
   assert.match(holiday, /Sign in with your email and join the crawl\./);
   assert.match(rules, /Show some love if you can and buy something at the shop\./);
-  assert.match(rules, /100 m/);
+  assert.match(rules, /The phone does not ask for location/);
+  assert.doesNotMatch(rules, /50 meters|100 meters|Location is required/);
+  assert.match(faqs, /The phone does not ask for location/);
   assert.match(faqs, /Show some love if you can and buy something at the shop\./);
   assert.match(holiday, /id="location-count"/);
   assert.match(holiday, /paid location/);
@@ -145,6 +147,10 @@ test("demo never stamps, joins, or uploads, and claim_stamp has no bypass", () =
   assert.doesNotMatch(codes.slice(codes.indexOf("create or replace function public.claim_stamp")), /demo_bypass/);
   assert.match(codes, /c_radius_m constant double precision := 50/);
   assert.match(claim, /50/);
+  const codeOnly = read("migrations/20261101180000_claim_stamp_code_only.sql");
+  assert.doesNotMatch(codeOnly, /c_radius_m|Location required|You need to be at the shop/);
+  assert.match(codeOnly, /crawl_shop_codes/);
+  assert.match(codeOnly, /p_lat, p_lng/);
   assert.doesNotMatch(claim, /demo_bypass/);
   assert.match(codes, /crawl_shop_codes/);
 });

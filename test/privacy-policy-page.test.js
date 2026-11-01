@@ -39,7 +39,7 @@ test("privacy policy page uses the approved wording with the owner contact", () 
   const wording = normHtml(article[0]);
   assert.equal(
     crypto.createHash("sha256").update(wording).digest("hex"),
-    "c19bea1625c2060138977b7147fd2a2e31f87f2c967578e209d160c1d2926236"
+    "cb0b353d0595177e67a97ed79e275d4dfcbd0a2060a6e35c43e2235ca789bae8"
   );
   if (fs.existsSync(sourcePath)) {
     assert.equal(wording, normMd(fs.readFileSync(sourcePath, "utf8")));
