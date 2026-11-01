@@ -307,7 +307,8 @@
           var pay = row.is_paid ? '<span class="pill pill-ok">Paid</span>' : '<span class="pill pill-wait">Unpaid</span>';
           return '<article class="record-card"><b class="record-name">' + esc(row.display_name) + '</b><p class="record-email">' +
             esc(row.scans || 0) + ' scans</p><div class="record-chips">' + pay +
-            '</div><div class="row mt-1"><button class="btn btn-soft" type="button" data-edit-shop="' + esc(row.listing_id) +
+            '</div><div class="row mt-1"><button class="btn btn-soft" type="button" data-counter-card="' + esc(row.listing_id) +
+            '">Counter card</button><button class="btn btn-soft" type="button" data-edit-shop="' + esc(row.listing_id) +
             '">Edit</button></div><label class="check"><input type="checkbox" data-listing="' +
             esc(row.listing_id) + '"' + (row.is_visible ? " checked" : "") + "> Show on the passport</label></article>";
         }).join("") || '<p class="muted small">No stores yet.</p>';
@@ -343,10 +344,12 @@
       renderLive();
     }).catch(function () {});
 
+    var closeCounterCard = function () {};
     var picker = document.getElementById("org-crawl");
     if (picker) {
       picker.addEventListener("change", async function () {
         if (demoOn()) return;
+        closeCounterCard();
         active = picker.value;
         await loadShops();
         await loadTeam();
@@ -495,7 +498,171 @@
       return path;
     }
 
+    var counterListing = null;
+    var counterRequest = 0;
+
+    function counterBox(id) {
+      return document.getElementById(id);
+    }
+
+    function showCounter(on) {
+      var panel = counterBox("org-counter-card");
+      if (!panel) return;
+      panel.classList.toggle("hidden", !on);
+      panel.hidden = !on;
+    }
+
+    function counterMessage(text) {
+      var el = counterBox("org-counter-err");
+      if (!el) return;
+      el.textContent = text || "";
+      el.classList.toggle("show", !!text);
+    }
+
+    function counterErrorText(error) {
+      var message = (error && error.message) || "";
+      if (/not authorized/i.test(message)) return "That counter card is only available to the crawl team.";
+      if (/organizer_shop_counter_card|schema cache|could not find the function/i.test(message)) {
+        return "Counter cards are not on this server yet. The database update still needs to be applied.";
+      }
+      return message || "Could not open that counter card.";
+    }
+
+    function paintCounter(row) {
+      counterListing = row;
+      var name = counterBox("org-counter-name");
+      var lead = counterBox("org-counter-lead");
+      var codeEl = counterBox("org-counter-code");
+      var actions = counterBox("org-counter-actions");
+      var note = counterBox("org-counter-print-note");
+      var tent = counterBox("org-counter-tent");
+      var cardReady = !!(window.HCCounterCard && HCCounterCard.ready(row));
+      if (name) name.textContent = row.display_name || "Shop";
+      if (codeEl) {
+        codeEl.textContent = row.store_code || "";
+        codeEl.hidden = !row.store_code;
+      }
+      if (cardReady) {
+        if (lead) lead.textContent = "Same tent the host sets on the counter. Guests scan the QR or type the counter code.";
+        if (actions) actions.classList.remove("hidden");
+        if (note) note.classList.remove("hidden");
+        if (tent) {
+          tent.classList.remove("hidden");
+          tent.innerHTML = HCCounterCard.tentHtml(row);
+        }
+        return;
+      }
+      if (actions) actions.classList.add("hidden");
+      if (note) note.classList.add("hidden");
+      if (tent) {
+        tent.innerHTML = "";
+        tent.classList.add("hidden");
+      }
+      if (!lead) return;
+      if (!row.is_paid && !row.store_code && !row.qr_secret) {
+        lead.textContent = "This shop is not paid yet, so there is no counter card. It shows up here after payment.";
+      } else if (row.store_code && window.HCCounterCard && !HCCounterCard.stampPage(row.crawl_id)) {
+        lead.textContent = "The counter code is ready. This crawl does not have a public stamp page yet, so the QR is not on the card.";
+      } else {
+        lead.textContent = "This counter card is still being prepared. Email hello@hometowncrawls.com if this stays blank.";
+      }
+    }
+
+    function closeCounter() {
+      counterRequest += 1;
+      counterListing = null;
+      var tent = counterBox("org-counter-tent");
+      if (tent) tent.innerHTML = "";
+      var codeEl = counterBox("org-counter-code");
+      if (codeEl) codeEl.textContent = "";
+      counterMessage("");
+      showCounter(false);
+    }
+    closeCounterCard = closeCounter;
+
+    function removePrintStyle() {
+      document.body.classList.remove("hc-counter-print");
+      var style = document.getElementById("hc-counter-page-size");
+      if (style) style.remove();
+    }
+
+    function armPrint() {
+      if (!counterListing || !window.HCCounterCard || !HCCounterCard.ready(counterListing)) return false;
+      document.body.classList.add("hc-counter-print");
+      if (!document.getElementById("hc-counter-page-size")) {
+        var style = document.createElement("style");
+        style.id = "hc-counter-page-size";
+        style.textContent = "@media print { @page { size: letter landscape; margin: 0; } }";
+        document.head.appendChild(style);
+      }
+      return true;
+    }
+
+    function printCounter() {
+      if (!armPrint()) return;
+      window.print();
+    }
+
+    window.addEventListener("beforeprint", armPrint);
+    window.addEventListener("afterprint", removePrintStyle);
+
+    async function downloadCounter() {
+      if (!counterListing || !window.HCCounterCard || !HCCounterCard.ready(counterListing)) return;
+      var css = "";
+      try {
+        var res = await fetch("/assets/counter-card.css");
+        if (res.ok) css = await res.text();
+      } catch (ignore) {}
+      var file = HCCounterCard.downloadFile(counterListing, css);
+      var blob = new Blob([file.html], { type: "text/html" });
+      var url = URL.createObjectURL(blob);
+      var link = document.createElement("a");
+      link.href = url;
+      link.download = file.name;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    }
+
+    async function openCounter(listingId) {
+      var request = ++counterRequest;
+      closeShopForm();
+      counterListing = null;
+      counterMessage("");
+      var tent = counterBox("org-counter-tent");
+      if (tent) { tent.innerHTML = ""; tent.classList.add("hidden"); }
+      var codeEl = counterBox("org-counter-code");
+      if (codeEl) { codeEl.textContent = ""; codeEl.hidden = true; }
+      var actions = counterBox("org-counter-actions");
+      if (actions) actions.classList.add("hidden");
+      var note = counterBox("org-counter-print-note");
+      if (note) note.classList.add("hidden");
+      showCounter(true);
+      var known = shops.filter(function (row) { return row.listing_id === listingId; })[0];
+      var name = counterBox("org-counter-name");
+      if (name) name.textContent = (known && known.display_name) || "Shop";
+      var lead = counterBox("org-counter-lead");
+      if (lead) lead.textContent = "Loading the counter card…";
+      var res = await HCCrawl.client().rpc("organizer_shop_counter_card", { p_listing: listingId });
+      if (request !== counterRequest) return;
+      if (res.error || !res.data || !res.data.length) {
+        counterListing = null;
+        var tent = counterBox("org-counter-tent");
+        if (tent) { tent.innerHTML = ""; tent.classList.add("hidden"); }
+        var actions = counterBox("org-counter-actions");
+        if (actions) actions.classList.add("hidden");
+        if (lead) lead.textContent = "";
+        counterMessage(counterErrorText(res.error));
+        return;
+      }
+      paintCounter(res.data[0]);
+      var panel = counterBox("org-counter-card");
+      if (panel && panel.scrollIntoView) panel.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
     async function openShop(listingId) {
+      closeCounter();
       shopMessage("org-shop-err", "");
       var res = await HCCrawl.client().rpc("organizer_shop_listing", { p_listing: listingId });
       if (res.error || !res.data || !res.data.length) {
@@ -513,6 +680,11 @@
     if (storeList) {
       storeList.addEventListener("click", function (ev) {
         if (demoOn()) return;
+        var cardBtn = ev.target.closest && ev.target.closest("[data-counter-card]");
+        if (cardBtn) {
+          openCounter(cardBtn.getAttribute("data-counter-card"));
+          return;
+        }
         var btn = ev.target.closest && ev.target.closest("[data-edit-shop]");
         if (!btn) return;
         openShop(btn.getAttribute("data-edit-shop"));
@@ -533,6 +705,12 @@
     if (shopEditor) {
       var cancelShop = document.getElementById("org-shop-cancel");
       if (cancelShop) cancelShop.addEventListener("click", closeShopForm);
+      var closeCard = document.getElementById("org-counter-close");
+      if (closeCard) closeCard.addEventListener("click", closeCounter);
+      var printCard = document.getElementById("org-counter-print");
+      if (printCard) printCard.addEventListener("click", printCounter);
+      var downloadCard = document.getElementById("org-counter-download");
+      if (downloadCard) downloadCard.addEventListener("click", downloadCounter);
       shopEditor.addEventListener("submit", async function (ev) {
         if (demoOn()) return;
         ev.preventDefault();

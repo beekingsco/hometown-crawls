@@ -156,6 +156,7 @@
   <script src="/assets/site.js?v=2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+  <script src="/assets/counter-card.js"></script>
   <script src="/assets/crawl.js?v=3"></script>
   <script>
   (function () {
@@ -274,15 +275,13 @@
       var cardHref = "/puyallup/coffee-crawl/shop/card?listing=" + encodeURIComponent(l.listing_id || "");
       var printLink = $("btn-print");
       if (printLink) printLink.setAttribute("href", cardHref);
-      if (!l.business_id || !l.qr_secret || typeof qrcode !== "function") {
+      var target = window.HCCounterCard && HCCounterCard.stampUrl(l);
+      if (!l.business_id || !l.qr_secret || !target || typeof qrcode !== "function") {
         host.innerHTML = '<p class="muted">Your counter card is being prepared.</p>';
         return;
       }
-      var url = new URL("https://www.hometowncrawls.com/puyallup/holiday-coffee-crawl");
-      url.searchParams.set("shop", l.business_id);
-      url.searchParams.set("code", l.qr_secret);
       var qr = qrcode(0, "M");
-      qr.addData(url.toString());
+      qr.addData(target);
       qr.make();
       host.innerHTML = typeof qr.createSvgTag === "function" ? qr.createSvgTag(6, 2) : qr.createImgTag(6, 8);
     }
@@ -336,7 +335,7 @@
       var photoDone = Array.isArray(l.photo_paths) && l.photo_paths.length > 0;
       var hoursDone = !!(l.hours && String(l.hours).trim());
       var offerDone = !!(l.blurb && String(l.blurb).trim());
-      var cardReady = !!(l.business_id && l.qr_secret);
+      var cardReady = !!(window.HCCounterCard && HCCounterCard.stampUrl(l));
       var cardHref = "/puyallup/coffee-crawl/shop/card?listing=" + encodeURIComponent(l.listing_id || "");
       list.innerHTML = [
         checkItem(addressDone, addressDone ? "Street address saved" : "Add your street address", "#f-address"),
