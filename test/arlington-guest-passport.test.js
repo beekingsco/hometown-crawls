@@ -101,7 +101,7 @@ test("Arlington guest passport is its own page and never names Puyallup", () => 
   assert.match(page, /You're on the Arlington Holiday Coffee Crawl passport\./);
   assert.match(page, /Shops joining soon/);
   assert.match(page, /downtown Arlington/);
-  assert.match(page, /src="\/assets\/guest-hub\.js\?v=gps-off-2"/);
+  assert.match(page, /src="\/assets\/guest-hub\.js\?v=guest-photos-1"/);
   assert.match(page, /src="\/assets\/crawl\.js\?v=gps-off-2"/);
   assert.match(page, /HCCrawl\.claimStamp\(\{ crawl: CRAWL/);
   assert.match(page, /HCCrawl\.joinCrawl\(CRAWL\)/);
@@ -110,7 +110,7 @@ test("Arlington guest passport is its own page and never names Puyallup", () => 
   assert.match(page, /eq\("crawl_id", CRAWL\)/);
   assert.doesNotMatch(page, /puy-coffee|Puyallup|puyallup|hc-holiday-claim|98371|47\.191/);
   assert.doesNotMatch(page, /holiday-coffee-crawl\/rules/);
-  const hubAt = page.indexOf('src="/assets/guest-hub.js?v=gps-off-2"');
+  const hubAt = page.indexOf('src="/assets/guest-hub.js?v=guest-photos-1"');
   const crawlSet = page.indexOf('window.HC_GUEST_CRAWL = "arl-coffee"');
   assert.ok(crawlSet > -1 && crawlSet < hubAt);
 });
@@ -125,6 +125,17 @@ test("Arlington guest copy fills the passport without promising a prize", () => 
   assert.match(guest, /It does not add a prize entry, and your stamp is unchanged\./);
   assert.match(guest, /guestCrawl\(\) === "arl-coffee"/);
   assert.match(guest, /It does not change your stamp\./);
+});
+
+test("holiday crawl pages label the guest photo gallery", () => {
+  for (const html of [page, puyallup]) {
+    assert.match(html, /<p class="eyebrow">Shared by guests<\/p>/);
+    assert.match(html, /<h3 class="mt-1">Guest photos<\/h3>/);
+    assert.match(html, /They show here after an organizer approves them\./);
+    const head = html.indexOf("<h3 class=\"mt-1\">Guest photos</h3>");
+    const gallery = html.indexOf('id="photo-gallery"');
+    assert.ok(head > -1 && gallery > head);
+  }
 });
 
 test("Puyallup holiday passport is unchanged", () => {

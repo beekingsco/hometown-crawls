@@ -4,7 +4,8 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const root = path.join(__dirname, "..");
-const VERSION = "gps-off-2";
+const CRAWL_VERSION = "gps-off-2";
+const GUEST_HUB_VERSION = "guest-photos-1";
 
 function htmlFiles(dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -29,8 +30,10 @@ test("every crawl.js and guest-hub.js script tag is cache-busted", () => {
   }
   assert.ok(hits.length >= 4, "expected guest pages to load crawl.js or guest-hub.js");
   for (const hit of hits) {
+    const fileName = hit.src.split(/[?#]/)[0];
+    const version = /guest-hub\.js$/.test(fileName) ? GUEST_HUB_VERSION : CRAWL_VERSION;
     assert.equal(
-      hit.src.includes(`?v=${VERSION}`),
+      hit.src.includes(`?v=${version}`),
       true,
       `${hit.file} still loads ${hit.src}`
     );
