@@ -1,9 +1,13 @@
 /* Store tab helpers: stats, optional coupon, consented guest export, demo code.
    ?demo=1 shows DEMO_STORE / DEMO_ORGANIZER from assets/config.js.
-   The coupon is off until the shop turns it on. */
+   The coupon is off until the shop turns it on.
+   Demo coupons stay on hc-coupon-anthemco. A signed-in shop uses its own
+   listing id, and the guest card uses that listing's display name. */
 (function () {
-  var COUPON_KEY = "hc-coupon-anthemco";
+  var DEMO_COUPON_KEY = "hc-coupon-anthemco";
   var CODE_KEY = "hc-code-anthemco";
+  var liveShop = null;
+  var currentCoupon = null;
 
   function env() {
     return window.__HC_ENV__ || {};
@@ -69,16 +73,39 @@
     });
   }
 
+  function storageKey() {
+    if (demoRequested()) return DEMO_COUPON_KEY;
+    if (liveShop && liveShop.listingId) return "hc-coupon-listing-" + liveShop.listingId;
+    return "";
+  }
+
+  function blankCoupon() {
+    return { enabled: false, reward: "", expiryDays: 30, issued: null, redeemed: null };
+  }
+
+  function rememberCoupon(coupon) {
+    currentCoupon = {
+      enabled: coupon.enabled === true,
+      reward: String(coupon.reward || "").trim(),
+      expiryDays: Number(coupon.expiryDays) || 30,
+      issued: coupon.issued != null ? coupon.issued : null,
+      redeemed: coupon.redeemed != null ? coupon.redeemed : null
+    };
+    return currentCoupon;
+  }
+
   function loadCoupon(base) {
     var coupon = {
       enabled: false,
       reward: (base && base.reward) || "",
       expiryDays: (base && base.expiryDays) || 30,
-      issued: base && base.issued != null ? base.issued : 0,
-      redeemed: base && base.redeemed != null ? base.redeemed : 0
+      issued: base && base.issued != null ? base.issued : (demoRequested() ? 0 : null),
+      redeemed: base && base.redeemed != null ? base.redeemed : (demoRequested() ? 0 : null)
     };
+    var key = storageKey();
+    if (!key) return coupon;
     try {
-      var saved = JSON.parse(localStorage.getItem(COUPON_KEY) || "null");
+      var saved = JSON.parse(localStorage.getItem(key) || "null");
       if (saved && typeof saved === "object") {
         coupon.enabled = saved.enabled === true;
         if (typeof saved.reward === "string" && saved.reward.trim()) coupon.reward = saved.reward.trim();
@@ -90,11 +117,130 @@
   }
 
   function saveCoupon(coupon) {
-    localStorage.setItem(COUPON_KEY, JSON.stringify({
-      enabled: coupon.enabled === true,
-      reward: String(coupon.reward || "").trim(),
-      expiryDays: Number(coupon.expiryDays) || 30
-    }));
+    var key = storageKey();
+    if (!key) return;
+    try {
+      localStorage.setItem(key, JSON.stringify({
+        enabled: coupon.enabled === true,
+        reward: String(coupon.reward || "").trim(),
+        expiryDays: Number(coupon.expiryDays) || 30
+      }));
+    } catch (e) {}
+  }
+
+  function listingHasReward(listing) {
+    return !!(listing && (
+      Object.prototype.hasOwnProperty.call(listing, "reward_enabled") ||
+      Object.prototype.hasOwnProperty.call(listing, "reward_text") ||
+      Object.prototype.hasOwnProperty.call(listing, "reward_expiry_days")
+    ));
+  }
+
+  function couponFromListing(listing) {
+    var days = Number(listing && listing.reward_expiry_days);
+    return {
+      enabled: !!(listing && listing.reward_enabled === true),
+      reward: listing && typeof listing.reward_text === "string" ? listing.reward_text.trim() : "",
+      expiryDays: days >= 1 && days <= 365 ? Math.round(days) : 30,
+      issued: null,
+      redeemed: null
+    };
+  }
+
+  function readFormCoupon() {
+    var base = currentCoupon || (demoRequested() ? loadCoupon(fixture() && fixture().coupon) : blankCoupon());
+    var rewardEl = document.getElementById("coupon-reward");
+    var daysEl = document.getElementById("coupon-days");
+    var toggle = document.getElementById("coupon-enabled");
+    var days = daysEl && daysEl.value !== "" ? Number(daysEl.value) : base.expiryDays;
+    if (!days || days < 1 || days > 365) days = base.expiryDays || 30;
+    return rememberCoupon({
+      enabled: toggle ? toggle.checked === true : base.enabled === true,
+      reward: rewardEl ? rewardEl.value.trim() : base.reward,
+      expiryDays: days,
+      issued: base.issued,
+      redeemed: base.redeemed
+    });
+  }
+
+  function rewardShopName(sample) {
+    if (sample || demoRequested()) {
+      var shop = (fixture() && fixture().shop) || {};
+      return shop.name || "Anthem Coffee & Tea";
+    }
+    if (liveShop && liveShop.name) return liveShop.name;
+    return "This shop";
+  }
+
+  async function persistCoupon(coupon) {
+    if (demoRequested()) {
+      saveCoupon(coupon);
+      return { ok: true, message: "Reward saved on this browser. Guests see it after they stamp." };
+    }
+    if (!liveShop || !liveShop.listingId) {
+      return { ok: false, message: "Sign in as the store owner to save this reward." };
+    }
+    if (!window.HCCrawl || !HCCrawl.client) {
+      saveCoupon(coupon);
+      return { ok: true, message: "Reward saved on this browser for this shop. Guests see it after they stamp." };
+    }
+    try {
+      var res = await HCCrawl.client().rpc("shop_save_reward", {
+        p_listing: liveShop.listingId,
+        p_enabled: coupon.enabled === true,
+        p_reward: String(coupon.reward || "").trim(),
+        p_expiry_days: Math.round(Number(coupon.expiryDays) || 30)
+      });
+      if (res && res.error) throw res.error;
+      saveCoupon(coupon);
+      return {
+        ok: true,
+        remote: true,
+        message: coupon.enabled
+          ? "Reward saved for this shop. Guests see it after they stamp."
+          : "Reward turned off for this shop."
+      };
+    } catch (e) {
+      var message = (e && e.message) || "Could not save the reward.";
+      if (/shop_save_reward|schema cache|reward_enabled|reward_text/i.test(message)) {
+        saveCoupon(coupon);
+        return { ok: true, message: "Reward saved on this browser for this shop. Guests see it after they stamp." };
+      }
+      return { ok: false, message: message };
+    }
+  }
+
+  function useLiveListing(listing) {
+    if (demoRequested() || !listing || !listing.listing_id) return;
+    liveShop = {
+      listingId: String(listing.listing_id),
+      name: (listing.display_name && String(listing.display_name).trim()) || "Your shop",
+      businessId: listing.business_id || "",
+      crawlId: listing.crawl_id || ""
+    };
+    var coupon;
+    if (listingHasReward(listing)) {
+      coupon = couponFromListing(listing);
+      if (!coupon.enabled && !coupon.reward) {
+        var stored = loadCoupon(blankCoupon());
+        if (stored.enabled || stored.reward) {
+          coupon = stored;
+          persistCoupon(coupon).catch(function () {});
+        }
+      }
+    } else {
+      coupon = loadCoupon(blankCoupon());
+    }
+    rememberCoupon(coupon);
+    fillCoupon(coupon, false);
+  }
+
+  function setLiveShopName(name) {
+    if (demoRequested() || !liveShop) return;
+    var next = String(name || "").trim();
+    if (!next) return;
+    liveShop.name = next;
+    if (currentCoupon) fillCoupon(currentCoupon, false);
   }
 
   function currentCode(demo) {
@@ -208,17 +354,16 @@
     if (fields) fields.classList.toggle("hidden", coupon.enabled !== true);
     if (reward && document.activeElement !== reward) reward.value = coupon.reward;
     if (days && document.activeElement !== days) days.value = String(coupon.expiryDays);
-    if (issued) issued.textContent = String(coupon.issued);
-    if (redeemed) redeemed.textContent = String(coupon.redeemed);
+    if (issued) issued.textContent = coupon.issued == null ? "—" : String(coupon.issued);
+    if (redeemed) redeemed.textContent = coupon.redeemed == null ? "—" : String(coupon.redeemed);
     var guestText = document.getElementById("guest-reward-text");
     var guestMeta = document.getElementById("guest-reward-meta");
     var guestNote = document.getElementById("guest-reward-note");
     var guestCard = document.getElementById("guest-reward");
-    var shop = (fixture() && fixture().shop) || {};
     var showGuest = coupon.enabled === true && !!coupon.reward;
     if (guestText) guestText.textContent = coupon.reward;
     if (guestMeta) {
-      guestMeta.textContent = (shop.name || "This shop") + " · show within " + coupon.expiryDays + " days of your stamp";
+      guestMeta.textContent = rewardShopName(sample) + " · show within " + coupon.expiryDays + " days of your stamp";
     }
     if (guestNote) {
       guestNote.textContent = sample
@@ -323,21 +468,31 @@
     });
     var toggle = document.getElementById("coupon-enabled");
     if (toggle) {
-      toggle.onchange = function () {
-        var coupon = loadCoupon(demo.coupon);
-        coupon.enabled = toggle.checked === true;
-        saveCoupon(coupon);
+      toggle.onchange = async function () {
+        var coupon = readFormCoupon();
+        var result = await persistCoupon(coupon);
+        var err = document.getElementById("coupon-err");
+        if (!result.ok) {
+          coupon.enabled = toggle.checked !== true;
+          rememberCoupon(coupon);
+          toggle.checked = coupon.enabled;
+          fillCoupon(coupon, demoRequested());
+          if (err) { err.textContent = result.message; err.classList.add("show"); }
+          if (window.HC) HC.toast(result.message);
+          return;
+        }
+        if (err) { err.textContent = ""; err.classList.remove("show"); }
         fillCoupon(coupon, demoRequested());
       };
     }
     var form = document.getElementById("coupon-form");
     if (form) {
-      form.onsubmit = function (ev) {
+      form.onsubmit = async function (ev) {
         ev.preventDefault();
-        var coupon = loadCoupon(demo.coupon);
+        var coupon = readFormCoupon();
         if (!coupon.enabled) return;
-        var reward = document.getElementById("coupon-reward").value.trim();
-        var days = Number(document.getElementById("coupon-days").value);
+        var reward = coupon.reward;
+        var days = coupon.expiryDays;
         var err = document.getElementById("coupon-err");
         var ok = document.getElementById("coupon-ok");
         if (err) { err.textContent = ""; err.classList.remove("show"); }
@@ -353,9 +508,16 @@
         coupon.reward = reward;
         coupon.expiryDays = Math.round(days);
         coupon.enabled = true;
-        saveCoupon(coupon);
-        fillCoupon(loadCoupon(demo.coupon), demoRequested());
-        if (ok) { ok.textContent = "Reward saved on this browser. Guests see it after they stamp."; ok.classList.add("show"); }
+        rememberCoupon(coupon);
+        var result = await persistCoupon(coupon);
+        if (!result.ok) {
+          if (err) { err.textContent = result.message; err.classList.add("show"); }
+          return;
+        }
+        var shown = demoRequested() ? loadCoupon(demo.coupon) : coupon;
+        rememberCoupon(shown);
+        fillCoupon(shown, demoRequested());
+        if (ok) { ok.textContent = result.message; ok.classList.add("show"); }
         if (window.HC) HC.toast("Reward saved");
       };
     }
@@ -428,38 +590,21 @@
     }
   }
 
-  async function guestHasShopStamp(businessId, crawlId) {
-    if (!window.HCCrawl || !businessId) return false;
-    try {
-      var session = await HCCrawl.getSession();
-      if (!session) return false;
-      var stamps = await HCCrawl.myStamps(crawlId || "puy-coffee");
-      return (stamps || []).some(function (stamp) { return stamp.business_id === businessId; });
-    } catch (e) {
-      return false;
-    }
-  }
-
   async function refreshGuest() {
-    var demo = fixture();
-    if (!demo) return;
-    var coupon = loadCoupon(demo.coupon);
-    if (!coupon.enabled) {
+    if (demoRequested()) {
+      var demo = fixture();
+      if (!demo) return;
+      var sample = loadCoupon(demo.coupon);
+      rememberCoupon(sample);
+      fillCoupon(sample, true);
+      return;
+    }
+    if (!liveShop) {
       var card = document.getElementById("guest-reward");
       if (card) card.classList.add("hidden");
       return;
     }
-    if (demoRequested()) {
-      fillCoupon(coupon, true);
-      return;
-    }
-    var stamped = await guestHasShopStamp(demo.shop.businessId, demo.shop.crawlId);
-    if (!stamped) {
-      var hidden = document.getElementById("guest-reward");
-      if (hidden) hidden.classList.add("hidden");
-      return;
-    }
-    fillCoupon(coupon, false);
+    fillCoupon(currentCoupon || blankCoupon(), false);
   }
 
   document.addEventListener("DOMContentLoaded", function () {
@@ -473,7 +618,6 @@
       selectTab(want);
       return;
     }
-    refreshGuest();
   });
 
   window.HCStoreDemo = {
@@ -487,6 +631,10 @@
     openRequestedTab: openRequestedTab,
     randomStoreCode: randomStoreCode,
     loadCoupon: loadCoupon,
-    esc: esc
+    esc: esc,
+    useLiveListing: useLiveListing,
+    setLiveShopName: setLiveShopName,
+    couponStorageKey: storageKey,
+    paintCoupon: fillCoupon
   };
 })();

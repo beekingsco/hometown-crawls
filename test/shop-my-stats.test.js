@@ -90,8 +90,8 @@ test("live store path fills the listing that shop_my_listings showed", async () 
   assert.equal(els["stat-first"].textContent, "11");
   assert.match(listing, /rpc\("shop_my_listings"\)/);
   assert.match(listing, /HCStoreDemo\.fillLiveStats\(listing\.listing_id\)/);
-  assert.match(account, /assets\/store-demo\.js\?v=shop-stats-1/);
-  assert.match(account, /assets\/store-listing\.js\?v=shop-stats-1/);
+  assert.match(account, /assets\/store-demo\.js\?v=shop-reward-1/);
+  assert.match(account, /assets\/store-listing\.js\?v=shop-reward-1/);
 });
 
 test("demo mode still shows sample stats and does not call shop_my_stats", async () => {
