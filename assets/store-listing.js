@@ -316,6 +316,7 @@
       if (code && listing.store_code) code.textContent = listing.store_code;
       if (big && listing.store_code) big.textContent = listing.store_code;
       paintLive();
+      if (window.HCStoreDemo && HCStoreDemo.useLiveListing) HCStoreDemo.useLiveListing(listing);
       if (window.HCStoreDemo && HCStoreDemo.fillLiveStats) HCStoreDemo.fillLiveStats(listing.listing_id);
     }).catch(function () {});
 
@@ -360,6 +361,9 @@
         return;
       }
       listing.display_name = draft.name;
+      var storeName = document.getElementById("store-name");
+      if (storeName) storeName.textContent = draft.name || "Your shop";
+      if (window.HCStoreDemo && HCStoreDemo.setLiveShopName) HCStoreDemo.setLiveShopName(draft.name);
       listing.stamp_label = draft.stampLabel;
       listing.postal_code = draft.postal;
       listing.video_url = draft.video;
