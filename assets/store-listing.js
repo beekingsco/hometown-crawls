@@ -316,6 +316,7 @@
       if (code && listing.store_code) code.textContent = listing.store_code;
       if (big && listing.store_code) big.textContent = listing.store_code;
       paintLive();
+      if (window.HCStoreDemo && HCStoreDemo.fillLiveStats) HCStoreDemo.fillLiveStats(listing.listing_id);
     }).catch(function () {});
 
     form.addEventListener("submit", async function (ev) {

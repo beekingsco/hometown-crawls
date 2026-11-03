@@ -154,6 +154,36 @@
     });
   }
 
+  function statsRows(data) {
+    if (Array.isArray(data)) return data;
+    if (data && typeof data === "object") return [data];
+    return [];
+  }
+
+  async function fillLiveStats(listingId) {
+    if (demoRequested() || !listingId || !window.HCCrawl || !HCCrawl.client) return false;
+    try {
+      var res = await HCCrawl.client().rpc("shop_my_stats");
+      if (!res || res.error) return false;
+      var row = null;
+      statsRows(res.data).forEach(function (item) {
+        if (!row && item && item.listing_id === listingId) row = item;
+      });
+      if (!row) return false;
+      fillStats({
+        stats: {
+          players: row.players,
+          scans: row.scans,
+          shopScans: row.shop_scans,
+          firstTime: row.first_time
+        }
+      });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   function fillShop(demo) {
     var shop = demo.shop || {};
     var name = document.getElementById("store-name");
@@ -448,6 +478,8 @@
 
   window.HCStoreDemo = {
     percent: percent,
+    fillStats: fillStats,
+    fillLiveStats: fillLiveStats,
     consentedGuests: consentedGuests,
     downloadGuests: downloadGuests,
     refreshGuest: refreshGuest,
