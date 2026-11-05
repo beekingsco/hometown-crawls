@@ -321,7 +321,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="/assets/video-embed.js"></script>
-  <script src="/assets/crawl.js?v=gps-off-2"></script>
+  <script src="/assets/crawl.js?v=autojoin-1"></script>
   <script>window.HC_GUEST_CRAWL = "arl-coffee";</script>
   <script src="/assets/guest-hub.js?v=guest-photos-1"></script>
   <script>
@@ -735,8 +735,8 @@
           button.textContent = "Sending…";
         }
         try {
-          await HCCrawl.magicLink(email);
-          $("passport-ok").textContent = "Check your email for the sign-in link. It brings you back to this page.";
+          await HCCrawl.magicLink(email, CRAWL);
+          $("passport-ok").textContent = "Check your email for the sign-in link. It brings you back to this page and adds you to this crawl.";
           showBox($("passport-ok"), true);
           if (HCCrawl.revealNotice) HCCrawl.revealNotice($("passport-ok"));
         } catch (e) {
