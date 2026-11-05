@@ -102,7 +102,7 @@ test("Arlington guest passport is its own page and never names Puyallup", () => 
   assert.match(page, /Shops joining soon/);
   assert.match(page, /downtown Arlington/);
   assert.match(page, /src="\/assets\/guest-hub\.js\?v=guest-photos-1"/);
-  assert.match(page, /src="\/assets\/crawl\.js\?v=stamp-fix-1"/);
+  assert.match(page, /src="\/assets\/crawl\.js\?v=stamp-fix-2"/);
   assert.match(page, /HCCrawl\.claimStamp\(\{ crawl: CRAWL/);
   assert.match(page, /HCCrawl\.joinCrawl\(CRAWL\)/);
   assert.match(page, /HCCrawl\.myStamps\(CRAWL\)/);

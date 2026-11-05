@@ -403,7 +403,8 @@ test("the account prompt shows only for a signed-in guest with zero joins", () =
 
 test("guest crawl pages send their own crawl id and do not default the join", () => {
   const crawl = read("assets/crawl.js");
-  assert.match(crawl, /emailRedirectTo: redirectForMagicLink\(id\)/);
+  assert.match(crawl, /emailRedirectTo: signInRedirect/);
+  assert.match(crawl, /const signInRedirect = redirectForMagicLink\(id\)/);
   assert.match(crawl, /location\.origin \+ location\.pathname \+ location\.search/);
   assert.doesNotMatch(crawl, /emailRedirectTo: redirectTo/);
   assert.match(crawl, /p_crawl: id/);

@@ -78,7 +78,6 @@
     var shops = document.getElementById("stamp-fix-shops");
     var join = document.getElementById("stamp-fix-join");
     setText("stamp-fix-err", "");
-    setText("stamp-fix-msg", "");
     if (!crawlId) {
       setText("stamp-fix-status", "Open the stamp fix link from your crawl. This page will not pick one for you.");
       show(form, false);
@@ -95,25 +94,10 @@
       return;
     }
     show(auth, false);
-    var joins = await HCCrawl.myJoins();
-    var joined = (joins || []).some(function (row) { return row && row.crawl_id === crawlId; });
-    if (!joined) {
-      show(form, false);
-      show(join, true);
-      var href = crawlHref(crawlId);
-      var link = document.getElementById("stamp-fix-join-link");
-      if (link) {
-        if (href) {
-          link.href = href;
-          link.classList.remove("hidden");
-        } else {
-          link.removeAttribute("href");
-          link.classList.add("hidden");
-        }
-      }
-      return;
-    }
     show(join, false);
+    if (window.HCCrawl && HCCrawl.consumeAutoJoin) {
+      try { await HCCrawl.consumeAutoJoin(); } catch (e) {}
+    }
     var list = await loadShops(crawlId);
     if (shops) {
       shops.innerHTML = list.map(function (shop) {
@@ -135,10 +119,12 @@
         setText("stamp-fix-err", "");
         setText("stamp-fix-msg", "");
         var email = document.getElementById("stamp-fix-email");
+        var crawlId = crawlFromLocation();
         send.disabled = true;
         try {
-          await HCCrawl.magicLink((email && email.value || "").trim());
-          setText("stamp-fix-msg", "Check your email for the sign-in link. It brings you back to this crawl.");
+          if (HCCrawl.rememberStampFixReturn) HCCrawl.rememberStampFixReturn(crawlId);
+          await HCCrawl.magicLink((email && email.value || "").trim(), crawlId);
+          setText("stamp-fix-msg", "Check your email for the sign-in link. It brings you back to this page.");
         } catch (error) {
           setText("stamp-fix-err", (error && error.message) || "Could not send the sign-in link.");
         } finally {
@@ -164,9 +150,15 @@
         }
       });
     }
+    if (crawlId && window.HCCrawl && HCCrawl.rememberStampFixReturn) HCCrawl.rememberStampFixReturn(crawlId);
     paint(crawlId).catch(function (error) {
       setText("stamp-fix-err", (error && error.message) || "Could not open this crawl.");
     });
+    if (window.HCCrawl && HCCrawl.watchSession) {
+      HCCrawl.watchSession(function () {
+        paint(crawlFromLocation()).catch(function () {});
+      });
+    }
   }
 
   window.HCStampFix = {

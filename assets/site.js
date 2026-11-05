@@ -27,6 +27,15 @@
     return `<a href="${full}"${cur}>${label}</a>`;
   }
 
+  function stampFixAccountHref() {
+    const path = String(location.pathname || "");
+    if (!/\/stamp-fix\/?$/.test(path) && !path.endsWith("/stamp-fix/index.html")) return "";
+    const id = String(new URLSearchParams(location.search).get("crawl") || "").trim();
+    if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(id)) return "";
+    const target = "/stamp-fix?crawl=" + id + "&autojoin=" + id;
+    return "/account?redirect_to=" + encodeURIComponent(target);
+  }
+
   function injectHeader() {
     const el = document.getElementById("site-header");
     if (!el) return;
@@ -41,7 +50,7 @@
           ${link("organize.html", "Start a crawl")}
         </nav>
         <div class="nav-end">
-          <a class="nav-login" id="nav-login" href="${base}account.html">Log in</a>
+          <a class="nav-login" id="nav-login" href="${stampFixAccountHref() || (base + "account.html")}">Log in</a>
           <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav-links" id="nav-toggle"><span></span></button>
         </div>
       </div>`;
@@ -72,7 +81,7 @@
     const link = el.querySelector("#nav-login");
     if (!link) return;
     const user = sessionUser();
-    const href = (window.HC && window.HC.base ? window.HC.base : "") + "account.html";
+    const href = stampFixAccountHref() || ((window.HC && window.HC.base ? window.HC.base : "") + "account.html");
     link.setAttribute("href", href);
     if (!user) {
       link.dataset.signed = "0";

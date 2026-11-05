@@ -58,8 +58,13 @@
   // not a source for which crawl to join.
   const AUTOJOIN_PARAM = "autojoin";
   const AUTOJOIN_PREFIX = "hc-autojoin:";
+  const STAMP_FIX_RETURN_KEY = "hc-stamp-fix-return";
   let landedAutoJoin = readAutoJoinParam();
   const autoJoinFlight = new Map();
+
+  function pagePath() {
+    return String(location.pathname || "").replace(/\/index\.html$/, "").replace(/\.html$/, "").replace(/\/+$/, "") || "/";
+  }
 
   function crawlIdToken(value) {
     const id = String(value == null ? "" : value).trim();
@@ -135,7 +140,116 @@
     stripAutoJoinParam(token);
   }
 
+  function stampFixTarget(crawlId) {
+    const id = crawlIdToken(crawlId);
+    if (!id) return null;
+    const path = "/stamp-fix?crawl=" + id + "&" + AUTOJOIN_PARAM + "=" + id;
+    return { crawlId: id, path: path, url: location.origin + path };
+  }
+
+  function parseStampFixTarget(raw) {
+    const text = String(raw || "").trim();
+    if (!text) return null;
+    let pathAndQuery = text;
+    if (/^https?:\/\//i.test(text)) {
+      if (typeof URL !== "function") return null;
+      let url;
+      try { url = new URL(text); } catch (e) { return null; }
+      if (url.origin !== location.origin) return null;
+      pathAndQuery = url.pathname + url.search;
+    }
+    const splitAt = pathAndQuery.indexOf("?");
+    const path = (splitAt === -1 ? pathAndQuery : pathAndQuery.slice(0, splitAt)).replace(/\/+$/, "") || "/";
+    const query = splitAt === -1 ? "" : pathAndQuery.slice(splitAt + 1);
+    if (path !== "/stamp-fix") return null;
+    let params;
+    try { params = new URLSearchParams(query); } catch (e) { return null; }
+    const id = crawlIdToken(params.get("crawl"));
+    if (!id) return null;
+    const auto = params.get(AUTOJOIN_PARAM);
+    if (auto && crawlIdToken(auto) !== id) return null;
+    return stampFixTarget(id);
+  }
+
+  function searchParams() {
+    try {
+      return new URLSearchParams(String(location.search || "").replace(/^\?/, ""));
+    } catch (e) {
+      return new URLSearchParams();
+    }
+  }
+
+  function stampFixPageTarget() {
+    if (pagePath() !== "/stamp-fix") return null;
+    return stampFixTarget(searchParams().get("crawl"));
+  }
+
+  function stampFixRedirectParam() {
+    const params = searchParams();
+    return parseStampFixTarget(params.get("redirect_to") || params.get("next") || "");
+  }
+
+  function storedStampFixTarget() {
+    let raw = "";
+    try { raw = sessionStorage.getItem(STAMP_FIX_RETURN_KEY) || ""; } catch (e) {}
+    if (!raw) {
+      try { raw = localStorage.getItem(STAMP_FIX_RETURN_KEY) || ""; } catch (e2) {}
+    }
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw);
+      const target = parseStampFixTarget(parsed && (parsed.path || parsed.url));
+      if (!target || (parsed.crawlId && crawlIdToken(parsed.crawlId) !== target.crawlId)) return null;
+      return target;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function rememberStampFixReturn(crawlId) {
+    const target = stampFixTarget(crawlId);
+    if (!target) return null;
+    const payload = JSON.stringify({ crawlId: target.crawlId, path: target.path });
+    storageSet(typeof sessionStorage !== "undefined" ? sessionStorage : null, STAMP_FIX_RETURN_KEY, payload);
+    storageSet(typeof localStorage !== "undefined" ? localStorage : null, STAMP_FIX_RETURN_KEY, payload);
+    return target;
+  }
+
+  function clearStampFixReturn() {
+    storageRemove(typeof sessionStorage !== "undefined" ? sessionStorage : null, STAMP_FIX_RETURN_KEY);
+    storageRemove(typeof localStorage !== "undefined" ? localStorage : null, STAMP_FIX_RETURN_KEY);
+  }
+
+  function onAccountPage() {
+    return pagePath() === "/account";
+  }
+
+  function stampFixSignInTarget(crawlId) {
+    const explicit = crawlIdToken(crawlId);
+    const here = stampFixPageTarget();
+    const carried = stampFixRedirectParam();
+    const stored = onAccountPage() ? storedStampFixTarget() : null;
+    if (here && (!explicit || explicit === here.crawlId)) return here;
+    if (carried && (!explicit || explicit === carried.crawlId)) return carried;
+    if (stored && (!explicit || explicit === stored.crawlId)) return stored;
+    return null;
+  }
+
+  function resumeStampFixReturn() {
+    if (demoMode()) return false;
+    if (stampFixPageTarget()) {
+      clearStampFixReturn();
+      return false;
+    }
+    const stored = storedStampFixTarget();
+    if (!stored || !stored.url) return false;
+    if (location.replace) location.replace(stored.url);
+    return true;
+  }
+
   function redirectForMagicLink(crawlId) {
+    const fix = stampFixSignInTarget(crawlId);
+    if (fix) return fix.url;
     const params = new URLSearchParams(String(location.search || "").replace(/^\?/, ""));
     const id = crawlIdToken(crawlId);
     if (id) params.set(AUTOJOIN_PARAM, id);
@@ -179,6 +293,7 @@
       session = next;
       if (event === "INITIAL_SESSION" || event === "SIGNED_IN" || event === "SIGNED_OUT") {
         setTimeout(function () {
+          if (event !== "SIGNED_OUT" && emailSession(next) && resumeStampFixReturn()) return;
           const pending = (event === "SIGNED_OUT") ? null : consumeAutoJoin();
           Promise.resolve(pending).then(function () { fn(next, event); }, function () { fn(next, event); });
         }, 0);
@@ -232,18 +347,21 @@
     const c = client();
     if (!c) throw new Error("Supabase not loaded");
     const id = crawlIdToken(crawlId);
+    const signInRedirect = redirectForMagicLink(id);
+    const fix = parseStampFixTarget(signInRedirect);
     let error = null;
     try {
       const result = await c.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: redirectForMagicLink(id) }
+        options: { emailRedirectTo: signInRedirect }
       });
       error = result && result.error;
     } catch (thrown) {
       error = thrown;
     }
     if (!error) {
-      if (id) rememberAutoJoin(id);
+      if (fix) rememberStampFixReturn(fix.crawlId);
+      if (id || (fix && fix.crawlId)) rememberAutoJoin(id || fix.crawlId);
       return;
     }
     const failure = new Error(otpErrorMessage(error));
@@ -744,6 +862,14 @@
     };
   }
 
+  if (typeof document !== "undefined" && document && typeof document.addEventListener === "function") {
+    document.addEventListener("DOMContentLoaded", function () {
+      getSession().then(function (s) {
+        if (emailSession(s)) resumeStampFixReturn();
+      }).catch(function () {});
+    });
+  }
+
   window.HCCrawl = {
     CRAWL,
     client,
@@ -751,6 +877,8 @@
     ensureAuth,
     getSession,
     authRedirect,
+    rememberStampFixReturn,
+    resumeStampFixReturn,
     watchSession,
     magicLink,
     otpErrorMessage,
