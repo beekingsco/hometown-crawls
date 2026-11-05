@@ -406,7 +406,7 @@
         <div class="card">
           <p class="eyebrow">Organizer</p>
           <p id="org-who"></p>
-          <p class="muted small">Set the title, dates, and an optional video. Mark stores paid or hidden, and invite someone to help. <a href="/organize">Start another crawl</a>.</p>
+          <p class="muted small">Set the title, dates, and an optional video. Mark stores paid or hidden, and invite someone to help. The weekly drawing below uses only the crawl selected here. <a href="/organize">Start another crawl</a>.</p>
           <div class="row mt-2">
             <a class="btn btn-primary" id="organizer-help-link" href="/account/organizer/help">Instructions</a>
             <a class="btn btn-ghost" href="/support">Support</a>
@@ -415,6 +415,32 @@
           <label class="field mt-2"><span>Crawl</span>
             <select class="input" id="org-crawl"></select>
           </label>
+        </div>
+        <div class="card" id="weekly-drawing">
+          <p class="eyebrow">Weekly drawing</p>
+          <h3>Pick this week's winners</h3>
+          <p class="muted small mt-1" id="drawing-lead">Everyone who joined the crawl selected above is in the pool, from every shop. Stamps are not required. Each person can win once on this crawl. A win here stays on this crawl.</p>
+          <p class="demo-banner hidden" id="drawing-demo"></p>
+          <p class="mt-2" id="drawing-pool">The pool appears here for the selected crawl.</p>
+          <p class="form-error mt-2" id="drawing-locked" role="status"></p>
+          <form class="mt-2" id="drawing-form">
+            <label class="field"><span>Number of winners</span>
+              <input class="input" id="drawing-count" type="number" min="1" max="25" step="1" value="1" inputmode="numeric" />
+            </label>
+            <label class="field"><span>Label <span class="opt">optional</span></span>
+              <input class="input" id="drawing-label" maxlength="80" placeholder="Week 1" autocomplete="off" />
+            </label>
+            <button class="btn btn-primary" type="submit" id="drawing-submit">Draw</button>
+          </form>
+          <p class="form-success mt-2" id="drawing-ok" role="status"></p>
+          <p class="form-error mt-2" id="drawing-err" role="alert"></p>
+          <div class="row mt-2">
+            <button class="btn btn-soft" type="button" id="drawing-copy">Copy winners</button>
+            <button class="btn btn-soft" type="button" id="drawing-csv">Download CSV</button>
+          </div>
+          <h3 class="mt-3">Past winners</h3>
+          <p class="muted small" id="drawing-history-note">Winners show up here after a draw, with the label you gave that week.</p>
+          <div class="stack mt-2" id="drawing-history"></div>
         </div>
         <form class="card" id="org-details">
           <h3>Title and dates</h3>
@@ -592,7 +618,7 @@
   <script src="assets/store-listing.js?v=shop-reward-1"></script>
   <script src="assets/qrcode-generator.js"></script>
   <script src="assets/counter-card.js"></script>
-  <script src="assets/organizer-panel.js"></script>
+  <script src="assets/organizer-panel.js?v=weekly-drawing-1"></script>
   <script src="assets/guest-hub.js?v=guest-photos-1"></script>
   <script src="assets/paper-card.js"></script>
   <script>
