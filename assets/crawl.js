@@ -464,6 +464,7 @@
       "Code required",
       "Business not on this crawl",
       "Not authenticated",
+      "Not joined",
       "Unknown business"
     ];
     for (const line of known) {
@@ -472,23 +473,55 @@
     return raw.replace(/^ERROR:\s*/i, "").trim() || "Could not claim that stamp.";
   }
 
+  // Own request so the row survives when claim_stamp raises and rolls back.
+  async function logStampFailure({ crawl, business, code, message }) {
+    if (demoMode()) return;
+    const id = crawlIdToken(crawl);
+    const c = client();
+    if (!id || !c) return;
+    let agent = "";
+    try {
+      agent = (typeof navigator !== "undefined" && navigator && navigator.userAgent) || "";
+    } catch (e) {}
+    try {
+      await c.rpc("log_stamp_attempt_failure", {
+        p_crawl: id,
+        p_business: business || null,
+        p_code: code == null ? "" : String(code),
+        p_message: message == null ? "" : String(message),
+        p_user_agent: agent
+      });
+    } catch (e) {}
+  }
+
   // Code or QR only. Never ask the browser for location.
   async function claimStamp({ crawl, business, code, lat, lng }) {
-    if (demoMode()) throw new Error("Demo mode only shows sample data. It does not stamp.");
-    const c = client();
-    if (!c) throw new Error("Supabase not loaded");
-    let s = await getSession();
-    if (!s) s = await ensureAuth();
-    if (!s) throw new Error("Please sign in with email to stamp.");
-    const { data, error } = await c.rpc("claim_stamp", {
-      p_crawl: crawl || CRAWL,
-      p_business: business,
-      p_code: code,
-      p_lat: lat == null ? null : lat,
-      p_lng: lng == null ? null : lng
-    });
-    if (error) throw new Error(plainStampError(error));
-    return data;
+    const crawlId = crawl || CRAWL;
+    try {
+      if (demoMode()) throw new Error("Demo mode only shows sample data. It does not stamp.");
+      const c = client();
+      if (!c) throw new Error("Supabase not loaded");
+      let s = await getSession();
+      if (!s) s = await ensureAuth();
+      if (!emailSession(s)) throw new Error("Please sign in with email to stamp.");
+      const { data, error } = await c.rpc("claim_stamp", {
+        p_crawl: crawlId,
+        p_business: business,
+        p_code: code,
+        p_lat: lat == null ? null : lat,
+        p_lng: lng == null ? null : lng
+      });
+      if (error) throw new Error(plainStampError(error));
+      return data;
+    } catch (error) {
+      await logStampFailure({
+        crawl: crawlId,
+        business: business,
+        code: code,
+        message: (error && error.message) || String(error || "")
+      });
+      throw error;
+    }
   }
 
   function renderShopList(container, shops, stamps) {
@@ -731,6 +764,7 @@
     myStamps,
     myJoins,
     claimStamp,
+    logStampFailure,
     renderShopList,
     renderStamps,
     stampLabel,

@@ -111,7 +111,7 @@ test("organizer tab draws for the selected crawl and cache-busts the script", ()
   assert.match(account, /id="drawing-csv"/);
   assert.match(account, /id="drawing-history"/);
   assert.match(account, /Everyone who joined gets 1 entry, plus 1 more for each shop stamped\./);
-  assert.match(account, /assets\/organizer-panel\.js\?v=weighted-entries-1/);
+  assert.match(account, /assets\/organizer-panel\.js\?v=stamp-fix-1/);
   assert.doesNotMatch(account, /src="assets\/organizer-panel\.js"/);
   assert.match(organizer, /organizer_drawing_status"/);
   assert.match(organizer, /organizer_draw_winners"/);

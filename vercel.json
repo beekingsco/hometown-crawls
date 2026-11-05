@@ -39,6 +39,10 @@
       "destination": "/support/index.html"
     },
     {
+      "source": "/stamp-fix",
+      "destination": "/stamp-fix/index.html"
+    },
+    {
       "source": "/account/store/help",
       "destination": "/account/store/help/index.html"
     },

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Request a stamp fix · Hometown Crawls</title>
+  <meta name="theme-color" content="#f8f2e7" />
+  <meta name="description" content="Ask an organizer to add stamps for shops you visited on this crawl." />
+  <link rel="canonical" href="https://www.hometowncrawls.com/stamp-fix" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Hometown Crawls" />
+  <meta property="og:title" content="Request a stamp fix · Hometown Crawls" />
+  <meta property="og:description" content="Ask an organizer to add stamps for shops you visited on this crawl." />
+  <meta property="og:url" content="https://www.hometowncrawls.com/stamp-fix" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Request a stamp fix · Hometown Crawls" />
+  <meta name="twitter:description" content="Ask an organizer to add stamps for shops you visited on this crawl." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/site.css" />
+  <link rel="stylesheet" href="/assets/app.css" />
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+  <main>
+    <div class="wrap-narrow page-hero">
+      <p class="eyebrow">Guest</p>
+      <h1>Request a stamp fix</h1>
+      <p id="stamp-fix-status">Checking this crawl.</p>
+    </div>
+    <div class="wrap-narrow stack" style="padding-bottom:2.5rem">
+      <div class="card hidden" id="stamp-fix-auth">
+        <p>Sign in with the email on this crawl. The link brings you back here.</p>
+        <label class="field mt-2"><span>Email</span>
+          <input class="input" id="stamp-fix-email" type="email" autocomplete="email" placeholder="you@example.com" />
+        </label>
+        <button class="btn btn-primary mt-2" type="button" id="stamp-fix-send">Email me a sign-in link</button>
+      </div>
+      <div class="card hidden" id="stamp-fix-join">
+        <p>You're signed in, but you haven't joined this crawl. Stamps and fix requests stay on the crawl you joined.</p>
+        <p class="mt-2"><a class="btn btn-primary hidden" id="stamp-fix-join-link" href="">Open this crawl</a></p>
+      </div>
+      <form class="card hidden" id="stamp-fix-form">
+        <p class="muted small">Pick the shops you visited on this crawl. An organizer for this crawl can approve the request and add a manual stamp for each one.</p>
+        <div class="stack mt-2" id="stamp-fix-shops"></div>
+        <label class="field mt-2"><span>Note (optional)</span>
+          <textarea class="input" id="stamp-fix-note" maxlength="1000" placeholder="What happened at the counter?"></textarea>
+        </label>
+        <button class="btn btn-primary mt-2" type="submit" id="stamp-fix-submit">Request a stamp fix</button>
+      </form>
+      <p class="form-success" id="stamp-fix-msg" role="status"></p>
+      <p class="form-error" id="stamp-fix-err" role="alert"></p>
+    </div>
+  </main>
+  <footer class="site-footer" id="site-footer"></footer>
+  <script src="/assets/config.js"></script>
+  <script src="/assets/site.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/crawl.js?v=stamp-fix-1"></script>
+  <script src="/assets/stamp-fix.js?v=stamp-fix-1"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      if (window.HCStampFix) HCStampFix.start();
+    });
+  </script>
+</body>
+</html>
