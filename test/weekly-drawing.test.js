@@ -8,6 +8,7 @@ const root = path.join(__dirname, "..");
 const read = (rel) => fs.readFileSync(path.join(root, rel), "utf8");
 
 const migration = read("migrations/20261105180000_organizer_weekly_drawing.sql");
+const weighted = read("migrations/20261105193000_organizer_drawing_weighted_entries.sql");
 const account = read("account.html");
 const organizer = read("assets/organizer-panel.js");
 const help = read("account/organizer/help/index.html");
@@ -61,6 +62,44 @@ test("weekly drawing migration stays on one crawl and is not granted to anon", (
   assert.doesNotMatch(migration, /delete from public\.crawl_drawing_winners/i);
 });
 
+test("weighted entries replace the draw functions and keep the winners table", () => {
+  assert.match(weighted, /add column if not exists entry_count integer/);
+  assert.match(weighted, /create or replace function private\.drawing_entry_count\(p_crawl text, p_user uuid\)/);
+  assert.match(weighted, /create or replace function public\.organizer_drawing_status\(p_crawl text\)/);
+  assert.match(weighted, /create or replace function public\.organizer_draw_winners/);
+  assert.doesNotMatch(weighted, /drop table/i);
+  assert.doesNotMatch(weighted, /service_role/);
+  assert.doesNotMatch(weighted, /grant [^;]* to anon/);
+
+  const weight = sliceFunction(weighted, "private.drawing_entry_count");
+  const weightBody = weight.slice(weight.indexOf("as $function$"), weight.indexOf("$function$;"));
+  assert.match(weightBody, /1 \+/);
+  assert.match(weightBody, /count\(distinct s\.business_id\)/);
+  assert.match(weightBody, /s\.crawl_id = p_crawl/);
+  assert.match(weightBody, /s\.user_id = p_user/);
+  assert.match(weightBody, /from public\.stamps s/);
+  assert.doesNotMatch(weightBody, /\bsource\b/);
+
+  const draw = sliceFunction(weighted, "public.organizer_draw_winners");
+  assert.match(draw, /-ln\(greatest\(random\(\), 1e-12::double precision\)\)/);
+  assert.match(draw, /\/ base\.entry_count::double precision/);
+  assert.match(draw, /order by weighted\.draw_key, weighted\.user_id/);
+  assert.match(draw, /j\.crawl_id = v_crawl/);
+  assert.match(draw, /w\.crawl_id = v_crawl/);
+  assert.match(draw, /w\.user_id = j\.user_id/);
+  assert.match(draw, /entry_count/);
+  assert.match(draw, /private\.assert_crawl_drawer\(v_crawl\)/);
+  assert.doesNotMatch(draw, /order by random\(\)/);
+
+  const status = sliceFunction(weighted, "public.organizer_drawing_status");
+  assert.match(status, /'entry_count', v_entries/);
+  assert.match(status, /private\.drawing_entry_count\(v_crawl, j\.user_id\)/);
+  assert.match(status, /j\.crawl_id = v_crawl/);
+  assert.match(weighted, /'entry_count', dw\.entry_count/);
+  assert.match(weighted, /grant execute on function public\.organizer_draw_winners\(text, integer, text\) to authenticated/);
+  assert.match(weighted, /grant execute on function public\.organizer_drawing_status\(text\) to authenticated/);
+});
+
 test("organizer tab draws for the selected crawl and cache-busts the script", () => {
   assert.match(account, /id="weekly-drawing"/);
   assert.match(account, /id="drawing-pool"/);
@@ -71,8 +110,8 @@ test("organizer tab draws for the selected crawl and cache-busts the script", ()
   assert.match(account, /id="drawing-copy"/);
   assert.match(account, /id="drawing-csv"/);
   assert.match(account, /id="drawing-history"/);
-  assert.match(account, /Stamps are not required/);
-  assert.match(account, /assets\/organizer-panel\.js\?v=weekly-drawing-1/);
+  assert.match(account, /Everyone who joined gets 1 entry, plus 1 more for each shop stamped\./);
+  assert.match(account, /assets\/organizer-panel\.js\?v=weighted-entries-1/);
   assert.doesNotMatch(account, /src="assets\/organizer-panel\.js"/);
   assert.match(organizer, /organizer_drawing_status"/);
   assert.match(organizer, /organizer_draw_winners"/);
@@ -86,6 +125,7 @@ test("organizer tab draws for the selected crawl and cache-busts the script", ()
   assert.doesNotMatch(sliceBetween(organizer, "var DEMO_POOLS", "function fixture"), /\u2014/);
 
   assert.match(help, /Pick winners for the week/);
+  assert.match(help, /Everyone who joined gets 1 entry, plus 1 more for each shop stamped\./);
   assert.match(help, /The names are picked in the database/);
   assert.match(help, /A contributor cannot/);
   assert.doesNotMatch(help, /\u2014/);
@@ -112,8 +152,14 @@ test("a draw cannot reuse a winner or cross into another crawl", () => {
   const already = drawing.demoSeed["puy-coffee"];
   const picked = drawing.pickFromPool(coffee, already, 5, () => 0);
   assert.equal(picked.length, 5);
+  assert.equal(new Set(picked.map((row) => row.userId)).size, 5);
   assert.ok(picked.every((row) => row.userId !== "puy-maya"));
   assert.ok(picked.every((row) => !summer.some((person) => person.userId === row.userId)));
+  const weightedPick = drawing.pickFromPool(coffee, already, 2, () => 0.2);
+  assert.equal(weightedPick.map((row) => row.userId).join(","), "puy-noah,puy-priya");
+  assert.equal(weightedPick[0].entryCount, 5);
+  assert.equal(weightedPick[1].entryCount, 3);
+  assert.equal(drawing.eligibleEntries(coffee, already), 12);
   assert.equal(drawing.pickFromPool(summer, already, 2, () => 0).length, 2);
   assert.equal(
     drawing.pickFromPool(summer, [{ userId: "summer-riley" }], 3, () => 0).map((row) => row.userId).sort().join(","),
@@ -124,15 +170,17 @@ test("a draw cannot reuse a winner or cross into another crawl", () => {
     label: row.label,
     displayName: row.displayName,
     email: row.email,
+    entryCount: row.entryCount,
     drawnAt: row.drawnAt
   })));
-  assert.match(csv, /^crawl_id,label,name,email,drawn_at/);
+  assert.match(csv, /^crawl_id,label,name,email,entries,drawn_at/);
   assert.match(csv, /puy-coffee/);
   assert.match(csv, /maya\.chen@example\.com/);
+  assert.match(csv, /,"4",/);
   assert.doesNotMatch(csv, /riley\.kim@example\.com/);
-  assert.match(drawing.poolSentence(399, 397), /399 people have joined this crawl/);
-  assert.match(drawing.poolSentence(399, 397), /397 people are still in the drawing/);
-  assert.doesNotMatch(drawing.poolSentence(6, 5), /\u2014/);
+  assert.match(drawing.poolSentence(399, 397, 820), /399 people have joined this crawl/);
+  assert.match(drawing.poolSentence(399, 397, 820), /397 people are still in the drawing, with 820 entries/);
+  assert.doesNotMatch(drawing.poolSentence(6, 5, 12), /\u2014/);
 
   const groups = drawing.groupWinners([
     { label: "Week 1", displayName: "Maya Chen", drawnAt: "2026-11-02T18:00:00.000Z" },
@@ -220,9 +268,10 @@ test("demo drawing keeps each crawl's winners on that crawl", () => {
   assert.match(history, /Maya Chen/);
   assert.match(history, /maya\.chen@example\.com/);
   assert.match(history, /Week 1/);
+  assert.match(history, /4 entries/);
   assert.doesNotMatch(history, /Riley Kim/);
   assert.match(seen["drawing-pool"].textContent, /6 people have joined this crawl/);
-  assert.match(seen["drawing-pool"].textContent, /5 people are still in the drawing/);
+  assert.match(seen["drawing-pool"].textContent, /5 people are still in the drawing, with 12 entries/);
   assert.equal(seen["drawing-demo"].classes.hidden, false);
 
   seen["org-crawl"].value = "puy-summer-demo";
@@ -231,7 +280,7 @@ test("demo drawing keeps each crawl's winners on that crawl", () => {
   assert.match(summer, /No winners yet for this crawl/);
   assert.doesNotMatch(summer, /Maya Chen/);
   assert.match(seen["drawing-pool"].textContent, /3 people have joined this crawl/);
-  assert.match(seen["drawing-pool"].textContent, /3 people are still in the drawing/);
+  assert.match(seen["drawing-pool"].textContent, /3 people are still in the drawing, with 6 entries/);
 
   seen["drawing-label"].value = "Week 2";
   seen["drawing-form"].listeners.submit.forEach((fn) => fn({ preventDefault() {} }));

@@ -7,17 +7,17 @@
 
   var DEMO_POOLS = {
     "puy-coffee": [
-      { userId: "puy-maya", name: "Maya Chen", email: "maya.chen@example.com" },
-      { userId: "puy-sam", name: "Sam Ortiz", email: "sam.ortiz@example.com" },
-      { userId: "puy-priya", name: "Priya Shah", email: "priya.shah@example.com" },
-      { userId: "puy-jordan", name: "Jordan Lee", email: "jordan.lee@example.com" },
-      { userId: "puy-avery", name: "Avery Brooks", email: "avery.brooks@example.com" },
-      { userId: "puy-noah", name: "Noah Patel", email: "noah.patel@example.com" }
+      { userId: "puy-maya", name: "Maya Chen", email: "maya.chen@example.com", stamps: 3 },
+      { userId: "puy-sam", name: "Sam Ortiz", email: "sam.ortiz@example.com", stamps: 0 },
+      { userId: "puy-priya", name: "Priya Shah", email: "priya.shah@example.com", stamps: 2 },
+      { userId: "puy-jordan", name: "Jordan Lee", email: "jordan.lee@example.com", stamps: 1 },
+      { userId: "puy-avery", name: "Avery Brooks", email: "avery.brooks@example.com", stamps: 0 },
+      { userId: "puy-noah", name: "Noah Patel", email: "noah.patel@example.com", stamps: 4 }
     ],
     "puy-summer-demo": [
-      { userId: "summer-riley", name: "Riley Kim", email: "riley.kim@example.com" },
-      { userId: "summer-quinn", name: "Quinn Alvarez", email: "quinn.alvarez@example.com" },
-      { userId: "summer-harper", name: "Harper Diaz", email: "harper.diaz@example.com" }
+      { userId: "summer-riley", name: "Riley Kim", email: "riley.kim@example.com", stamps: 1 },
+      { userId: "summer-quinn", name: "Quinn Alvarez", email: "quinn.alvarez@example.com", stamps: 0 },
+      { userId: "summer-harper", name: "Harper Diaz", email: "harper.diaz@example.com", stamps: 2 }
     ]
   };
 
@@ -28,6 +28,7 @@
         displayName: "Maya Chen",
         email: "maya.chen@example.com",
         label: "Week 1",
+        entryCount: 4,
         drawnAt: "2026-11-02T18:00:00.000Z"
       }
     ]
@@ -41,12 +42,45 @@
     return String((row && (row.userId || row.user_id)) || "");
   }
 
+  function storedEntryCount(row) {
+    if (!row) return null;
+    var raw = row.entryCount != null ? row.entryCount : row.entry_count;
+    if (raw == null || raw === "") return null;
+    var count = Number(raw);
+    if (!Number.isFinite(count) || count < 1) return null;
+    return Math.floor(count);
+  }
+
+  function entryCountOf(row) {
+    var stored = storedEntryCount(row);
+    if (stored != null) return stored;
+    if (row && row.stamps != null && row.stamps !== "") {
+      var stamps = Number(row.stamps);
+      if (Number.isFinite(stamps) && stamps >= 0) return 1 + Math.floor(stamps);
+    }
+    return 1;
+  }
+
+  function entryPhrase(count) {
+    if (count == null || !Number.isFinite(Number(count))) return "";
+    var n = Math.floor(Number(count));
+    if (n < 1) return "";
+    return n === 1 ? "1 entry" : n + " entries";
+  }
+
+  function winnerLabel(row) {
+    var name = String((row && (row.displayName || row.display_name || row.name || row.email)) || "Guest");
+    var phrase = entryPhrase(storedEntryCount(row));
+    return phrase ? name + " (" + phrase + ")" : name;
+  }
+
   function cloneWinner(row) {
     return {
       userId: personId(row),
       displayName: String((row && (row.displayName || row.display_name || row.name)) || "Guest"),
       email: String((row && row.email) || ""),
       label: String((row && row.label) || ""),
+      entryCount: storedEntryCount(row),
       drawnAt: String((row && (row.drawnAt || row.drawn_at)) || "")
     };
   }
@@ -65,31 +99,52 @@
     return (people || []).filter(function (row) { return personId(row) && !taken[personId(row)]; }).length;
   }
 
+  function eligibleEntries(people, winners) {
+    var taken = {};
+    (winners || []).forEach(function (row) { taken[personId(row)] = true; });
+    return (people || []).reduce(function (sum, row) {
+      if (!personId(row) || taken[personId(row)]) return sum;
+      return sum + entryCountOf(row);
+    }, 0);
+  }
+
   function pickFromPool(people, already, count, random) {
     var taken = {};
     (already || []).forEach(function (row) { taken[personId(row)] = true; });
+    var rand = typeof random === "function" ? random : Math.random;
+    var seen = {};
     var pool = (people || []).filter(function (row) {
-      return personId(row) && !taken[personId(row)];
+      var id = personId(row);
+      if (!id || taken[id] || seen[id]) return false;
+      seen[id] = true;
+      return true;
     }).map(function (row) {
+      var weight = entryCountOf(row);
+      var unit = Number(rand());
+      if (!Number.isFinite(unit) || unit <= 0) unit = 1e-12;
+      if (unit >= 1) unit = 1 - 1e-12;
       return {
         userId: personId(row),
         displayName: String(row.displayName || row.name || row.display_name || "Guest"),
-        email: String(row.email || "")
+        email: String(row.email || ""),
+        entryCount: weight,
+        drawKey: -Math.log(unit) / weight
       };
     });
-    var rand = typeof random === "function" ? random : Math.random;
-    var i;
-    for (i = pool.length - 1; i > 0; i -= 1) {
-      var j = Math.floor(rand() * (i + 1));
-      if (j < 0 || j > i) j = i;
-      var swap = pool[i];
-      pool[i] = pool[j];
-      pool[j] = swap;
-    }
+    pool.sort(function (a, b) {
+      return a.drawKey - b.drawKey || String(a.userId).localeCompare(String(b.userId));
+    });
     var n = count | 0;
     if (n < 0) n = 0;
     if (n > pool.length) n = pool.length;
-    return pool.slice(0, n);
+    return pool.slice(0, n).map(function (row) {
+      return {
+        userId: row.userId,
+        displayName: row.displayName,
+        email: row.email,
+        entryCount: row.entryCount
+      };
+    });
   }
 
   function groupWinners(winners) {
@@ -108,17 +163,18 @@
     return groups;
   }
 
-  function poolSentence(joined, eligible) {
+  function poolSentence(joined, eligible, entries) {
     var people = Number(joined) || 0;
     var left = Number(eligible) || 0;
-    if (!people) return "Nobody has joined this crawl yet. The pool fills in as people join, and stamps are not required.";
+    var tickets = entries == null || entries === "" ? null : Number(entries);
+    if (!Number.isFinite(tickets)) tickets = null;
+    if (!people) return "Nobody has joined this crawl yet. The pool fills in as people join.";
     var joinedText = people === 1 ? "1 person has joined this crawl." : people + " people have joined this crawl.";
-    var leftText = left === 0
-      ? " Everyone in the pool has already won."
-      : left === 1
-        ? " 1 person is still in the drawing."
-        : " " + left + " people are still in the drawing.";
-    return joinedText + leftText;
+    if (!left) return joinedText + " Everyone in the pool has already won.";
+    var peopleLeft = left === 1 ? "1 person is still in the drawing" : left + " people are still in the drawing";
+    if (tickets == null) return joinedText + " " + peopleLeft + ".";
+    var ticketText = tickets === 0 ? "0 entries" : entryPhrase(tickets);
+    return joinedText + " " + peopleLeft + ", with " + ticketText + ".";
   }
 
   function csvCell(value) {
@@ -126,9 +182,16 @@
   }
 
   function winnersCsv(crawlId, winners) {
-    var lines = ["crawl_id,label,name,email,drawn_at"];
+    var lines = ["crawl_id,label,name,email,entries,drawn_at"];
     (winners || []).forEach(function (row) {
-      lines.push([crawlId, row.label, row.displayName, row.email, row.drawnAt].map(csvCell).join(","));
+      lines.push([
+        crawlId,
+        row.label,
+        row.displayName,
+        row.email,
+        row.entryCount == null ? "" : row.entryCount,
+        row.drawnAt
+      ].map(csvCell).join(","));
     });
     return lines.join("\n");
   }
@@ -141,6 +204,8 @@
       group.rows.forEach(function (row) {
         lines.push(row.displayName);
         lines.push(row.email);
+        var phrase = entryPhrase(row.entryCount);
+        if (phrase) lines.push(phrase);
       });
     });
     return lines.join("\n");
@@ -198,7 +263,8 @@
       demo: !!next.demo,
       canDraw: next.canDraw !== false && !next.locked,
       participantCount: next.participantCount,
-      eligibleCount: next.eligibleCount
+      eligibleCount: next.eligibleCount,
+      entryCount: next.entryCount
     };
     var pool = document.getElementById("drawing-pool");
     var history = document.getElementById("drawing-history");
@@ -229,7 +295,7 @@
       if (next.loading) pool.textContent = "Counting everyone who joined this crawl.";
       else if (next.locked) pool.textContent = "The pool and the winner list stay with the owner and organizers of this crawl.";
       else if (next.poolText) pool.textContent = next.poolText;
-      else pool.textContent = poolSentence(drawingView.participantCount, drawingView.eligibleCount);
+      else pool.textContent = poolSentence(drawingView.participantCount, drawingView.eligibleCount, drawingView.entryCount);
     }
     if (note) {
       note.textContent = drawingView.winners.length
@@ -263,7 +329,10 @@
             var when = document.createElement("p");
             when.className = "muted small";
             var drawn = formatWhen(row.drawnAt);
-            when.textContent = drawn ? "Drawn " + drawn : "Drawn";
+            var phrase = entryPhrase(row.entryCount);
+            if (phrase && drawn) when.textContent = phrase + ". Drawn " + drawn;
+            else if (phrase) when.textContent = phrase;
+            else when.textContent = drawn ? "Drawn " + drawn : "Drawn";
             article.append(name, email, when);
             block.append(article);
           });
@@ -286,7 +355,15 @@
       title: crawl.title,
       participantCount: pool.length,
       eligibleCount: eligibleCount(pool, winners),
-      winners: winners,
+      entryCount: eligibleEntries(pool, winners),
+      winners: winners.map(function (row) {
+        var cloned = cloneWinner(row);
+        if (cloned.entryCount == null) {
+          var match = pool.filter(function (person) { return personId(person) === cloned.userId; })[0];
+          if (match) cloned.entryCount = entryCountOf(match);
+        }
+        return cloned;
+      }),
       canDraw: true,
       demo: true,
       locked: ""
@@ -328,15 +405,14 @@
         displayName: row.displayName,
         email: row.email,
         label: label,
+        entryCount: row.entryCount,
         drawnAt: when
       });
     });
     state.drawings[crawl.id] = already;
     saveState(state);
     paintDemoDrawing(state);
-    setDrawingMessage("drawing-ok", "Drawn. " + picked.map(function (row) {
-      return row.displayName;
-    }).join(", ") + ". Demo only, and they stay out of the next drawing for this crawl.");
+    setDrawingMessage("drawing-ok", "Drawn. " + picked.map(winnerLabel).join(", ") + ". Demo only, and they stay out of the next drawing for this crawl.");
   }
 
   function fixture() {
@@ -692,6 +768,7 @@
         title: crawl.name || "",
         participantCount: Number(data && data.participant_count) || 0,
         eligibleCount: Number(data && data.eligible_count) || 0,
+        entryCount: data && data.entry_count != null && data.entry_count !== "" ? Number(data.entry_count) : null,
         winners: (data && data.winners) || [],
         canDraw: true,
         demo: false,
@@ -779,9 +856,7 @@
           return;
         }
         paintDrawing(statusView(crawl, data));
-        var names = (data.drawn || []).map(function (row) {
-          return row.display_name || row.email || "Guest";
-        }).filter(Boolean);
+        var names = (data.drawn || []).map(winnerLabel).filter(Boolean);
         setDrawingMessage("drawing-ok", names.length
           ? "Drawn. " + names.join(", ") + ". They are out of the next drawing for this crawl."
           : "Drawn.");
@@ -1453,6 +1528,8 @@
     winnersCsv: winnersCsv,
     winnersText: winnersText,
     poolSentence: poolSentence,
+    entryCountOf: entryCountOf,
+    eligibleEntries: eligibleEntries,
     demoPools: DEMO_POOLS,
     demoSeed: DEMO_SEED
   };
