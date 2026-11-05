@@ -427,6 +427,105 @@
     return window.HCStoreDemo && HCStoreDemo.esc ? HCStoreDemo.esc(value) : String(value || "");
   }
 
+  function escText(value) {
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function rowsForCrawl(rows, crawlId) {
+    return (rows || []).filter(function (row) {
+      return row && row.crawl_id === crawlId;
+    });
+  }
+
+  function reasonLabel(reason) {
+    if (reason === "not_signed_in") return "Not signed in";
+    if (reason === "not_joined") return "Not joined";
+    if (reason === "bad_code") return "Bad code";
+    if (reason === "already_stamped") return "Already stamped";
+    return "Error";
+  }
+
+  function whenLabel(value) {
+    var text = String(value || "");
+    return text ? text.slice(0, 16).replace("T", " ") : "";
+  }
+
+  function renderFailureList(crawlId, rows) {
+    var mine = rowsForCrawl(rows, crawlId);
+    if (!mine.length) return '<p class="muted small">No failed scans for this crawl.</p>';
+    return mine.map(function (row) {
+      return '<article class="record-card"><b class="record-name">' + escText(reasonLabel(row.reason)) +
+        '</b><p class="record-email">' + escText(row.business_id || "No shop") + " · " + escText(row.code_entered || "No code") +
+        '</p><p class="small muted">' + escText(whenLabel(row.created_at)) + " · " + escText(row.user_agent || "") + "</p></article>";
+    }).join("");
+  }
+
+  function renderFixList(crawlId, rows) {
+    var mine = rowsForCrawl(rows, crawlId);
+    if (!mine.length) return '<p class="muted small">No stamp fix requests for this crawl.</p>';
+    return mine.map(function (row) {
+      var shops = Array.isArray(row.business_ids) ? row.business_ids.join(", ") : "";
+      return '<article class="record-card"><b class="record-name">' + escText(row.guest_email || row.user_id || "Guest") +
+        '</b><p class="record-email">' + escText(shops) + '</p><p class="small">' + escText(row.note || "") +
+        '</p><p class="small muted">' + escText(whenLabel(row.created_at)) +
+        '</p><button class="btn btn-soft mt-1" type="button" data-approve-fix="' + escText(row.id) +
+        '" data-crawl="' + escText(crawlId) + '">Approve</button></article>';
+    }).join("");
+  }
+
+  function paintScanLists(crawlId, failures, fixes) {
+    var scans = document.getElementById("failed-scans");
+    var requests = document.getElementById("stamp-fix-requests");
+    if (scans) scans.innerHTML = renderFailureList(crawlId, failures);
+    if (requests) requests.innerHTML = renderFixList(crawlId, fixes);
+  }
+
+  function demoFailureRows(crawlId) {
+    return [
+      {
+        crawl_id: crawlId,
+        business_id: "demo-shop",
+        code_entered: "DEMOCODE",
+        reason: "bad_code",
+        user_agent: "DEMO DATA",
+        created_at: "2026-11-05T18:00:00Z"
+      },
+      {
+        crawl_id: crawlId === "puy-coffee" ? "arl-coffee" : "puy-coffee",
+        business_id: "other-shop",
+        code_entered: "OTHERCODE",
+        reason: "bad_code",
+        user_agent: "other crawl",
+        created_at: "2026-11-05T18:00:00Z"
+      }
+    ];
+  }
+
+  function demoFixRows(crawlId) {
+    return [
+      {
+        id: "demo-fix-" + crawlId,
+        crawl_id: crawlId,
+        guest_email: "guest@example.com",
+        business_ids: ["demo-shop"],
+        note: "DEMO DATA. The counter code did not stick.",
+        created_at: "2026-11-05T18:04:00Z"
+      },
+      {
+        id: "demo-fix-other",
+        crawl_id: crawlId === "puy-coffee" ? "arl-coffee" : "puy-coffee",
+        guest_email: "other@example.com",
+        business_ids: ["other-shop"],
+        note: "OTHER CRAWL NOTE",
+        created_at: "2026-11-05T18:05:00Z"
+      }
+    ];
+  }
+
   function loadState(base) {
     var state = {
       active: base.crawls[0].id,
@@ -562,6 +661,7 @@
       }).join("");
       people.innerHTML = mine + pending;
     }
+    paintScanLists(crawl.id, demoFailureRows(crawl.id), demoFixRows(crawl.id));
     paintDemoDrawing(state);
   }
 
@@ -570,6 +670,19 @@
     if (!base || !demoOn() || !document.getElementById("panel-organizer")) return;
     var state = loadState(base);
     render(state, base.person);
+    var fixList = document.getElementById("stamp-fix-requests");
+    if (fixList) {
+      fixList.addEventListener("click", function (ev) {
+        var btn = ev.target.closest && ev.target.closest("[data-approve-fix]");
+        if (!btn) return;
+        var crawl = activeCrawl(state);
+        if (btn.getAttribute("data-crawl") !== crawl.id) return;
+        var ok = document.getElementById("stamp-fix-ok");
+        var err = document.getElementById("stamp-fix-err");
+        if (err) err.textContent = "";
+        if (ok) ok.textContent = "DEMO DATA. No stamp was added.";
+      });
+    }
     onDrawSubmit = function () {
       if (!demoOn()) return;
       runDemoDraw(state);
@@ -762,6 +875,21 @@
       team = res.error ? [] : (res.data || []);
     }
 
+    async function loadScanLists() {
+      var failures = await HCCrawl.client().rpc("organizer_stamp_failures", { p_crawl: active });
+      var fixes = await HCCrawl.client().rpc("organizer_list_stamp_fix_requests", { p_crawl: active });
+      var err = document.getElementById("stamp-fix-err");
+      if (err) err.textContent = "";
+      if (failures.error || fixes.error) {
+        if (err) err.textContent = (failures.error && failures.error.message) || (fixes.error && fixes.error.message) || "Could not load this crawl.";
+      }
+      paintScanLists(
+        active,
+        failures.error ? [] : (failures.data || []),
+        fixes.error ? [] : (fixes.data || [])
+      );
+    }
+
     function statusView(crawl, data) {
       return {
         crawlId: crawl.crawl_id,
@@ -876,6 +1004,7 @@
       await loadTeam();
       renderLive();
       await loadDrawing();
+      await loadScanLists();
     }).catch(function () {});
 
     var closeCounterCard = function () {};
@@ -889,6 +1018,32 @@
         await loadTeam();
         renderLive();
         await loadDrawing();
+        await loadScanLists();
+      });
+    }
+
+    var fixList = document.getElementById("stamp-fix-requests");
+    if (fixList) {
+      fixList.addEventListener("click", async function (ev) {
+        var btn = ev.target.closest && ev.target.closest("[data-approve-fix]");
+        if (!btn || demoOn()) return;
+        if (btn.getAttribute("data-crawl") !== active) return;
+        var ok = document.getElementById("stamp-fix-ok");
+        var err = document.getElementById("stamp-fix-err");
+        if (ok) ok.textContent = "";
+        if (err) err.textContent = "";
+        btn.disabled = true;
+        var saved = await HCCrawl.client().rpc("organizer_approve_stamp_fix", {
+          p_crawl: active,
+          p_request: btn.getAttribute("data-approve-fix")
+        });
+        btn.disabled = false;
+        if (saved.error) {
+          if (err) err.textContent = saved.error.message || "Could not approve that request.";
+          return;
+        }
+        if (ok) ok.textContent = "Approved. A manual stamp was added for the shops on this crawl.";
+        await loadScanLists();
       });
     }
 
@@ -1532,5 +1687,11 @@
     eligibleEntries: eligibleEntries,
     demoPools: DEMO_POOLS,
     demoSeed: DEMO_SEED
+  };
+
+  window.HCOrganizerScans = {
+    rowsForCrawl: rowsForCrawl,
+    renderFailureList: renderFailureList,
+    renderFixList: renderFixList
   };
 })();

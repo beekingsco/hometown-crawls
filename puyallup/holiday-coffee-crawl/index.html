@@ -280,6 +280,7 @@
             </label>
             <button class="btn btn-primary" type="submit" id="btn-code">Claim stamp</button>
           </form>
+          <p class="small mt-2"><a href="/stamp-fix?crawl=puy-coffee">Request a stamp fix</a> if a visit on this crawl did not stick.</p>
           <form id="magic-form" class="hidden mt-2">
             <p class="small">Sign in with the email you want on this passport. We'll send a one-time link back to this page.</p>
             <label class="field mt-2"><span>Email</span>
@@ -330,7 +331,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="/assets/video-embed.js"></script>
-  <script src="/assets/crawl.js?v=gps-off-2"></script>
+  <script src="/assets/crawl.js?v=stamp-fix-1"></script>
   <script src="/assets/guest-hub.js?v=guest-photos-1"></script>
   <script>
   (function () {
@@ -737,8 +738,8 @@
           button.textContent = "Sending…";
         }
         try {
-          await HCCrawl.magicLink(email);
-          $("passport-ok").textContent = "Check your email for the sign-in link. It brings you back to this page.";
+          await HCCrawl.magicLink(email, CRAWL);
+          $("passport-ok").textContent = "Check your email for the sign-in link. It brings you back to this page and adds you to this crawl.";
           showBox($("passport-ok"), true);
           if (HCCrawl.revealNotice) HCCrawl.revealNotice($("passport-ok"));
         } catch (e) {

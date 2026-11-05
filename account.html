@@ -105,6 +105,16 @@
         <p class="mt-2 hidden" id="paper-counter-note"></p>
       </div>
 
+      <div class="card hidden" id="join-your-crawl">
+        <h2>Join your crawl</h2>
+        <p>You're signed in, and you haven't joined a crawl yet. Your passport stays blank and stamps won't stick until you join the crawl from its own page.</p>
+        <p class="muted small mt-1">Open the crawl link you started from. This page will not add you to a different crawl.</p>
+        <div class="row mt-2">
+          <a class="btn btn-primary" href="/puyallup/holiday-coffee-crawl">Puyallup Holiday Coffee Crawl</a>
+          <a class="btn btn-soft" href="/arlington/holiday-coffee-crawl">Arlington Holiday Coffee Crawl</a>
+        </div>
+      </div>
+
       <div class="card hidden" id="nearby-crawls">
         <h3>There's a crawl near you</h3>
         <div class="stack mt-2" id="nearby-list"></div>
@@ -128,6 +138,7 @@
           <input class="input" id="stamp-code" placeholder="Counter code or QR secret" autocomplete="off" />
         </label>
         <button class="btn btn-primary" type="button" id="btn-stamp">Claim stamp</button>
+        <p class="small mt-2"><a href="/stamp-fix?crawl=puy-coffee">Request a stamp fix</a> if a visit on this crawl did not stick.</p>
         <div id="passport-stamps" class="mt-3"></div>
       </div>
 
@@ -587,6 +598,18 @@
           <p class="muted small mt-1">Approve or hide. Only approved photos show on the crawl page.</p>
           <div class="stack mt-2" id="org-photos"></div>
         </div>
+        <div class="card" id="failed-scans-card">
+          <h3>Failed scans</h3>
+          <p class="muted small mt-1">Stamp attempts on this crawl that did not stick. This list is only for the crawl selected above.</p>
+          <div class="stack mt-2" id="failed-scans"></div>
+        </div>
+        <div class="card" id="stamp-fix-card">
+          <h3>Stamp fix requests</h3>
+          <p class="muted small mt-1">Guests on this crawl asked for a visit to be added. Approving adds a manual stamp for the shops on that request. It does not touch another crawl.</p>
+          <div class="stack mt-2" id="stamp-fix-requests"></div>
+          <p class="form-success mt-2" id="stamp-fix-ok" role="status"></p>
+          <p class="form-error mt-2" id="stamp-fix-err" role="alert"></p>
+        </div>
         <div class="card" id="player-search-card">
           <div class="row" style="justify-content:space-between">
             <h3>Players</h3>
@@ -645,13 +668,13 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="assets/video-embed.js"></script>
-  <script src="assets/crawl.js?v=gps-off-2"></script>
+  <script src="assets/crawl.js?v=stamp-fix-1"></script>
   <script src="assets/store-demo.js?v=shop-reward-1"></script>
   <script src="assets/stamp-art.js"></script>
   <script src="assets/store-listing.js?v=shop-reward-1"></script>
   <script src="assets/qrcode-generator.js"></script>
   <script src="assets/counter-card.js"></script>
-  <script src="assets/organizer-panel.js?v=weighted-entries-1"></script>
+  <script src="assets/organizer-panel.js?v=stamp-fix-1"></script>
   <script src="assets/guest-leaderboard.js?v=guest-leaderboard-2"></script>
   <script src="assets/guest-hub.js?v=guest-photos-1"></script>
   <script src="assets/paper-card.js"></script>
@@ -684,14 +707,28 @@
             if (HCPaper.refreshNearby) await HCPaper.refreshNearby();
           }
         } catch (e) {}
+        try { await refreshJoinPrompt(true); } catch (e) {}
       } else {
         status.textContent = "Not signed in";
         out.classList.remove("hidden");
         inn.classList.add("hidden");
+        await refreshJoinPrompt(false);
         var nearby = document.getElementById("nearby-crawls");
         if (nearby) nearby.classList.add("hidden");
       }
       return s;
+    }
+    async function refreshJoinPrompt(signedIn) {
+      const card = document.getElementById("join-your-crawl");
+      if (!card) return;
+      if (!signedIn || new URLSearchParams(location.search).get("demo") === "1") {
+        card.classList.add("hidden");
+        return;
+      }
+      let joins = [];
+      try { joins = await HCCrawl.myJoins(); } catch (e) { joins = []; }
+      if (!Array.isArray(joins) || !joins.length) HCCrawl.syncJoinPrompt(card, []);
+      else HCCrawl.syncJoinPrompt(card, joins);
     }
     async function loadPassportUI(shops, justId) {
       const sel = document.getElementById("stamp-shop");

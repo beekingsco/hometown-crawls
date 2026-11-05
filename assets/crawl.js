@@ -52,8 +52,124 @@
     return session;
   }
 
-  function authRedirect() {
-    return location.origin + location.pathname + location.search;
+  // autojoin is set only on the magic-link redirect for the crawl page that
+  // sent the email. It is never filled from CRAWL / CRAWL_ID. Hundreds of
+  // crawls run at once, so pending storage is keyed by that crawl id and is
+  // not a source for which crawl to join.
+  const AUTOJOIN_PARAM = "autojoin";
+  const AUTOJOIN_PREFIX = "hc-autojoin:";
+  let landedAutoJoin = readAutoJoinParam();
+  const autoJoinFlight = new Map();
+
+  function crawlIdToken(value) {
+    const id = String(value == null ? "" : value).trim();
+    if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(id)) return "";
+    return id;
+  }
+
+  function readAutoJoinParam() {
+    try {
+      return crawlIdToken(new URLSearchParams(String(location.search || "").replace(/^\?/, "")).get(AUTOJOIN_PARAM));
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function autoJoinTarget() {
+    const live = readAutoJoinParam();
+    const landed = crawlIdToken(landedAutoJoin);
+    if (live && landed && live !== landed) return "";
+    return live || landed || "";
+  }
+
+  function autoJoinStorageKey(id) {
+    return AUTOJOIN_PREFIX + id;
+  }
+
+  function storageSet(store, key, value) {
+    try {
+      if (store && typeof store.setItem === "function") store.setItem(key, value);
+    } catch (e) {}
+  }
+
+  function storageRemove(store, key) {
+    try {
+      if (store && typeof store.removeItem === "function") store.removeItem(key);
+    } catch (e) {}
+  }
+
+  function rememberAutoJoin(id) {
+    const token = crawlIdToken(id);
+    if (!token) return;
+    const payload = JSON.stringify({ crawlId: token });
+    const key = autoJoinStorageKey(token);
+    storageSet(typeof sessionStorage !== "undefined" ? sessionStorage : null, key, payload);
+    storageSet(typeof localStorage !== "undefined" ? localStorage : null, key, payload);
+  }
+
+  function stripAutoJoinParam(id) {
+    const token = crawlIdToken(id);
+    if (!token) return;
+    let params;
+    try {
+      params = new URLSearchParams(String(location.search || "").replace(/^\?/, ""));
+    } catch (e) {
+      return;
+    }
+    if (params.get(AUTOJOIN_PARAM) !== token) return;
+    params.delete(AUTOJOIN_PARAM);
+    const query = params.toString();
+    const next = location.pathname + (query ? "?" + query : "") + (location.hash || "");
+    if (typeof history !== "undefined" && history && typeof history.replaceState === "function") {
+      history.replaceState(null, "", next);
+    }
+  }
+
+  function clearAutoJoin(id) {
+    const token = crawlIdToken(id);
+    if (!token) return;
+    if (landedAutoJoin === token) landedAutoJoin = "";
+    const key = autoJoinStorageKey(token);
+    storageRemove(typeof sessionStorage !== "undefined" ? sessionStorage : null, key);
+    storageRemove(typeof localStorage !== "undefined" ? localStorage : null, key);
+    stripAutoJoinParam(token);
+  }
+
+  function redirectForMagicLink(crawlId) {
+    const params = new URLSearchParams(String(location.search || "").replace(/^\?/, ""));
+    const id = crawlIdToken(crawlId);
+    if (id) params.set(AUTOJOIN_PARAM, id);
+    else params.delete(AUTOJOIN_PARAM);
+    const query = params.toString();
+    const stem = location.origin + location.pathname + location.search;
+    const path = stem.split("?")[0];
+    return query ? path + "?" + query : path;
+  }
+
+  function authRedirect(crawlId) {
+    return redirectForMagicLink(crawlId);
+  }
+
+  function emailSession(s) {
+    return !!(s && s.user && !s.user.is_anonymous && s.user.email);
+  }
+
+  // Listed and not ended. Upcoming crawls still count so a guest can join
+  // before opening day. is_listed false (hidden crawls) does not.
+  function crawlIsActive(row, now) {
+    if (!row || !crawlIdToken(row.id)) return false;
+    if (row.is_listed === false) return false;
+    const t = now == null ? Date.now() : new Date(now).getTime();
+    if (row.ends_at) {
+      const end = new Date(row.ends_at).getTime();
+      if (Number.isFinite(end) && end < t) return false;
+    }
+    return true;
+  }
+
+  function alreadyJoinedError(error) {
+    const text = String((error && (error.message || error.code || error.details)) || error || "");
+    return /duplicate key|already joined|unique constraint|23505/i.test(text);
   }
 
   function watchSession(fn) {
@@ -62,7 +178,10 @@
     const { data } = c.auth.onAuthStateChange(function (event, next) {
       session = next;
       if (event === "INITIAL_SESSION" || event === "SIGNED_IN" || event === "SIGNED_OUT") {
-        setTimeout(function () { fn(next, event); }, 0);
+        setTimeout(function () {
+          const pending = (event === "SIGNED_OUT") ? null : consumeAutoJoin();
+          Promise.resolve(pending).then(function () { fn(next, event); }, function () { fn(next, event); });
+        }, 0);
       }
     });
     return function () {
@@ -109,20 +228,24 @@
     }
   }
 
-  async function magicLink(email) {
+  async function magicLink(email, crawlId) {
     const c = client();
     if (!c) throw new Error("Supabase not loaded");
+    const id = crawlIdToken(crawlId);
     let error = null;
     try {
       const result = await c.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: location.origin + location.pathname + location.search }
+        options: { emailRedirectTo: redirectForMagicLink(id) }
       });
       error = result && result.error;
     } catch (thrown) {
       error = thrown;
     }
-    if (!error) return;
+    if (!error) {
+      if (id) rememberAutoJoin(id);
+      return;
+    }
     const failure = new Error(otpErrorMessage(error));
     if (error.status != null) failure.status = error.status;
     else if (error.statusCode != null) failure.status = error.statusCode;
@@ -204,27 +327,103 @@
   }
 
   async function loadCrawl(crawlId) {
-    const c = client();
-    const id = crawlId || CRAWL;
-    if (!c) return null;
-    const { data, error } = await c.from("crawls").select("*").eq("id", id).maybeSingle();
-    if (error) {
-      console.warn("crawl load", error.message);
+    try {
+      return await loadCrawlRow(crawlId || CRAWL);
+    } catch (e) {
       return null;
     }
+  }
+
+  async function loadCrawlRow(id) {
+    const token = crawlIdToken(id);
+    const c = client();
+    if (!c || !token) return null;
+    const { data, error } = await c.from("crawls").select("*").eq("id", token).maybeSingle();
+    if (error) {
+      console.warn("crawl load", error.message);
+      const failure = new Error(error.message || "Could not load crawl");
+      failure.transient = true;
+      throw failure;
+    }
+    if (!data || crawlIdToken(data.id) !== token) return null;
+    return data;
+  }
+
+  async function joinExact(crawlId) {
+    const id = crawlIdToken(crawlId);
+    if (!id) throw new Error("Missing crawl");
+    const c = client();
+    if (!c) throw new Error("Supabase not loaded");
+    let s = await getSession();
+    if (!s) s = await ensureAuth();
+    if (!emailSession(s)) throw new Error("Please sign in with email to join this crawl.");
+    const { data, error } = await c.rpc("join_crawl", { p_crawl: id });
+    if (error) throw error;
     return data;
   }
 
   async function joinCrawl(crawlId) {
     if (demoMode()) throw new Error("Demo mode only shows sample data. It does not join a crawl.");
-    const c = client();
-    if (!c) throw new Error("Supabase not loaded");
-    let s = await getSession();
-    if (!s) s = await ensureAuth();
-    if (!s) throw new Error("Please sign in with email to join this crawl.");
-    const { data, error } = await c.rpc("join_crawl", { p_crawl: crawlId || CRAWL });
-    if (error) throw error;
-    return data;
+    return joinExact(crawlId || CRAWL);
+  }
+
+  // Join only the crawl id carried on the magic-link redirect. No id, no join.
+  // Does not read other crawls' pending keys and does not fall back to CRAWL.
+  async function consumeAutoJoin(now) {
+    if (demoMode()) return { joined: false, reason: "demo" };
+    const live = readAutoJoinParam();
+    const landed = crawlIdToken(landedAutoJoin);
+    if (live && landed && live !== landed) {
+      landedAutoJoin = "";
+      stripAutoJoinParam(live);
+      return { joined: false, reason: "mismatch" };
+    }
+    const id = live || landed || "";
+    if (!id) return { joined: false, reason: "none" };
+    if (autoJoinFlight.has(id)) return autoJoinFlight.get(id);
+    const job = consumeAutoJoinNow(id, now).finally(function () {
+      autoJoinFlight.delete(id);
+    });
+    autoJoinFlight.set(id, job);
+    return job;
+  }
+
+  async function consumeAutoJoinNow(id, now) {
+    try {
+      if (autoJoinTarget() !== id) return { joined: false, reason: "none" };
+      let s = await getSession();
+      if (!emailSession(s)) return { joined: false, reason: "signed-out" };
+      const row = await loadCrawlRow(id);
+      if (!row) {
+        clearAutoJoin(id);
+        return { joined: false, reason: "missing" };
+      }
+      if (!crawlIsActive(row, now)) {
+        clearAutoJoin(id);
+        return { joined: false, reason: "inactive" };
+      }
+      if (autoJoinTarget() !== id) return { joined: false, reason: "none" };
+      const existing = await myJoins();
+      if (existing.some(function (join) { return join && join.crawl_id === id; })) {
+        clearAutoJoin(id);
+        return { joined: true, already: true };
+      }
+      try {
+        await joinExact(id);
+      } catch (error) {
+        if (!alreadyJoinedError(error)) return { joined: false, reason: "error" };
+      }
+      clearAutoJoin(id);
+      return { joined: true };
+    } catch (e) {
+      return { joined: false, reason: "error" };
+    }
+  }
+
+  function syncJoinPrompt(el, joins) {
+    if (!el || !el.classList) return;
+    const empty = !Array.isArray(joins) || joins.length === 0;
+    el.classList.toggle("hidden", !empty);
   }
 
   async function myStamps(crawlId) {
@@ -265,6 +464,7 @@
       "Code required",
       "Business not on this crawl",
       "Not authenticated",
+      "Not joined",
       "Unknown business"
     ];
     for (const line of known) {
@@ -273,23 +473,55 @@
     return raw.replace(/^ERROR:\s*/i, "").trim() || "Could not claim that stamp.";
   }
 
+  // Own request so the row survives when claim_stamp raises and rolls back.
+  async function logStampFailure({ crawl, business, code, message }) {
+    if (demoMode()) return;
+    const id = crawlIdToken(crawl);
+    const c = client();
+    if (!id || !c) return;
+    let agent = "";
+    try {
+      agent = (typeof navigator !== "undefined" && navigator && navigator.userAgent) || "";
+    } catch (e) {}
+    try {
+      await c.rpc("log_stamp_attempt_failure", {
+        p_crawl: id,
+        p_business: business || null,
+        p_code: code == null ? "" : String(code),
+        p_message: message == null ? "" : String(message),
+        p_user_agent: agent
+      });
+    } catch (e) {}
+  }
+
   // Code or QR only. Never ask the browser for location.
   async function claimStamp({ crawl, business, code, lat, lng }) {
-    if (demoMode()) throw new Error("Demo mode only shows sample data. It does not stamp.");
-    const c = client();
-    if (!c) throw new Error("Supabase not loaded");
-    let s = await getSession();
-    if (!s) s = await ensureAuth();
-    if (!s) throw new Error("Please sign in with email to stamp.");
-    const { data, error } = await c.rpc("claim_stamp", {
-      p_crawl: crawl || CRAWL,
-      p_business: business,
-      p_code: code,
-      p_lat: lat == null ? null : lat,
-      p_lng: lng == null ? null : lng
-    });
-    if (error) throw new Error(plainStampError(error));
-    return data;
+    const crawlId = crawl || CRAWL;
+    try {
+      if (demoMode()) throw new Error("Demo mode only shows sample data. It does not stamp.");
+      const c = client();
+      if (!c) throw new Error("Supabase not loaded");
+      let s = await getSession();
+      if (!s) s = await ensureAuth();
+      if (!emailSession(s)) throw new Error("Please sign in with email to stamp.");
+      const { data, error } = await c.rpc("claim_stamp", {
+        p_crawl: crawlId,
+        p_business: business,
+        p_code: code,
+        p_lat: lat == null ? null : lat,
+        p_lng: lng == null ? null : lng
+      });
+      if (error) throw new Error(plainStampError(error));
+      return data;
+    } catch (error) {
+      await logStampFailure({
+        crawl: crawlId,
+        business: business,
+        code: code,
+        message: (error && error.message) || String(error || "")
+      });
+      throw error;
+    }
   }
 
   function renderShopList(container, shops, stamps) {
@@ -527,9 +759,12 @@
     loadShops,
     loadCrawl,
     joinCrawl,
+    consumeAutoJoin,
+    syncJoinPrompt,
     myStamps,
     myJoins,
     claimStamp,
+    logStampFailure,
     renderShopList,
     renderStamps,
     stampLabel,

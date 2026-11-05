@@ -201,7 +201,7 @@ test("guest pages keep the rate-limit notice next to Send", () => {
   assert.match(paper, /button\.disabled = !!on/);
   assert.match(paper, /Sending…/);
   for (const page of [puyallup, arlington]) {
-    assert.match(page, /HCCrawl\.magicLink\(email\)/);
+    assert.match(page, /HCCrawl\.magicLink\(email, CRAWL\)/);
     assert.match(page, /HCCrawl\.otpErrorMessage/);
     assert.match(page, /HCCrawl\.revealNotice/);
     assert.match(page, /button\.disabled = true/);
