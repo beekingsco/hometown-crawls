@@ -41,6 +41,14 @@
         <p>You're signed in, but you haven't joined this crawl. Stamps and fix requests stay on the crawl you joined.</p>
         <p class="mt-2"><a class="btn btn-primary hidden" id="stamp-fix-join-link" href="">Open this crawl</a></p>
       </div>
+      <div class="card hidden" id="stamp-fix-pending">
+        <h2>Already requested</h2>
+        <p id="stamp-fix-pending-copy"></p>
+      </div>
+      <div class="card hidden" id="stamp-fix-done">
+        <h2>Thanks!</h2>
+        <p id="stamp-fix-done-copy"></p>
+      </div>
       <form class="card hidden" id="stamp-fix-form">
         <p class="muted small">Pick the shops you visited on this crawl. An organizer for this crawl can approve the request and add a manual stamp for each one.</p>
         <div class="stack mt-2" id="stamp-fix-shops"></div>
@@ -58,7 +66,7 @@
   <script src="/assets/site.js?v=stamp-fix-2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/assets/crawl.js?v=stamp-fix-2"></script>
-  <script src="/assets/stamp-fix.js?v=stamp-fix-2"></script>
+  <script src="/assets/stamp-fix.js?v=stamp-fix-3"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       if (window.HCStampFix) HCStampFix.start();
