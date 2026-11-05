@@ -2,6 +2,342 @@
    Invite links are created locally in the demo and are not emailed. */
 (function () {
   var KEY = "hc-organizer-demo";
+  var onDrawSubmit = function () {};
+  var drawingView = { crawlId: "", title: "", winners: [], demo: false, canDraw: false };
+
+  var DEMO_POOLS = {
+    "puy-coffee": [
+      { userId: "puy-maya", name: "Maya Chen", email: "maya.chen@example.com" },
+      { userId: "puy-sam", name: "Sam Ortiz", email: "sam.ortiz@example.com" },
+      { userId: "puy-priya", name: "Priya Shah", email: "priya.shah@example.com" },
+      { userId: "puy-jordan", name: "Jordan Lee", email: "jordan.lee@example.com" },
+      { userId: "puy-avery", name: "Avery Brooks", email: "avery.brooks@example.com" },
+      { userId: "puy-noah", name: "Noah Patel", email: "noah.patel@example.com" }
+    ],
+    "puy-summer-demo": [
+      { userId: "summer-riley", name: "Riley Kim", email: "riley.kim@example.com" },
+      { userId: "summer-quinn", name: "Quinn Alvarez", email: "quinn.alvarez@example.com" },
+      { userId: "summer-harper", name: "Harper Diaz", email: "harper.diaz@example.com" }
+    ]
+  };
+
+  var DEMO_SEED = {
+    "puy-coffee": [
+      {
+        userId: "puy-maya",
+        displayName: "Maya Chen",
+        email: "maya.chen@example.com",
+        label: "Week 1",
+        drawnAt: "2026-11-02T18:00:00.000Z"
+      }
+    ]
+  };
+
+  function canDraw(role) {
+    return role === "owner" || role === "organizer" || role === "co-organizer";
+  }
+
+  function personId(row) {
+    return String((row && (row.userId || row.user_id)) || "");
+  }
+
+  function cloneWinner(row) {
+    return {
+      userId: personId(row),
+      displayName: String((row && (row.displayName || row.display_name || row.name)) || "Guest"),
+      email: String((row && row.email) || ""),
+      label: String((row && row.label) || ""),
+      drawnAt: String((row && (row.drawnAt || row.drawn_at)) || "")
+    };
+  }
+
+  function seedDrawings() {
+    var drawings = {};
+    Object.keys(DEMO_POOLS).forEach(function (id) {
+      drawings[id] = (DEMO_SEED[id] || []).map(cloneWinner);
+    });
+    return drawings;
+  }
+
+  function eligibleCount(people, winners) {
+    var taken = {};
+    (winners || []).forEach(function (row) { taken[personId(row)] = true; });
+    return (people || []).filter(function (row) { return personId(row) && !taken[personId(row)]; }).length;
+  }
+
+  function pickFromPool(people, already, count, random) {
+    var taken = {};
+    (already || []).forEach(function (row) { taken[personId(row)] = true; });
+    var pool = (people || []).filter(function (row) {
+      return personId(row) && !taken[personId(row)];
+    }).map(function (row) {
+      return {
+        userId: personId(row),
+        displayName: String(row.displayName || row.name || row.display_name || "Guest"),
+        email: String(row.email || "")
+      };
+    });
+    var rand = typeof random === "function" ? random : Math.random;
+    var i;
+    for (i = pool.length - 1; i > 0; i -= 1) {
+      var j = Math.floor(rand() * (i + 1));
+      if (j < 0 || j > i) j = i;
+      var swap = pool[i];
+      pool[i] = pool[j];
+      pool[j] = swap;
+    }
+    var n = count | 0;
+    if (n < 0) n = 0;
+    if (n > pool.length) n = pool.length;
+    return pool.slice(0, n);
+  }
+
+  function groupWinners(winners) {
+    var groups = [];
+    var byLabel = {};
+    (winners || []).slice().sort(function (a, b) {
+      return String(b.drawnAt).localeCompare(String(a.drawnAt)) || String(a.displayName).localeCompare(String(b.displayName));
+    }).forEach(function (row) {
+      var label = row.label ? String(row.label) : "No label";
+      if (!byLabel[label]) {
+        byLabel[label] = { label: label, rows: [] };
+        groups.push(byLabel[label]);
+      }
+      byLabel[label].rows.push(row);
+    });
+    return groups;
+  }
+
+  function poolSentence(joined, eligible) {
+    var people = Number(joined) || 0;
+    var left = Number(eligible) || 0;
+    if (!people) return "Nobody has joined this crawl yet. The pool fills in as people join, and stamps are not required.";
+    var joinedText = people === 1 ? "1 person has joined this crawl." : people + " people have joined this crawl.";
+    var leftText = left === 0
+      ? " Everyone in the pool has already won."
+      : left === 1
+        ? " 1 person is still in the drawing."
+        : " " + left + " people are still in the drawing.";
+    return joinedText + leftText;
+  }
+
+  function csvCell(value) {
+    return '"' + String(value == null ? "" : value).replace(/"/g, '""') + '"';
+  }
+
+  function winnersCsv(crawlId, winners) {
+    var lines = ["crawl_id,label,name,email,drawn_at"];
+    (winners || []).forEach(function (row) {
+      lines.push([crawlId, row.label, row.displayName, row.email, row.drawnAt].map(csvCell).join(","));
+    });
+    return lines.join("\n");
+  }
+
+  function winnersText(title, crawlId, winners) {
+    var lines = [title || "Crawl", crawlId || ""];
+    groupWinners(winners).forEach(function (group) {
+      lines.push("");
+      lines.push(group.label);
+      group.rows.forEach(function (row) {
+        lines.push(row.displayName);
+        lines.push(row.email);
+      });
+    });
+    return lines.join("\n");
+  }
+
+  function formatWhen(value) {
+    var date = new Date(value);
+    if (isNaN(date.getTime())) return "";
+    try {
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        timeZone: "America/Los_Angeles"
+      });
+    } catch (e) {
+      return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    }
+  }
+
+  function setDrawingMessage(id, text) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text || "";
+    el.classList.toggle("show", !!text);
+  }
+
+  function readCount() {
+    var el = document.getElementById("drawing-count");
+    var n = el ? Number(el.value) : 1;
+    if (!Number.isInteger(n) || n < 1 || n > 25) return 0;
+    return n;
+  }
+
+  function readLabel() {
+    var el = document.getElementById("drawing-label");
+    return el ? el.value.trim().slice(0, 80) : "";
+  }
+
+  function plainDrawingError(error) {
+    var message = (error && error.message) || "Could not run the drawing.";
+    if (/organizer_draw_winners|organizer_drawing_status|schema cache|could not find the function/i.test(message)) {
+      return "The weekly drawing is not on this server yet. The database update still needs to be applied.";
+    }
+    return String(message).replace(/^ERROR:\s*/i, "");
+  }
+
+  function paintDrawing(view) {
+    var next = view || {};
+    var changed = drawingView.crawlId && next.crawlId && drawingView.crawlId !== next.crawlId;
+    drawingView = {
+      crawlId: next.crawlId || "",
+      title: next.title || "",
+      winners: (next.winners || []).map(cloneWinner),
+      demo: !!next.demo,
+      canDraw: next.canDraw !== false && !next.locked,
+      participantCount: next.participantCount,
+      eligibleCount: next.eligibleCount
+    };
+    var pool = document.getElementById("drawing-pool");
+    var history = document.getElementById("drawing-history");
+    var form = document.getElementById("drawing-form");
+    var locked = document.getElementById("drawing-locked");
+    var banner = document.getElementById("drawing-demo");
+    var note = document.getElementById("drawing-history-note");
+    if (changed) {
+      setDrawingMessage("drawing-ok", "");
+      setDrawingMessage("drawing-err", "");
+    }
+    if (banner) {
+      banner.classList.toggle("hidden", !drawingView.demo);
+      banner.textContent = drawingView.demo
+        ? "DEMO DATA. Sample names for this crawl only. Drawing here does not change the live pool."
+        : "";
+    }
+    if (form) {
+      var showForm = !!drawingView.canDraw;
+      form.classList.toggle("hidden", !showForm);
+      form.hidden = !showForm;
+    }
+    if (locked) {
+      locked.textContent = next.locked || "";
+      locked.classList.toggle("show", !!next.locked);
+    }
+    if (pool) {
+      if (next.loading) pool.textContent = "Counting everyone who joined this crawl.";
+      else if (next.locked) pool.textContent = "The pool and the winner list stay with the owner and organizers of this crawl.";
+      else if (next.poolText) pool.textContent = next.poolText;
+      else pool.textContent = poolSentence(drawingView.participantCount, drawingView.eligibleCount);
+    }
+    if (note) {
+      note.textContent = drawingView.winners.length
+        ? "Grouped by the label from each draw."
+        : "Winners show up here after a draw, with the label you gave that week.";
+    }
+    if (history) {
+      history.replaceChildren();
+      if (!drawingView.winners.length) {
+        var empty = document.createElement("p");
+        empty.className = "muted small";
+        empty.textContent = next.loading ? "Loading past winners." : "No winners yet for this crawl.";
+        history.append(empty);
+      } else {
+        groupWinners(drawingView.winners).forEach(function (group) {
+          var block = document.createElement("section");
+          block.className = "stack";
+          var heading = document.createElement("p");
+          heading.className = "eyebrow";
+          heading.textContent = group.label;
+          block.append(heading);
+          group.rows.forEach(function (row) {
+            var article = document.createElement("article");
+            article.className = "record-card";
+            var name = document.createElement("b");
+            name.textContent = row.displayName || "Guest";
+            var email = document.createElement("p");
+            email.className = "small";
+            email.style.overflowWrap = "anywhere";
+            email.textContent = row.email || "No email on the account";
+            var when = document.createElement("p");
+            when.className = "muted small";
+            var drawn = formatWhen(row.drawnAt);
+            when.textContent = drawn ? "Drawn " + drawn : "Drawn";
+            article.append(name, email, when);
+            block.append(article);
+          });
+          history.append(block);
+        });
+      }
+    }
+    ["drawing-copy", "drawing-csv"].forEach(function (id) {
+      var button = document.getElementById(id);
+      if (button) button.disabled = !drawingView.winners.length || !!next.locked;
+    });
+  }
+
+  function paintDemoDrawing(state) {
+    var crawl = activeCrawl(state);
+    var pool = DEMO_POOLS[crawl.id] || [];
+    var winners = (state.drawings && state.drawings[crawl.id]) || [];
+    paintDrawing({
+      crawlId: crawl.id,
+      title: crawl.title,
+      participantCount: pool.length,
+      eligibleCount: eligibleCount(pool, winners),
+      winners: winners,
+      canDraw: true,
+      demo: true,
+      locked: ""
+    });
+  }
+
+  function runDemoDraw(state) {
+    var crawl = activeCrawl(state);
+    setDrawingMessage("drawing-ok", "");
+    setDrawingMessage("drawing-err", "");
+    var count = readCount();
+    if (!count) {
+      setDrawingMessage("drawing-err", "Pick a number of winners from 1 to 25.");
+      return;
+    }
+    var label = readLabel();
+    var pool = DEMO_POOLS[crawl.id] || [];
+    var already = (state.drawings && state.drawings[crawl.id]) || [];
+    var left = eligibleCount(pool, already);
+    if (!pool.length) {
+      setDrawingMessage("drawing-err", "Nobody has joined this crawl yet.");
+      return;
+    }
+    if (!left) {
+      setDrawingMessage("drawing-err", "No one is left in this drawing.");
+      return;
+    }
+    if (count > left) {
+      setDrawingMessage("drawing-err", left === 1
+        ? "Only 1 person is still in this drawing."
+        : "Only " + left + " people are still in this drawing.");
+      return;
+    }
+    var picked = pickFromPool(pool, already, count);
+    var when = new Date().toISOString();
+    picked.forEach(function (row) {
+      already.push({
+        userId: row.userId,
+        displayName: row.displayName,
+        email: row.email,
+        label: label,
+        drawnAt: when
+      });
+    });
+    state.drawings[crawl.id] = already;
+    saveState(state);
+    paintDemoDrawing(state);
+    setDrawingMessage("drawing-ok", "Drawn. " + picked.map(function (row) {
+      return row.displayName;
+    }).join(", ") + ". Demo only, and they stay out of the next drawing for this crawl.");
+  }
 
   function fixture() {
     return (window.__HC_ENV__ && window.__HC_ENV__.DEMO_ORGANIZER) || null;
@@ -19,7 +355,8 @@
     var state = {
       active: base.crawls[0].id,
       crawls: JSON.parse(JSON.stringify(base.crawls)),
-      invites: []
+      invites: [],
+      drawings: seedDrawings()
     };
     try {
       var saved = JSON.parse(localStorage.getItem(KEY) || "null");
@@ -40,6 +377,16 @@
         });
       }
       if (saved && Array.isArray(saved.invites)) state.invites = saved.invites;
+      if (saved && saved.drawings && typeof saved.drawings === "object") {
+        Object.keys(DEMO_POOLS).forEach(function (id) {
+          if (!Array.isArray(saved.drawings[id])) return;
+          var poolIds = {};
+          DEMO_POOLS[id].forEach(function (person) { poolIds[person.userId] = true; });
+          state.drawings[id] = saved.drawings[id].map(cloneWinner).filter(function (row) {
+            return poolIds[row.userId];
+          });
+        });
+      }
       if (saved && saved.active && state.crawls.some(function (c) { return c.id === saved.active; })) state.active = saved.active;
     } catch (e) {}
     return state;
@@ -58,7 +405,8 @@
           stores: (c.stores || []).map(function (row) { return { name: row.name, visible: row.visible !== false }; })
         };
       }),
-      invites: state.invites
+      invites: state.invites,
+      drawings: state.drawings || seedDrawings()
     }));
   }
 
@@ -138,6 +486,7 @@
       }).join("");
       people.innerHTML = mine + pending;
     }
+    paintDemoDrawing(state);
   }
 
   document.addEventListener("DOMContentLoaded", function () {
@@ -145,6 +494,10 @@
     if (!base || !demoOn() || !document.getElementById("panel-organizer")) return;
     var state = loadState(base);
     render(state, base.person);
+    onDrawSubmit = function () {
+      if (!demoOn()) return;
+      runDemoDraw(state);
+    };
 
     var storeList = document.getElementById("org-stores");
     if (storeList) {
@@ -260,6 +613,7 @@
     var shops = [];
     var team = [];
     var active = "";
+    var drawingToken = 0;
 
     function showTab() {
       var tabs = document.getElementById("role-tabs");
@@ -332,6 +686,110 @@
       team = res.error ? [] : (res.data || []);
     }
 
+    function statusView(crawl, data) {
+      return {
+        crawlId: crawl.crawl_id,
+        title: crawl.name || "",
+        participantCount: Number(data && data.participant_count) || 0,
+        eligibleCount: Number(data && data.eligible_count) || 0,
+        winners: (data && data.winners) || [],
+        canDraw: true,
+        demo: false,
+        locked: ""
+      };
+    }
+
+    async function loadDrawing() {
+      var request = ++drawingToken;
+      var crawl = current();
+      if (!crawl) return;
+      if (!canDraw(crawl.role)) {
+        paintDrawing({
+          crawlId: crawl.crawl_id,
+          title: crawl.name || "",
+          winners: [],
+          canDraw: false,
+          demo: false,
+          locked: "Only the owner, an organizer, or a co-organizer of this crawl can run the weekly drawing."
+        });
+        return;
+      }
+      paintDrawing({
+        crawlId: crawl.crawl_id,
+        title: crawl.name || "",
+        winners: [],
+        canDraw: true,
+        demo: false,
+        loading: true
+      });
+      var res = await HCCrawl.client().rpc("organizer_drawing_status", { p_crawl: crawl.crawl_id });
+      if (request !== drawingToken) return;
+      var now = current();
+      if (!now || now.crawl_id !== crawl.crawl_id) return;
+      if (res.error) {
+        paintDrawing({
+          crawlId: crawl.crawl_id,
+          title: crawl.name || "",
+          winners: [],
+          canDraw: true,
+          demo: false,
+          locked: "",
+          poolText: "The pool could not be loaded for this crawl."
+        });
+        setDrawingMessage("drawing-err", plainDrawingError(res.error));
+        return;
+      }
+      paintDrawing(statusView(crawl, res.data || {}));
+    }
+
+    onDrawSubmit = async function () {
+      if (demoOn()) return;
+      var crawl = current();
+      if (!crawl || !canDraw(crawl.role)) return;
+      var crawlId = crawl.crawl_id;
+      setDrawingMessage("drawing-ok", "");
+      setDrawingMessage("drawing-err", "");
+      var count = readCount();
+      if (!count) {
+        setDrawingMessage("drawing-err", "Pick a number of winners from 1 to 25.");
+        return;
+      }
+      var label = readLabel();
+      var button = document.getElementById("drawing-submit");
+      if (button) button.disabled = true;
+      try {
+        var res = await HCCrawl.client().rpc("organizer_draw_winners", {
+          p_crawl: crawlId,
+          p_count: count,
+          p_label: label || null
+        });
+        var now = current();
+        if (!now || now.crawl_id !== crawlId) {
+          await loadDrawing();
+          return;
+        }
+        if (res.error) {
+          setDrawingMessage("drawing-err", plainDrawingError(res.error));
+          return;
+        }
+        var data = res.data || {};
+        if (data.crawl_id && data.crawl_id !== crawlId) {
+          setDrawingMessage("drawing-err", "That result was for a different crawl, so it was not shown here.");
+          await loadDrawing();
+          return;
+        }
+        paintDrawing(statusView(crawl, data));
+        var names = (data.drawn || []).map(function (row) {
+          return row.display_name || row.email || "Guest";
+        }).filter(Boolean);
+        setDrawingMessage("drawing-ok", names.length
+          ? "Drawn. " + names.join(", ") + ". They are out of the next drawing for this crawl."
+          : "Drawn.");
+      } finally {
+        if (button) button.disabled = false;
+      }
+    };
+
     HCCrawl.getSession().then(async function (session) {
       if (!session || !session.user || session.user.is_anonymous || !session.user.email) return;
       var mine = await HCCrawl.client().rpc("organizer_my_crawls");
@@ -342,6 +800,7 @@
       await loadShops();
       await loadTeam();
       renderLive();
+      await loadDrawing();
     }).catch(function () {});
 
     var closeCounterCard = function () {};
@@ -354,6 +813,7 @@
         await loadShops();
         await loadTeam();
         renderLive();
+        await loadDrawing();
       });
     }
 
@@ -932,4 +1392,68 @@
       });
     }
   });
+
+  function copyDrawingText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+    return Promise.reject(new Error("Copy is not available in this browser."));
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    var form = document.getElementById("drawing-form");
+    if (form) {
+      form.addEventListener("submit", function (ev) {
+        ev.preventDefault();
+        Promise.resolve(onDrawSubmit()).catch(function (error) {
+          setDrawingMessage("drawing-err", (error && error.message) || "Could not run the drawing.");
+        });
+      });
+    }
+    var copy = document.getElementById("drawing-copy");
+    if (copy) {
+      copy.addEventListener("click", function () {
+        if (!drawingView.winners.length) {
+          setDrawingMessage("drawing-err", "No winners to copy yet.");
+          return;
+        }
+        var text = winnersText(drawingView.title, drawingView.crawlId, drawingView.winners);
+        copyDrawingText(text).then(function () {
+          setDrawingMessage("drawing-err", "");
+          var count = drawingView.winners.length;
+          setDrawingMessage("drawing-ok", "Copied " + count + (count === 1 ? " winner" : " winners") + " for this crawl.");
+        }).catch(function () {
+          setDrawingMessage("drawing-err", "Copy did not work in this browser. Download the CSV instead.");
+        });
+      });
+    }
+    var csv = document.getElementById("drawing-csv");
+    if (csv) {
+      csv.addEventListener("click", function () {
+        if (!drawingView.winners.length) {
+          setDrawingMessage("drawing-err", "No winners to download yet.");
+          return;
+        }
+        var blob = new Blob([winnersCsv(drawingView.crawlId, drawingView.winners)], { type: "text/csv" });
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement("a");
+        var safe = String(drawingView.crawlId || "crawl").replace(/[^a-z0-9-]+/gi, "");
+        link.href = url;
+        link.download = "hometown-drawing-" + (safe || "crawl") + ".csv";
+        link.click();
+        URL.revokeObjectURL(url);
+      });
+    }
+  });
+
+  window.HCDrawing = {
+    pickFromPool: pickFromPool,
+    canDraw: canDraw,
+    groupWinners: groupWinners,
+    winnersCsv: winnersCsv,
+    winnersText: winnersText,
+    poolSentence: poolSentence,
+    demoPools: DEMO_POOLS,
+    demoSeed: DEMO_SEED
+  };
 })();
