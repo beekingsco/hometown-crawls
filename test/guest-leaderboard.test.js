@@ -97,7 +97,7 @@ test("account page keeps the leaderboard beside the weekly drawing", () => {
   assert.match(account, /id="weekly-drawing"/);
   assert.match(account, /assets\/guest-leaderboard\.js\?v=guest-leaderboard-2/);
   assert.match(account, /assets\/guest-leaderboard\.css\?v=guest-leaderboard-2/);
-  assert.match(account, /assets\/organizer-panel\.js\?v=weekly-drawing-1/);
+  assert.match(account, /assets\/organizer-panel\.js\?v=weighted-entries-1/);
   assert.doesNotMatch(account, /src="assets\/guest-leaderboard\.js"/);
   assert.doesNotMatch(boardJs, /service_role/);
   assert.match(storeHelp, /first name and a last initial/);
