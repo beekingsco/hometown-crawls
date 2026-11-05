@@ -226,6 +226,331 @@ test("organizer lists drop rows from other crawls", () => {
   assert.doesNotMatch(fixes, /fix-puy/);
 });
 
+function memoryStorage(initial) {
+  const data = Object.assign({}, initial || {});
+  return {
+    getItem(key) { return Object.prototype.hasOwnProperty.call(data, key) ? data[key] : null; },
+    setItem(key, value) { data[key] = String(value); },
+    removeItem(key) { delete data[key]; },
+    dump() { return Object.assign({}, data); }
+  };
+}
+
+function loadReturn(options) {
+  const opts = options || {};
+  const calls = [];
+  const replaced = [];
+  const state = { session: opts.session === undefined ? null : opts.session };
+  const location = {
+    hash: "",
+    search: opts.search || "",
+    pathname: opts.pathname || "/stamp-fix",
+    origin: "https://www.hometowncrawls.com",
+    replace(url) { replaced.push(url); }
+  };
+  const sandbox = {
+    URLSearchParams,
+    URL,
+    location,
+    history: { replaceState() {} },
+    localStorage: opts.localStorage || memoryStorage(),
+    sessionStorage: opts.sessionStorage || memoryStorage(),
+    navigator: { userAgent: "TestAgent" },
+    console: { warn() {} },
+    document: { addEventListener() {}, getElementById() { return null; } },
+    setTimeout,
+    Promise
+  };
+  sandbox.window = sandbox;
+  sandbox.__HC_ENV__ = {
+    SUPABASE_URL: "https://example.supabase.co",
+    SUPABASE_ANON_KEY: "anon",
+    CRAWL_ID: "puy-coffee"
+  };
+  sandbox.supabase = {
+    createClient() {
+      return {
+        auth: {
+          getSession() { return Promise.resolve({ data: { session: state.session } }); },
+          signInWithOtp(args) {
+            calls.push(args);
+            return Promise.resolve({ error: null });
+          },
+          onAuthStateChange(fn) {
+            (opts.emit || []).forEach(function (event) { fn(event, state.session); });
+            return { data: { subscription: { unsubscribe() {} } } };
+          }
+        },
+        from() {
+          return { select() { return { eq() { return { maybeSingle() { return Promise.resolve({ data: null, error: null }); } }; } }; } };
+        },
+        rpc(name, args) {
+          calls.push({ name: name, args: args });
+          return Promise.resolve({ data: null, error: null });
+        }
+      };
+    }
+  };
+  vm.runInNewContext(read("assets/crawl.js"), sandbox, { filename: "assets/crawl.js" });
+  return { sandbox, calls, location, replaced };
+}
+
+test("stamp-fix sign-in returns to that exact crawl url", async () => {
+  const page = loadReturn({
+    pathname: "/stamp-fix",
+    search: "?crawl=puy-coffee"
+  });
+  await page.sandbox.HCCrawl.magicLink("ada@example.com", "puy-coffee");
+  const redirect = page.calls[0].options.emailRedirectTo;
+  const url = new URL(redirect);
+  assert.equal(url.origin, "https://www.hometowncrawls.com");
+  assert.equal(url.pathname, "/stamp-fix");
+  assert.equal(url.searchParams.get("crawl"), "puy-coffee");
+  assert.equal(url.searchParams.get("autojoin"), "puy-coffee");
+  assert.equal(url.searchParams.get("redirect_to"), null);
+  const saved = JSON.parse(page.sandbox.localStorage.getItem("hc-stamp-fix-return"));
+  assert.equal(saved.crawlId, "puy-coffee");
+  assert.equal(saved.path, "/stamp-fix?crawl=puy-coffee&autojoin=puy-coffee");
+});
+
+test("account sign-in keeps the stamp-fix return and ignores another crawl", async () => {
+  const carried = encodeURIComponent("/stamp-fix?crawl=puy-coffee");
+  const account = loadReturn({
+    pathname: "/account",
+    search: "?redirect_to=" + carried
+  });
+  await account.sandbox.HCCrawl.magicLink("ada@example.com");
+  const redirect = new URL(account.calls[0].options.emailRedirectTo);
+  assert.equal(redirect.pathname, "/stamp-fix");
+  assert.equal(redirect.searchParams.get("crawl"), "puy-coffee");
+  assert.equal(redirect.searchParams.get("autojoin"), "puy-coffee");
+
+  const hostile = loadReturn({
+    pathname: "/account",
+    search: "?redirect_to=" + encodeURIComponent("https://evil.example/stamp-fix?crawl=puy-coffee")
+  });
+  await hostile.sandbox.HCCrawl.magicLink("ada@example.com");
+  const blocked = new URL(hostile.calls[0].options.emailRedirectTo);
+  assert.equal(blocked.pathname, "/account");
+  assert.equal(blocked.searchParams.get("autojoin"), null);
+
+  const stored = memoryStorage({
+    "hc-stamp-fix-return": JSON.stringify({
+      crawlId: "arl-coffee",
+      path: "/stamp-fix?crawl=arl-coffee&autojoin=arl-coffee"
+    })
+  });
+  const holiday = loadReturn({
+    pathname: "/puyallup/holiday-coffee-crawl",
+    search: "",
+    localStorage: stored,
+    sessionStorage: stored
+  });
+  await holiday.sandbox.HCCrawl.magicLink("ada@example.com", "puy-coffee");
+  const trail = new URL(holiday.calls[0].options.emailRedirectTo);
+  assert.equal(trail.pathname, "/puyallup/holiday-coffee-crawl");
+  assert.equal(trail.searchParams.get("autojoin"), "puy-coffee");
+  assert.equal(trail.searchParams.get("crawl"), null);
+});
+
+test("a finished magic link on the crawl page is sent back to stamp-fix", async () => {
+  const stored = memoryStorage({
+    "hc-stamp-fix-return": JSON.stringify({
+      crawlId: "puy-coffee",
+      path: "/stamp-fix?crawl=puy-coffee&autojoin=puy-coffee"
+    })
+  });
+  const page = loadReturn({
+    pathname: "/puyallup/holiday-coffee-crawl",
+    session: { user: { id: "user-1", email: "ada@example.com", is_anonymous: false } },
+    localStorage: stored,
+    sessionStorage: stored,
+    emit: ["SIGNED_IN"]
+  });
+  let ran = false;
+  page.sandbox.HCCrawl.watchSession(function () { ran = true; });
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  assert.deepEqual(page.replaced, ["https://www.hometowncrawls.com/stamp-fix?crawl=puy-coffee&autojoin=puy-coffee"]);
+  assert.equal(ran, false);
+  assert.equal(page.calls.some((row) => row.name === "join_crawl"), false);
+});
+
+test("after auth the stamp-fix page shows the form for that crawl", async () => {
+  const nodes = {};
+  function el() {
+    const node = { className: "", style: {}, textContent: "", value: "", innerHTML: "", classList: { toggle() {} }, addEventListener() {} };
+    return node;
+  }
+  ["stamp-fix-form", "stamp-fix-auth", "stamp-fix-shops", "stamp-fix-join", "stamp-fix-err", "stamp-fix-msg", "stamp-fix-status"].forEach(function (id) {
+    nodes[id] = el();
+  });
+  const calls = [];
+  const sandbox = {
+    URLSearchParams,
+    location: { search: "?crawl=puy-coffee&autojoin=puy-coffee", pathname: "/stamp-fix", origin: "https://www.hometowncrawls.com" },
+    document: {
+      addEventListener() {},
+      getElementById(id) { return nodes[id] || null; },
+      querySelectorAll() { return []; }
+    }
+  };
+  sandbox.window = sandbox;
+  sandbox.HCCrawl = {
+    rememberStampFixReturn() {},
+    consumeAutoJoin() { calls.push("autojoin"); return Promise.resolve({ joined: true }); },
+    watchSession(fn) { calls.push("watch"); setTimeout(function () { fn(); }, 0); },
+    getSession: async () => ({ user: { id: "user-1", email: "ada@example.com", is_anonymous: false } }),
+    myJoins: async () => [],
+    loadShops(id) {
+      calls.push(id);
+      return { shops: [{ id: "anthem", name: "Anthem" }] };
+    },
+    magicLink: async () => {}
+  };
+  vm.runInNewContext(read("assets/stamp-fix.js"), sandbox, { filename: "assets/stamp-fix.js" });
+  sandbox.HCStampFix.start();
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  assert.equal(nodes["stamp-fix-form"].style.display, "block");
+  assert.equal(nodes["stamp-fix-auth"].style.display, "none");
+  assert.equal(nodes["stamp-fix-join"].style.display, "none");
+  assert.match(nodes["stamp-fix-shops"].innerHTML, /anthem/);
+  assert.deepEqual(calls.filter((item) => item === "puy-coffee" || item === "arl-coffee"), ["puy-coffee", "puy-coffee"]);
+});
+
+test("one pending shop is unique and the page confirms it", async () => {
+  const sql = read("migrations/20261105223000_stamp_fix_one_pending_shop.sql");
+  assert.match(sql, /create unique index if not exists stamp_fix_request_shops_one_pending/);
+  assert.match(sql, /on public\.stamp_fix_request_shops \(user_id, crawl_id, business_id\)/);
+  assert.match(sql, /where status = 'pending'/);
+  assert.match(sql, /raise exception 'That shop is already pending'/);
+  assert.match(sql, /raise exception 'That shop is already stamped'/);
+  assert.match(sql, /where r\.user_id = auth\.uid\(\)/);
+  assert.match(sql, /and r\.crawl_id = p_crawl/);
+  assert.match(sql, /revoke all on table public\.stamp_fix_request_shops from public, anon, authenticated/);
+  assert.doesNotMatch(sql, /grant select on (table )?public\.stamp_fix_request_shops/i);
+  assert.match(sql, /Apply by hand/);
+
+  const copy = read("assets/stamp-fix.js");
+  const sandbox = { URLSearchParams, location: { search: "" }, document: { addEventListener() {}, getElementById() { return null; }, querySelectorAll() { return []; } } };
+  sandbox.window = sandbox;
+  sandbox.HCCrawl = { magicLink: async () => {}, loadShops: async () => ({ shops: [] }), getSession: async () => null, myJoins: async () => [] };
+  vm.runInNewContext(copy, sandbox, { filename: "assets/stamp-fix.js" });
+  assert.equal(
+    sandbox.HCStampFix.thanksCopy(["Anthem", "Valley Tea"]),
+    "Thanks! We got your request for Anthem, Valley Tea. Your organizer will review it soon."
+  );
+  const open = sandbox.HCStampFix.openShops(
+    [{ id: "anthem", name: "Anthem" }, { id: "valley", name: "Valley Tea" }, { id: "stamped", name: "Stamped" }],
+    ["anthem", "stamped"]
+  );
+  assert.deepEqual(open.map((shop) => shop.id), ["valley"]);
+  assert.deepEqual(Array.from(sandbox.HCStampFix.pendingShopIds([
+    { crawl_id: "puy-coffee", business_ids: ["anthem", "valley"] },
+    { crawl_id: "arl-coffee", business_ids: ["other"] }
+  ])), ["anthem", "valley", "other"]);
+
+  const nodes = {};
+  function el(extra) {
+    const node = Object.assign({
+      className: "",
+      style: {},
+      textContent: "",
+      value: "",
+      innerHTML: "",
+      disabled: false,
+      classList: { toggle(name, on) { if (name === "show") node.show = !!on; if (name === "hidden") node.hidden = !!on; } },
+      addEventListener() {},
+      setAttribute() {},
+      removeAttribute() {},
+      querySelector() { return null; }
+    }, extra || {});
+    return node;
+  }
+  nodes["stamp-fix-form"] = el();
+  nodes["stamp-fix-auth"] = el();
+  nodes["stamp-fix-shops"] = el();
+  nodes["stamp-fix-join"] = el();
+  nodes["stamp-fix-err"] = el({ id: "stamp-fix-err" });
+  nodes["stamp-fix-msg"] = el({ id: "stamp-fix-msg" });
+  nodes["stamp-fix-status"] = el();
+  nodes["stamp-fix-pending"] = el();
+  nodes["stamp-fix-pending-copy"] = el();
+  nodes["stamp-fix-done"] = el();
+  nodes["stamp-fix-done-copy"] = el();
+  nodes["stamp-fix-note"] = el({ value: "Counter was busy" });
+  nodes["stamp-fix-submit"] = el({ textContent: "Request a stamp fix" });
+  const box = { value: "anthem", checked: true, parentNode: { textContent: " Anthem " } };
+  nodes["stamp-fix-form"].querySelectorAll = () => [box];
+  nodes["stamp-fix-form"].querySelector = () => box;
+  let sawDisabled = false;
+  let sent = null;
+  const page = {
+    URLSearchParams,
+    location: { search: "?crawl=puy-coffee", pathname: "/stamp-fix", origin: "https://www.hometowncrawls.com" },
+    document: {
+      addEventListener() {},
+      getElementById(id) { return nodes[id] || null; },
+      querySelectorAll() { return []; }
+    }
+  };
+  page.window = page;
+  page.HCCrawl = {
+    rememberStampFixReturn() {},
+    consumeAutoJoin() { return Promise.resolve(); },
+    watchSession() {},
+    getSession: async () => ({ user: { id: "user-1", email: "ada@example.com", is_anonymous: false } }),
+    myJoins: async () => [{ crawl_id: "puy-coffee" }],
+    myStamps: async () => [{ business_id: "stamped" }],
+    loadShops: async () => ({ shops: [{ id: "anthem", name: "Anthem" }, { id: "stamped", name: "Stamped Shop" }, { id: "valley", name: "Valley Tea" }] }),
+    client() {
+      return {
+        rpc(name, args) {
+          if (name === "my_stamp_fix_requests") {
+            return Promise.resolve({ data: [{ crawl_id: "puy-coffee", business_ids: ["valley"], note: "" }], error: null });
+          }
+          sawDisabled = nodes["stamp-fix-submit"].disabled === true;
+          sent = { crawl: args.p_crawl, shops: Array.from(args.p_businesses || []) };
+          return Promise.resolve({ data: "req-1", error: null });
+        }
+      };
+    },
+    magicLink: async () => {}
+  };
+  vm.runInNewContext(copy, page, { filename: "assets/stamp-fix.js" });
+  const handlers = [];
+  nodes["stamp-fix-form"].addEventListener = (type, fn) => { if (type === "submit") handlers.push(fn); };
+  page.HCStampFix.start();
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  assert.match(nodes["stamp-fix-shops"].innerHTML, /value="anthem"/);
+  assert.doesNotMatch(nodes["stamp-fix-shops"].innerHTML, /valley|stamped/);
+  assert.match(nodes["stamp-fix-pending-copy"].textContent, /Thanks! We got your request for Valley Tea/);
+  assert.equal(handlers.length, 1);
+  await handlers[0]({ preventDefault() {} });
+  assert.equal(sawDisabled, true);
+  assert.equal(sent.crawl, "puy-coffee");
+  assert.deepEqual(sent.shops, ["anthem"]);
+  assert.equal(nodes["stamp-fix-err"].textContent, "");
+  assert.equal(nodes["stamp-fix-form"].style.display, "none");
+  assert.equal(nodes["stamp-fix-done"].style.display, "block");
+  assert.equal(
+    nodes["stamp-fix-done-copy"].textContent,
+    "Thanks! We got your request for Anthem. Your organizer will review it soon."
+  );
+  assert.equal(nodes["stamp-fix-submit"].disabled, true);
+
+  nodes["stamp-fix-form"].style.display = "block";
+  nodes["stamp-fix-submit"].disabled = false;
+  page.HCCrawl.client = () => ({
+    rpc() { return Promise.resolve({ data: null, error: { message: "That shop is already pending" } }); }
+  });
+  await handlers[0]({ preventDefault() {} });
+  assert.equal(nodes["stamp-fix-err"].textContent, "That shop is already pending");
+  assert.equal(nodes["stamp-fix-err"].style.display, "block");
+  assert.equal(nodes["stamp-fix-err"].show, true);
+  assert.equal(nodes["stamp-fix-submit"].disabled, false);
+  assert.equal(nodes["stamp-fix-form"].style.display, "block");
+});
+
 test("stamp fix page, rewrite, and organizer tab are wired to one crawl", () => {
   const page = read("stamp-fix/index.html");
   const account = read("account.html");
@@ -233,10 +558,11 @@ test("stamp fix page, rewrite, and organizer tab are wired to one crawl", () => 
   const vercel = read("vercel.json");
   assert.match(page, /<h1>Request a stamp fix<\/h1>/);
   assert.match(page, /canonical" href="https:\/\/www\.hometowncrawls\.com\/stamp-fix"/);
-  assert.match(page, /\/assets\/stamp-fix\.js\?v=stamp-fix-1/);
+  assert.match(page, /\/assets\/stamp-fix\.js\?v=stamp-fix-3/);
   assert.doesNotMatch(page, /puy-coffee|arl-coffee/);
-  assert.match(read("assets/stamp-fix.js"), /HCCrawl\.magicLink\(\(email && email\.value \|\| ""\)\.trim\(\)\)/);
-  assert.doesNotMatch(read("assets/stamp-fix.js"), /magicLink\([^)]*,/);
+  assert.match(read("assets/stamp-fix.js"), /HCCrawl\.magicLink\(\(email && email\.value \|\| ""\)\.trim\(\), crawlId\)/);
+  assert.match(read("assets/stamp-fix.js"), /HCCrawl\.watchSession/);
+  assert.match(read("assets/stamp-fix.js"), /show\(form, open\.length > 0\)/);
   assert.match(vercel, /"source": "\/stamp-fix"/);
   assert.match(vercel, /"destination": "\/stamp-fix\/index\.html"/);
   assert.match(read("sitemap.xml"), /https:\/\/www\.hometowncrawls\.com\/stamp-fix/);

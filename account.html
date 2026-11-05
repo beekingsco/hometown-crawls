@@ -668,7 +668,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="assets/video-embed.js"></script>
-  <script src="assets/crawl.js?v=stamp-fix-1"></script>
+  <script src="assets/crawl.js?v=stamp-fix-2"></script>
   <script src="assets/store-demo.js?v=shop-reward-1"></script>
   <script src="assets/stamp-art.js"></script>
   <script src="assets/store-listing.js?v=shop-reward-1"></script>
@@ -694,6 +694,7 @@
       const inn = document.getElementById("auth-signed-in");
       const signedIn = s && s.user && !s.user.is_anonymous && s.user.email;
       if (signedIn) {
+        if (window.HCCrawl && HCCrawl.resumeStampFixReturn && HCCrawl.resumeStampFixReturn()) return s;
         status.textContent = "Signed in · " + s.user.email;
         out.classList.add("hidden");
         inn.classList.remove("hidden");
