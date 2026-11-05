@@ -1,0 +1,30 @@
+.lb-complete {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--gold-ink);
+  font-weight: 600;
+}
+.lb-star {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+  color: #8a6a12;
+}
+.lb-rank {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--green);
+}
+.lb-count { font-variant-numeric: tabular-nums; }
+.lb-page {
+  margin: 0;
+  min-width: 7.5rem;
+  text-align: center;
+  font-weight: 600;
+}
+.lb-pager .btn:disabled { opacity: 0.45; }
+.lb-email {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}

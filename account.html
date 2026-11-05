@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="assets/site.css" />
   <link rel="stylesheet" href="assets/app.css" />
   <link rel="stylesheet" href="assets/counter-card.css" />
+  <link rel="stylesheet" href="assets/guest-leaderboard.css?v=guest-leaderboard-2" />
   
 </head>
 <body>
@@ -260,6 +261,22 @@
           </div>
         </div>
 
+        <section class="card" id="store-leaderboard" aria-labelledby="store-board-title">
+          <p class="eyebrow">Guest leaderboard</p>
+          <h3 id="store-board-title">Who is closest to a full card</h3>
+          <p class="muted small mt-1">These are the guests who joined this crawl. Each new shop is one stamp, from the counter code or from a paper card. A second visit to the same shop does not add another. The total is the shops on the passport right now.</p>
+          <p class="demo-banner hidden mt-2" id="store-board-demo"></p>
+          <p class="mt-2" id="store-lead">The board for this crawl shows up here.</p>
+          <p class="form-error mt-2" id="store-board-err" role="alert"></p>
+          <div class="row mt-2 lb-pager" id="store-board-pager">
+            <button class="btn btn-soft" type="button" id="store-board-prev" disabled>Prev</button>
+            <p class="lb-page" id="store-board-page">Page 1 of 1</p>
+            <button class="btn btn-soft" type="button" id="store-board-next" disabled>Next</button>
+          </div>
+          <div id="store-board"></div>
+          <p class="muted small mt-2">Names are a first name and last initial. Email addresses stay off this page. Each page holds 50 guests. The rank is their place on the whole crawl, so it does not start over on the next page.</p>
+        </section>
+
         <form class="card" id="coupon-form">
           <div class="row" style="justify-content:space-between">
             <h3>Post-stamp coupon</h3>
@@ -442,6 +459,22 @@
           <p class="muted small" id="drawing-history-note">Winners show up here after a draw, with the label you gave that week.</p>
           <div class="stack mt-2" id="drawing-history"></div>
         </div>
+        <section class="card" id="guest-leaderboard" aria-labelledby="org-board-title">
+          <p class="eyebrow">Guest leaderboard</p>
+          <h3 id="org-board-title">How the cards are filling</h3>
+          <p class="muted small mt-1">This list is only the crawl selected above. A full card on another crawl does not move anyone here. When two guests have the same number of shops, the one who got there first is ranked higher. A star means the card is full. The time is when the stamp that finished it landed, in Pacific time.</p>
+          <p class="demo-banner hidden mt-2" id="org-board-demo"></p>
+          <p class="mt-2" id="org-lead">The board for the selected crawl shows up here.</p>
+          <p class="form-error mt-2" id="org-board-err" role="alert"></p>
+          <div class="row mt-2 lb-pager" id="org-board-pager">
+            <button class="btn btn-soft" type="button" id="org-board-prev" disabled>Prev</button>
+            <p class="lb-page" id="org-board-page">Page 1 of 1</p>
+            <button class="btn btn-soft" type="button" id="org-board-next" disabled>Next</button>
+            <button class="btn btn-soft" type="button" id="org-board-csv">Download CSV</button>
+          </div>
+          <div id="org-board"></div>
+          <p class="muted small mt-2">Full names and emails are for the owner, an organizer, or a co-organizer of this crawl. The store page shows a first name and last initial only. Each page holds 50 guests, and the rank keeps counting from the top of this crawl. The CSV is every guest, not just the page on screen.</p>
+        </section>
         <form class="card" id="org-details">
           <h3>Title and dates</h3>
           <label class="field mt-2"><span>Title</span>
@@ -619,6 +652,7 @@
   <script src="assets/qrcode-generator.js"></script>
   <script src="assets/counter-card.js"></script>
   <script src="assets/organizer-panel.js?v=weighted-entries-1"></script>
+  <script src="assets/guest-leaderboard.js?v=guest-leaderboard-2"></script>
   <script src="assets/guest-hub.js?v=guest-photos-1"></script>
   <script src="assets/paper-card.js"></script>
   <script>
