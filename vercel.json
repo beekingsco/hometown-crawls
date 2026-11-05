@@ -39,6 +39,10 @@
       "destination": "/support/index.html"
     },
     {
+      "source": "/makeup",
+      "destination": "/makeup/index.html"
+    },
+    {
       "source": "/account/store/help",
       "destination": "/account/store/help/index.html"
     },
