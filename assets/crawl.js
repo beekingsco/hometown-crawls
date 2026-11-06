@@ -583,12 +583,32 @@
       "Business not on this crawl",
       "Not authenticated",
       "Not joined",
-      "Unknown business"
+      "Unknown business",
+      "Daily limit"
     ];
     for (const line of known) {
       if (raw.toLowerCase().includes(line.toLowerCase())) return line;
     }
     return raw.replace(/^ERROR:\s*/i, "").trim() || "Could not claim that stamp.";
+  }
+
+  function isDailyLimit(error) {
+    return /daily limit/i.test(String((error && error.message) || error || ""));
+  }
+
+  function dailyLimitNumber(error) {
+    const hint = error && (error.hint != null && String(error.hint) !== "" ? error.hint : error.details);
+    const fromHint = String(hint == null ? "" : hint).match(/\d+/);
+    if (fromHint) return fromHint[0];
+    const fromMessage = String((error && error.message) || error || "").match(/daily limit\s+(\d+)/i);
+    return fromMessage ? fromMessage[1] : "";
+  }
+
+  function dailyLimitCopy(error) {
+    if (!isDailyLimit(error)) return "";
+    const n = dailyLimitNumber(error);
+    if (!n) return "";
+    return "Oops! You've reached your " + n + " passport stamps for today. Come back tomorrow to collect more!";
   }
 
   // Own request so the row survives when claim_stamp raises and rolls back.
@@ -629,14 +649,19 @@
         p_lat: lat == null ? null : lat,
         p_lng: lng == null ? null : lng
       });
-      if (error) throw new Error(plainStampError(error));
+      if (error) {
+        const friendly = dailyLimitCopy(error);
+        const failure = new Error(friendly || plainStampError(error));
+        if (friendly) failure.logMessage = "Daily limit";
+        throw failure;
+      }
       return data;
     } catch (error) {
       await logStampFailure({
         crawl: crawlId,
         business: business,
         code: code,
-        message: (error && error.message) || String(error || "")
+        message: (error && error.logMessage) || (error && error.message) || String(error || "")
       });
       throw error;
     }
@@ -892,6 +917,7 @@
     myStamps,
     myJoins,
     claimStamp,
+    dailyLimitCopy,
     logStampFailure,
     renderShopList,
     renderStamps,

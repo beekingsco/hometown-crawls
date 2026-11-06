@@ -446,6 +446,7 @@
     if (reason === "not_joined") return "Not joined";
     if (reason === "bad_code") return "Bad code";
     if (reason === "already_stamped") return "Already stamped";
+    if (reason === "daily_limit") return "Daily limit";
     return "Error";
   }
 
