@@ -4,7 +4,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const root = path.join(__dirname, "..");
-const CRAWL_VERSION = "stamp-fix-2";
+const CRAWL_VERSION = "daily-limit-1";
 const GUEST_HUB_VERSION = "guest-photos-1";
 
 function htmlFiles(dir, out = []) {
