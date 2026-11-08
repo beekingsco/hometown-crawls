@@ -62,6 +62,16 @@ test("embedded config matches config.json and drives every field", () => {
   assert.match(page, /a court in <span data-field="venue_county">Kaufman<\/span> County, <span data-field="governing_state">Texas<\/span>/);
 });
 
+test("a check-in counts from the QR or counter code, not a selfie", () => {
+  assert.match(page, /A check-in counts when you scan the Stop's QR code or enter its counter code\./);
+  assert.match(page, /You do not need a photo for the check-in to count\./);
+  assert.match(page, /A photo is optional and has no effect on your entries or your chances of winning\./);
+  assert.doesNotMatch(page, /Take a selfie when prompted/);
+  assert.doesNotMatch(page, /A check-in counts only if it includes a selfie/);
+  assert.doesNotMatch(page, /No selfie is required for a mail-in entry/);
+  assert.doesNotMatch(page, /selfie/i);
+});
+
 test("paper passports have a Pacific turn-in deadline and entry math stays 1 plus 3", () => {
   assert.match(page, /Completed paper passports must be turned in by end of day December 31, 2026 \(Pacific\)\./);
   assert.match(page, /<strong>1 entry for each Stop you check in at\.<\/strong>/);
