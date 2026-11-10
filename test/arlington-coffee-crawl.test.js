@@ -40,7 +40,7 @@ test("Arlington shop signup names the crawl and posts arl-coffee-nov-2026", () =
 });
 
 test("Arlington thanks page stays on the Arlington crawl and account", () => {
-  assert.match(thanks, /Arlington Holiday Coffee Crawl · Nov 1 – Dec 31, 2026/);
+  assert.match(thanks, /Arlington Holiday Coffee Crawl · Dec 1, 2026 – Jan 31, 2027/);
   assert.match(thanks, /href="\/arlington\/coffee-crawl"/);
   assert.match(thanks, /href="\/account"/);
   assert.match(thanks, /noindex/);
