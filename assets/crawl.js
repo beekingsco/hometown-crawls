@@ -380,8 +380,20 @@
     session = null;
   }
 
+  // Public shop-images objects are rewritten to the render endpoint so the
+  // browser downloads a resized image. Other URLs, including already-rendered
+  // ones, stay as they are.
+  function shopImageUrl(url, kind) {
+    const raw = String(url || "").trim();
+    if (!raw) return "";
+    const match = raw.match(/^(https?:\/\/[^/?#]+)?(\/storage\/v1\/object\/public\/shop-images\/)([^?#]+)/i);
+    if (!match) return raw;
+    const query = kind === "logo" || kind === "stamp" ? "width=400&quality=70" : "width=800&height=450&quality=70";
+    return (match[1] || "") + "/storage/v1/render/image/public/shop-images/" + match[3] + "?" + query;
+  }
+
   function mapPaidShop(row) {
-    const photos = Array.isArray(row.photo_urls) ? row.photo_urls.filter(Boolean) : [];
+    const photos = Array.isArray(row.photo_urls) ? row.photo_urls.filter(Boolean).map((url) => shopImageUrl(url, "photo")) : [];
     return {
       id: row.business_id,
       name: row.display_name || "Shop",
@@ -389,8 +401,8 @@
       lat: row.lat,
       lng: row.lng,
       type: "coffee",
-      logo_url: row.logo_url || "",
-      stamp_image_url: row.stamp_image_url || "",
+      logo_url: shopImageUrl(row.logo_url || "", "logo"),
+      stamp_image_url: shopImageUrl(row.stamp_image_url || "", "stamp"),
       stamp_label: row.stamp_label || "",
       postal_code: row.postal_code || "",
       photo_urls: photos
@@ -440,7 +452,10 @@
     if (sErr) return { shops: [], error: sErr.message };
 
     // Preserve membership order roughly by name
-    const list = (shops || []).slice().sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    const list = (shops || []).map((shop) => ({
+      ...shop,
+      logo_url: shopImageUrl(shop.logo_url || "", "logo")
+    })).sort((a, b) => (a.name || "").localeCompare(b.name || ""));
     return { shops: list, error: null };
   }
 
@@ -678,9 +693,14 @@
       .map((s) => {
         const got = stamped.has(s.id);
         const init = window.HC?.initials(s.name) || "?";
-        const image = (s.photo_urls && s.photo_urls[0]) || s.stamp_image_url || s.logo_url || "";
+        const photo = s.photo_urls && s.photo_urls[0];
+        const image = photo
+          ? shopImageUrl(photo, "photo")
+          : s.stamp_image_url
+            ? shopImageUrl(s.stamp_image_url, "stamp")
+            : shopImageUrl(s.logo_url, "logo");
         const avatar = image
-          ? `<span class="shop-avatar"><img src="${escapeHtml(image)}" alt=""></span>`
+          ? `<span class="shop-avatar"><img src="${escapeHtml(image)}" alt="" loading="lazy" decoding="async"></span>`
           : `<span class="shop-avatar">${init}</span>`;
         return `<div class="shop-row" data-id="${s.id}">
           ${avatar}
@@ -741,9 +761,9 @@
         const local = demoStampArt(s.id);
         const stampSrc = (local && local.stamp) || s.stamp_image_url || "";
         const logoSrc = (local && local.logo) || s.logo_url || "";
-        const art = stampSrc || logoSrc;
+        const art = stampSrc ? shopImageUrl(stampSrc, "stamp") : shopImageUrl(logoSrc, "logo");
         const inner = art
-          ? `<img class="stamp-art" src="${escapeHtml(art)}" alt="">`
+          ? `<img class="stamp-art" src="${escapeHtml(art)}" alt="" loading="lazy" decoding="async">`
           : `<span class="stamp-label">${escapeHtml(label)}</span>`;
         const just = got && justId && s.id === justId ? " just" : "";
         return `<div class="stamp ${got ? "got" : ""}${just}" title="${escapeHtml(s.name)}">${inner}</div>`;
@@ -780,13 +800,16 @@
   }
 
   function shopImage(shop) {
-    return (shop.photo_urls && shop.photo_urls[0]) || shop.stamp_image_url || shop.logo_url || "";
+    const photo = shop && shop.photo_urls && shop.photo_urls[0];
+    if (photo) return shopImageUrl(photo, "photo");
+    if (shop && shop.stamp_image_url) return shopImageUrl(shop.stamp_image_url, "stamp");
+    return shopImageUrl(shop && shop.logo_url, "logo");
   }
 
   function shopPopup(shop) {
     const image = shopImage(shop);
     const photo = image
-      ? `<img src="${escapeHtml(image)}" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:8px;display:block;margin-bottom:6px">`
+      ? `<img src="${escapeHtml(image)}" alt="" loading="lazy" decoding="async" style="width:72px;height:72px;object-fit:cover;border-radius:8px;display:block;margin-bottom:6px">`
       : "";
     const zip = shop.postal_code ? `<br><span style="color:#6b6558">Zip ${escapeHtml(shop.postal_code)}</span>` : "";
     return `${photo}<b>${escapeHtml(shop.name)}</b><br><span style="color:#6b6558">${escapeHtml(shop.address || "")}</span>${zip}`;
@@ -925,6 +948,7 @@
     demoMode,
     initMap,
     renderVideo,
+    shopImageUrl,
     escapeHtml,
     claimOrganizer,
     dashboardRoles,

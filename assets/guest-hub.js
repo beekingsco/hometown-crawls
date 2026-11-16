@@ -185,25 +185,198 @@
     });
   }
 
+  function resizePhoto(file) {
+    return new Promise(function (resolve) {
+      function finish(blob, width, height, revoke) {
+        if (revoke) revoke();
+        try {
+          if (!blob || !blob.size) { resolve(file); return; }
+          var longSide = Math.max(width || 0, height || 0);
+          if (longSide && longSide <= 1600 && blob.size >= file.size) { resolve(file); return; }
+          var base = String(file.name || "photo").replace(/\.[^.]+$/, "") || "photo";
+          resolve(new File([blob], base + ".jpg", { type: "image/jpeg", lastModified: Date.now() }));
+        } catch (e) {
+          resolve(file);
+        }
+      }
+      function draw(source, width, height, revoke) {
+        try {
+          var longSide = Math.max(width || 0, height || 0);
+          if (!longSide) { finish(null, 0, 0, revoke); return; }
+          var scale = Math.min(1, 1600 / longSide);
+          var canvas = document.createElement("canvas");
+          canvas.width = Math.max(1, Math.round(width * scale));
+          canvas.height = Math.max(1, Math.round(height * scale));
+          var ctx = canvas.getContext("2d");
+          if (!ctx) { finish(null, 0, 0, revoke); return; }
+          ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(function (blob) { finish(blob, width, height, revoke); }, "image/jpeg", 0.8);
+        } catch (e) {
+          finish(null, 0, 0, revoke);
+        }
+      }
+      function loadImage() {
+        var url = "";
+        try { url = URL.createObjectURL(file); } catch (e) { resolve(file); return; }
+        var img = new Image();
+        var revoke = function () { try { URL.revokeObjectURL(url); } catch (e) {} };
+        img.onload = function () { draw(img, img.naturalWidth || img.width, img.naturalHeight || img.height, revoke); };
+        img.onerror = function () { finish(null, 0, 0, revoke); };
+        img.src = url;
+      }
+      if (typeof createImageBitmap === "function") {
+        createImageBitmap(file, { imageOrientation: "from-image" }).then(function (bmp) {
+          draw(bmp, bmp.width, bmp.height, function () { try { if (bmp.close) bmp.close(); } catch (e) {} });
+        }).catch(function () { loadImage(); });
+        return;
+      }
+      loadImage();
+    });
+  }
+
+  async function preparePhoto(file) {
+    var next = file;
+    try { next = await resizePhoto(file); } catch (e) { next = file; }
+    if (!next) next = file;
+    var type = next.type === "image/jpg" ? "image/jpeg" : next.type;
+    if (TYPES.indexOf(type) === -1) {
+      next = file;
+      type = file.type === "image/jpg" ? "image/jpeg" : file.type;
+    }
+    var ext = type === "image/png" ? "png" : (type === "image/webp" ? "webp" : "jpg");
+    return { file: next, type: type, ext: ext };
+  }
+
+  var PHOTO_PAGE = 12;
+  var shownCounts = { gallery: PHOTO_PAGE, mine: PHOTO_PAGE, moderation: PHOTO_PAGE };
+
+  function lazyImg(src, alt, style) {
+    return '<img src="' + esc(src) + '" alt="' + esc(alt || "") + '" loading="lazy" decoding="async"' +
+      (style ? ' style="' + style + '"' : "") + ">";
+  }
+
+  function withMore(html, shown, total, which) {
+    if (total <= shown) return html;
+    return html + '<p class="photo-more" style="grid-column:1 / -1;margin:0.35rem 0 0"><button type="button" class="btn btn-soft" data-more-photos="' + which + '">Show more</button></p>';
+  }
+
   function paintMine() {
     var box = document.getElementById("my-photos");
     if (!box) return;
     var mine = demoOn()
       ? photos().filter(function (row) { return row.owner === "demo" || row.owner === "me"; })
       : liveMine.filter(function (row) { return row.src; });
-    box.innerHTML = mine.map(function (row) {
-      return '<figure><img src="' + esc(row.src) + '" alt=""><button type="button" data-delete-photo="' + esc(row.id) + '">Delete</button><p class="small muted">' + esc(row.status) + "</p></figure>";
-    }).join("");
+    var visible = mine.slice(0, shownCounts.mine);
+    box.innerHTML = withMore(visible.map(function (row) {
+      return "<figure>" + lazyImg(row.src, "") + '<button type="button" data-delete-photo="' + esc(row.id) + '">Delete</button><p class="small muted">' + esc(row.status) + "</p></figure>";
+    }).join(""), shownCounts.mine, mine.length, "mine");
   }
 
   var liveGallery = [];
   var liveMine = [];
   var liveModeration = [];
+  var SIGN_TTL = 86400;
+  var SIGN_REUSE_MS = 5 * 60 * 1000;
+  var SIGN_CACHE_KEY = "hc-guest-photo-urls";
+  var THUMB = { width: 640, height: 640, quality: 70, resize: "cover" };
 
-  function signedSrc(path) {
-    return HCCrawl.client().storage.from("guest-photos").createSignedUrl(path, 3600).then(function (out) {
-      return (out && out.data && out.data.signedUrl) || "";
-    }).catch(function () { return ""; });
+  function signCacheId(path, transform) {
+    return [path, transform.width || 0, transform.height || 0, transform.quality, transform.resize].join(":");
+  }
+
+  function readSignStore() {
+    try {
+      var parsed = JSON.parse(localStorage.getItem(SIGN_CACHE_KEY) || "null");
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function readCachedUrl(path, transform) {
+    var row = readSignStore()[signCacheId(path, transform)];
+    if (!row || !row.url || !row.exp) return "";
+    if (String(row.url).indexOf("/render/image/") === -1) return "";
+    if (row.exp <= Date.now() + SIGN_REUSE_MS) return "";
+    return row.url;
+  }
+
+  function writeCachedUrl(path, transform, url) {
+    if (!url || String(url).indexOf("/render/image/") === -1) return;
+    try {
+      var store = readSignStore();
+      var now = Date.now();
+      Object.keys(store).forEach(function (key) {
+        var row = store[key];
+        if (!row || !row.exp || row.exp <= now) delete store[key];
+      });
+      store[signCacheId(path, transform)] = { url: url, exp: now + SIGN_TTL * 1000 };
+      localStorage.setItem(SIGN_CACHE_KEY, JSON.stringify(store));
+    } catch (e) {}
+  }
+
+  function signedSrc(path, transform) {
+    var size = transform || THUMB;
+    var hit = readCachedUrl(path, size);
+    if (hit) return Promise.resolve(hit);
+    return signedUrls([path], size).then(function (urls) { return urls[path] || ""; });
+  }
+
+  async function signedUrls(paths, transform) {
+    var size = transform || THUMB;
+    var unique = [];
+    var seen = {};
+    (paths || []).forEach(function (path) {
+      if (!path || seen[path]) return;
+      seen[path] = true;
+      unique.push(path);
+    });
+    var out = {};
+    var missing = [];
+    unique.forEach(function (path) {
+      var hit = readCachedUrl(path, size);
+      if (hit) out[path] = hit;
+      else missing.push(path);
+    });
+    if (!missing.length || !window.HCCrawl || !HCCrawl.client) return out;
+    var bucket = HCCrawl.client().storage.from("guest-photos");
+    if (typeof bucket.createSignedUrls === "function") {
+      try {
+        var batch = await bucket.createSignedUrls(missing, SIGN_TTL, { transform: size });
+        var data = batch && batch.data;
+        if (Array.isArray(data)) {
+          data.forEach(function (item) {
+            if (!item || !item.path || !item.signedUrl) return;
+            // Current supabase-js createSignedUrls ignores transform and
+            // returns the original object. Only keep a batch URL when the
+            // resize actually landed on the render endpoint.
+            if (String(item.signedUrl).indexOf("/render/image/") === -1) return;
+            out[item.path] = item.signedUrl;
+            writeCachedUrl(item.path, size, item.signedUrl);
+          });
+        }
+      } catch (e) {}
+    }
+    var still = missing.filter(function (path) { return !out[path]; });
+    if (still.length && typeof bucket.createSignedUrl === "function") {
+      await Promise.all(still.map(function (path) {
+        return bucket.createSignedUrl(path, SIGN_TTL, { transform: size }).then(function (res) {
+          var url = (res && res.data && res.data.signedUrl) || "";
+          if (!url) return;
+          out[path] = url;
+          writeCachedUrl(path, size, url);
+        }).catch(function () {});
+      }));
+    }
+    return out;
+  }
+
+  async function withSigned(rows, mapRow) {
+    var list = Array.isArray(rows) ? rows : [];
+    var urls = await signedUrls(list.map(function (row) { return row && row.path; }), THUMB);
+    return list.map(function (row) {
+      return mapRow(row, (row && urls[row.path]) || "");
+    });
   }
 
   async function loadLivePhotos() {
@@ -211,26 +384,26 @@
     var client = HCCrawl.client();
     var pub = await client.rpc("get_public_crawl_photos", { p_crawl: guestCrawl() });
     if (!pub.error && Array.isArray(pub.data)) {
-      liveGallery = await Promise.all(pub.data.map(async function (row) {
-        return { id: row.id, src: await signedSrc(row.path), status: "approved" };
-      }));
+      liveGallery = await withSigned(pub.data, function (row, src) {
+        return { id: row.id, src: src, status: "approved" };
+      });
       paintGallery();
     }
     var session = await HCCrawl.getSession();
     if (!session || !session.user || session.user.is_anonymous) return;
     var mine = await client.from("guest_photos").select("id, path, status, shop_id").eq("user_id", session.user.id);
     if (!mine.error && Array.isArray(mine.data)) {
-      liveMine = await Promise.all(mine.data.map(async function (row) {
-        return { id: row.id, src: await signedSrc(row.path), status: row.status, shop: row.shop_id || "" };
-      }));
+      liveMine = await withSigned(mine.data, function (row, src) {
+        return { id: row.id, src: src, status: row.status, shop: row.shop_id || "" };
+      });
       paintMine();
     }
     if (!document.getElementById("org-photos")) return;
     var mod = await client.rpc("organizer_list_guest_photos", { p_crawl: guestCrawl() });
     if (mod.error || !Array.isArray(mod.data)) return;
-    liveModeration = await Promise.all(mod.data.map(async function (row) {
-      return { id: row.id, src: await signedSrc(row.path), status: row.status, shop: row.shop_id || "Crawl photo" };
-    }));
+    liveModeration = await withSigned(mod.data, function (row, src) {
+      return { id: row.id, src: src, status: row.status, shop: row.shop_id || "Crawl photo" };
+    });
     paintModeration();
   }
 
@@ -244,9 +417,10 @@
       box.innerHTML = "";
       return;
     }
-    box.innerHTML = approved.map(function (row) {
-      return '<figure><img src="' + esc(row.src) + '" alt="Crawl photo"></figure>';
-    }).join("");
+    var visible = approved.slice(0, shownCounts.gallery);
+    box.innerHTML = withMore(visible.map(function (row) {
+      return "<figure>" + lazyImg(row.src, "Crawl photo") + "</figure>";
+    }).join(""), shownCounts.gallery, approved.length, "gallery");
   }
 
   function paintModeration() {
@@ -257,12 +431,13 @@
       box.innerHTML = '<p class="muted small">No photos yet.</p>';
       return;
     }
-    box.innerHTML = rows.map(function (row) {
-      return '<article class="record-card"><img src="' + esc(row.src) + '" alt="" style="width:100%;max-height:160px;object-fit:cover;border-radius:10px"><p class="small">' +
+    var visible = rows.slice(0, shownCounts.moderation);
+    box.innerHTML = withMore(visible.map(function (row) {
+      return '<article class="record-card">' + lazyImg(row.src, "", "width:100%;max-height:160px;object-fit:cover;border-radius:10px") + '<p class="small">' +
         esc(row.shop || "Crawl photo") + " · " + esc(row.status) + "</p>" +
         '<div class="row"><button class="btn btn-soft" type="button" data-photo-status="approved" data-photo-id="' + esc(row.id) + '">Approve</button>' +
         '<button class="btn btn-ghost" type="button" data-photo-status="hidden" data-photo-id="' + esc(row.id) + '">Hide</button></div></article>';
-    }).join("");
+    }).join(""), shownCounts.moderation, rows.length, "moderation");
   }
 
   function setStatus(id, status) {
@@ -317,11 +492,16 @@
       note(okId, errId, "", "Sign in with email before uploading a photo.");
       return;
     }
-    var type = file.type === "image/jpg" ? "image/jpeg" : file.type;
-    var ext = type === "image/png" ? "png" : (type === "image/webp" ? "webp" : "jpg");
+    var prepared = await preparePhoto(file);
+    var type = prepared.type;
+    var ext = prepared.ext;
     var path = session.user.id + "/" + (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())) + "." + ext;
     var client = HCCrawl.client();
-    var uploaded = await client.storage.from("guest-photos").upload(path, file, { contentType: type, upsert: false });
+    var uploaded = await client.storage.from("guest-photos").upload(path, prepared.file, {
+      contentType: type,
+      upsert: false,
+      cacheControl: "31536000"
+    });
     if (uploaded.error) {
       var uploadMessage = uploaded.error.message || "Could not upload that photo.";
       if (/guest-photos|bucket/i.test(uploadMessage)) uploadMessage = "Photos save after the database update is applied.";
@@ -390,6 +570,16 @@
       };
     }
     document.body.addEventListener("click", function (ev) {
+      var more = ev.target.closest && ev.target.closest("[data-more-photos]");
+      if (more) {
+        var which = more.getAttribute("data-more-photos");
+        if (!shownCounts[which]) return;
+        shownCounts[which] += PHOTO_PAGE;
+        if (which === "gallery") paintGallery();
+        else if (which === "mine") paintMine();
+        else paintModeration();
+        return;
+      }
       var del = ev.target.closest && ev.target.closest("[data-delete-photo]");
       if (del) {
         var id = del.getAttribute("data-delete-photo");

@@ -4,8 +4,8 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const root = path.join(__dirname, "..");
-const CRAWL_VERSION = "daily-limit-1";
-const GUEST_HUB_VERSION = "guest-photos-1";
+const CRAWL_VERSION = "photo-egress-1";
+const GUEST_HUB_VERSION = "photo-egress-1";
 
 function htmlFiles(dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
