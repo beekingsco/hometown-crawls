@@ -179,7 +179,8 @@
     var path = listing.listing_id + "/" + kind + "/" + uuid() + "." + ext;
     var up = await client.storage.from("shop-images").upload(path, blob, {
       contentType: type,
-      upsert: false
+      upsert: false,
+      cacheControl: "31536000"
     });
     if (up.error) throw up.error;
     var saved = await client.rpc("shop_set_stamp_art", {

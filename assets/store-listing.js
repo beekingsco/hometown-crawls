@@ -293,7 +293,7 @@
       if (file.size > limitMb * 1024 * 1024) throw new Error("Images need to be " + limitMb + " MB or smaller.");
       var client = HCCrawl.client();
       var path = listing.listing_id + "/" + folder + "/" + (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())) + "." + extFor(type);
-      var up = await client.storage.from("shop-images").upload(path, file, { contentType: type, upsert: false });
+      var up = await client.storage.from("shop-images").upload(path, file, { contentType: type, upsert: false, cacheControl: "31536000" });
       if (up.error) throw up.error;
       return path;
     }

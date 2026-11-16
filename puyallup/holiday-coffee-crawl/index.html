@@ -331,9 +331,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="/assets/video-embed.js"></script>
-  <script src="/assets/crawl.js?v=daily-limit-1"></script>
+  <script src="/assets/crawl.js?v=photo-egress-1"></script>
   <script src="/assets/guest-email.js?v=hide-email-1"></script>
-  <script src="/assets/guest-hub.js?v=guest-photos-1"></script>
+  <script src="/assets/guest-hub.js?v=photo-egress-1"></script>
   <script>
   (function () {
     var CRAWL = "puy-coffee";
@@ -362,6 +362,12 @@
       var u = String(value || "").trim();
       if (/^https?:\/\//i.test(u)) return u;
       return "";
+    }
+
+    function shopPhoto(value, kind) {
+      var url = httpUrl(value);
+      if (!url || !window.HCCrawl || typeof HCCrawl.shopImageUrl !== "function") return url;
+      return HCCrawl.shopImageUrl(url, kind);
     }
 
     function instagramUrl(value) {
@@ -431,9 +437,9 @@
       empty.classList.add("hidden");
       grid.innerHTML = shops.map(function (s) {
         var photos = Array.isArray(s.photo_urls) ? s.photo_urls : [];
-        var photo = httpUrl(photos[0]) || httpUrl(s.stamp_image_url) || httpUrl(s.logo_url);
+        var photo = shopPhoto(photos[0], "photo") || shopPhoto(s.stamp_image_url, "stamp") || shopPhoto(s.logo_url, "logo");
         var media = photo
-          ? '<img class="cover" src="' + esc(photo) + '" alt="' + esc(s.display_name || "Shop") + '" loading="lazy" />'
+          ? '<img class="cover" src="' + esc(photo) + '" alt="' + esc(s.display_name || "Shop") + '" loading="lazy" decoding="async" />'
           : '<div class="cover" style="display:grid;place-items:center;color:var(--green);font-family:var(--font-display);font-size:1.4rem">' + esc((window.HC && HC.initials(s.display_name)) || "☕") + "</div>";
         var links = [];
         var site = httpUrl(s.website);
