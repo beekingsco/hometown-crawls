@@ -333,9 +333,10 @@ test("account signup waits for Keep before magicLink and does not pass a crawl i
   assert.equal(calls.length, 0);
   assert.equal(nodes["btn-magic"].textContent, "Send magic link");
 
-  nodes["photo-promo-consent"].checked = false;
   const revoked = sandbox.HCPaper.submit({ show: show, msg: nodes["auth-msg"], err: nodes["auth-err"] });
   await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(noteFor(nodes["auth-email"]).classList.contains("hidden"), false);
+  nodes["photo-promo-consent"].checked = false;
   nodes["auth-email"]._hcRelayKeep.click();
   await revoked;
   assert.equal(calls.length, 0);
