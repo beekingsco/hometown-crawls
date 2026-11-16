@@ -241,7 +241,7 @@ test("guest sign-in pages load the helper and still send through the existing ma
     assert.match(html, /guest-email\.js\?v=hide-email-1/, rel);
     assert.match(html, /site\.css\?v=hide-email-1/, rel);
   }
-  assert.match(read("account.html"), /paper-card\.js\?v=hide-email-1/);
+  assert.match(read("account.html"), /paper-card\.js\?v=hide-email-2/);
   assert.match(read("stamp-fix/index.html"), /stamp-fix\.js\?v=stamp-fix-4/);
   assert.match(read("assets/paper-card.js"), /HCGuestEmail\.confirm/);
   assert.match(read("assets/paper-card.js"), /HCCrawl\.magicLink\(row\.email\)/);
@@ -269,6 +269,7 @@ test("guest sign-in pages load the helper and still send through the existing ma
 
 test("account signup waits for Keep before magicLink and does not pass a crawl id", async () => {
   const calls = [];
+  const urls = [];
   const nodes = {};
   const form = makeNode("form");
   function field(id, value) {
@@ -300,7 +301,7 @@ test("account signup waits for Keep before magicLink and does not pass a crawl i
     setTimeout,
     localStorage: memoryStorage(),
     sessionStorage: memoryStorage(),
-    history: { replaceState() {} },
+    history: { replaceState(_state, _title, url) { urls.push(String(url)); } },
     location: { search: "", pathname: "/account", origin: "https://www.hometowncrawls.com" },
     document: {
       readyState: "loading",
@@ -332,12 +333,26 @@ test("account signup waits for Keep before magicLink and does not pass a crawl i
   assert.equal(calls.length, 0);
   assert.equal(nodes["btn-magic"].textContent, "Send magic link");
 
+  nodes["photo-promo-consent"].checked = false;
+  const revoked = sandbox.HCPaper.submit({ show: show, msg: nodes["auth-msg"], err: nodes["auth-err"] });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  nodes["auth-email"]._hcRelayKeep.click();
+  await revoked;
+  assert.equal(calls.length, 0);
+  assert.equal(nodes["auth-err"].textContent, "Check the box to approve photo use on the website.");
+  assert.equal(urls.length, 0);
+  assert.equal(sandbox.sessionStorage.getItem("hc-paper-signup"), null);
+  assert.equal(sandbox.sessionStorage.getItem("hc-contact-consent"), null);
+  nodes["photo-promo-consent"].checked = true;
+
   const kept = sandbox.HCPaper.submit({ show: show, msg: nodes["auth-msg"], err: nodes["auth-err"] });
   await new Promise((resolve) => setTimeout(resolve, 0));
   nodes["auth-email"]._hcRelayKeep.click();
   await kept;
   assert.deepEqual(calls, [{ email: "deluxe.wizard7u@icloud.com", crawlId: undefined, args: 1 }]);
   assert.equal(sandbox.localStorage.getItem("hc-last-guest-email"), "deluxe.wizard7u@icloud.com");
+  assert.match(urls.at(-1), /contact=1/);
+  assert.match(urls.at(-1), /photo=1/);
 
   calls.length = 0;
   nodes["auth-email"].value = "jane.doe@icloud.com";

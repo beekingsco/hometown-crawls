@@ -678,7 +678,7 @@
   <script src="assets/organizer-panel.js?v=daily-limit-1"></script>
   <script src="assets/guest-leaderboard.js?v=guest-leaderboard-2"></script>
   <script src="assets/guest-hub.js?v=guest-photos-1"></script>
-  <script src="assets/paper-card.js?v=hide-email-1"></script>
+  <script src="assets/paper-card.js?v=hide-email-2"></script>
   <script>
     function show(el, on) {
       if (!el) return;
@@ -771,7 +771,7 @@
 
       document.getElementById("btn-magic").onclick = async () => {
         show(msg, false); show(err, false);
-        const email = document.getElementById("auth-email").value.trim();
+        let email = document.getElementById("auth-email").value.trim();
         const consent = document.getElementById("contact-consent");
         if (window.HCPaper) {
           await HCPaper.submit({ show, msg, err });
@@ -783,6 +783,10 @@
           const allowed = await HCGuestEmail.confirm(document.getElementById("auth-email"));
           if (!allowed) return;
         }
+        email = document.getElementById("auth-email").value.trim();
+        const stillConsent = document.getElementById("contact-consent");
+        if (!email) { err.textContent = "Enter your email."; show(err, true); return; }
+        if (!stillConsent || !stillConsent.checked) { err.textContent = "Check the box so stores and organizers can contact you about prizes and offers."; show(err, true); return; }
         const button = document.getElementById("btn-magic");
         button.disabled = true;
         button.setAttribute("aria-busy", "true");

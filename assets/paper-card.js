@@ -223,15 +223,22 @@
         if (!allowed) return;
       }
       row = formSignup();
+      problem = signupError(row);
+      if (problem) { err.textContent = problem; show(err, true); reveal(err); return; }
       writePending(row);
-      try { sessionStorage.setItem("hc-contact-consent", "1"); } catch (e) {}
+      try {
+        if (row.contact) sessionStorage.setItem("hc-contact-consent", "1");
+        else sessionStorage.removeItem("hc-contact-consent");
+      } catch (e) {}
       var next = new URLSearchParams(location.search);
       next.set("crawl", row.crawl);
       next.set("signup_name", row.name);
       next.set("signup_email", row.email);
       next.set("signup_phone", row.phone);
-      next.set("contact", "1");
-      next.set("photo", "1");
+      if (row.contact) next.set("contact", "1");
+      else next.delete("contact");
+      if (row.photo) next.set("photo", "1");
+      else next.delete("photo");
       if (row.area) next.set("area", "1");
       else next.delete("area");
       if (row.paper) {
