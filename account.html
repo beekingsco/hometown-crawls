@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/site.css" />
+  <link rel="stylesheet" href="assets/site.css?v=hide-email-1" />
   <link rel="stylesheet" href="assets/app.css" />
   <link rel="stylesheet" href="assets/counter-card.css" />
   <link rel="stylesheet" href="assets/guest-leaderboard.css?v=guest-leaderboard-2" />
@@ -669,6 +669,7 @@
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="assets/video-embed.js"></script>
   <script src="assets/crawl.js?v=daily-limit-1"></script>
+  <script src="assets/guest-email.js?v=hide-email-1"></script>
   <script src="assets/store-demo.js?v=shop-reward-1"></script>
   <script src="assets/stamp-art.js"></script>
   <script src="assets/store-listing.js?v=shop-reward-1"></script>
@@ -677,7 +678,7 @@
   <script src="assets/organizer-panel.js?v=daily-limit-1"></script>
   <script src="assets/guest-leaderboard.js?v=guest-leaderboard-2"></script>
   <script src="assets/guest-hub.js?v=guest-photos-1"></script>
-  <script src="assets/paper-card.js"></script>
+  <script src="assets/paper-card.js?v=hide-email-1"></script>
   <script>
     function show(el, on) {
       if (!el) return;
@@ -778,6 +779,10 @@
         }
         if (!email) { err.textContent = "Enter your email."; show(err, true); return; }
         if (!consent || !consent.checked) { err.textContent = "Check the box so stores and organizers can contact you about prizes and offers."; show(err, true); return; }
+        if (window.HCGuestEmail && typeof HCGuestEmail.confirm === "function") {
+          const allowed = await HCGuestEmail.confirm(document.getElementById("auth-email"));
+          if (!allowed) return;
+        }
         const button = document.getElementById("btn-magic");
         button.disabled = true;
         button.setAttribute("aria-busy", "true");
@@ -785,6 +790,7 @@
         try { sessionStorage.setItem("hc-contact-consent", "1"); } catch (e) {}
         try {
           await HCCrawl.magicLink(email);
+          if (window.HCGuestEmail && typeof HCGuestEmail.remember === "function") HCGuestEmail.remember(email);
           msg.textContent = "Check your email for the magic link.";
           show(msg, true);
         } catch (e) {

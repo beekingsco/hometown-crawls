@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/assets/site.css" />
+  <link rel="stylesheet" href="/assets/site.css?v=hide-email-1" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     .hc-hero {
@@ -332,6 +332,7 @@
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="/assets/video-embed.js"></script>
   <script src="/assets/crawl.js?v=daily-limit-1"></script>
+  <script src="/assets/guest-email.js?v=hide-email-1"></script>
   <script src="/assets/guest-hub.js?v=guest-photos-1"></script>
   <script>
   (function () {
@@ -725,33 +726,45 @@
       }
       if (stopScan) stopScan.addEventListener("click", stopCamera);
 
+      var magicSending = false;
       $("magic-form").onsubmit = async function (ev) {
         ev.preventDefault();
+        if (magicSending) return;
         showBox($("passport-err"), false);
         showBox($("passport-ok"), false);
         var email = $("magic-email").value.trim();
         if (!email) return;
-        var button = ev.currentTarget.querySelector("button");
-        if (button) {
-          button.disabled = true;
-          button.setAttribute("aria-busy", "true");
-          button.textContent = "Sending…";
-        }
+        var button = ev.currentTarget.querySelector("button[type='submit']");
+        magicSending = true;
         try {
-          await HCCrawl.magicLink(email, CRAWL);
-          $("passport-ok").textContent = "Check your email for the sign-in link. It brings you back to this page and adds you to this crawl.";
-          showBox($("passport-ok"), true);
-          if (HCCrawl.revealNotice) HCCrawl.revealNotice($("passport-ok"));
-        } catch (e) {
-          $("passport-err").textContent = HCCrawl.otpErrorMessage ? HCCrawl.otpErrorMessage(e) : (e.message || "Could not send the sign-in link.");
-          showBox($("passport-err"), true);
-          if (HCCrawl.revealNotice) HCCrawl.revealNotice($("passport-err"));
-        } finally {
-          if (button) {
-            button.disabled = false;
-            button.setAttribute("aria-busy", "false");
-            button.textContent = "Email me a sign-in link";
+          if (window.HCGuestEmail && typeof HCGuestEmail.confirm === "function") {
+            var allowed = await HCGuestEmail.confirm($("magic-email"));
+            if (!allowed) return;
           }
+          if (button) {
+            button.disabled = true;
+            button.setAttribute("aria-busy", "true");
+            button.textContent = "Sending…";
+          }
+          try {
+            await HCCrawl.magicLink(email, CRAWL);
+            if (window.HCGuestEmail && typeof HCGuestEmail.remember === "function") HCGuestEmail.remember(email);
+            $("passport-ok").textContent = "Check your email for the sign-in link. It brings you back to this page and adds you to this crawl.";
+            showBox($("passport-ok"), true);
+            if (HCCrawl.revealNotice) HCCrawl.revealNotice($("passport-ok"));
+          } catch (e) {
+            $("passport-err").textContent = HCCrawl.otpErrorMessage ? HCCrawl.otpErrorMessage(e) : (e.message || "Could not send the sign-in link.");
+            showBox($("passport-err"), true);
+            if (HCCrawl.revealNotice) HCCrawl.revealNotice($("passport-err"));
+          } finally {
+            if (button) {
+              button.disabled = false;
+              button.setAttribute("aria-busy", "false");
+              button.textContent = "Email me a sign-in link";
+            }
+          }
+        } finally {
+          magicSending = false;
         }
       };
     });

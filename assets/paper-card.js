@@ -214,47 +214,56 @@
     var row = formSignup();
     var problem = signupError(row);
     if (problem) { err.textContent = problem; show(err, true); reveal(err); return; }
-    writePending(row);
-    try { sessionStorage.setItem("hc-contact-consent", "1"); } catch (e) {}
-    var next = new URLSearchParams(location.search);
-    next.set("crawl", row.crawl);
-    next.set("signup_name", row.name);
-    next.set("signup_email", row.email);
-    next.set("signup_phone", row.phone);
-    next.set("contact", "1");
-    next.set("photo", "1");
-    if (row.area) next.set("area", "1");
-    else next.delete("area");
-    if (row.paper) {
-      next.set("play", "paper");
-      next.set("card_name", row.name);
-      next.set("terms", "1");
-    } else {
-      next.delete("play");
-      next.delete("card_name");
-      next.delete("terms");
-    }
-    if (row.shop) next.set("shop", row.shop);
-    else next.delete("shop");
-    history.replaceState(null, "", location.pathname + "?" + next.toString());
-    if (demoOn()) {
-      if (row.paper) showSuccess("Demo preview. No email was sent and no account was changed.");
-      else { msg.textContent = "Demo preview. No email was sent and no account was changed."; show(msg, true); reveal(msg); }
-      return;
-    }
     var button = sendButton();
     magicBusy = true;
-    setSending(button, true);
+    var startedSend = false;
     try {
+      if (window.HCGuestEmail && typeof HCGuestEmail.confirm === "function") {
+        var allowed = await HCGuestEmail.confirm(document.getElementById("auth-email"));
+        if (!allowed) return;
+      }
+      row = formSignup();
+      writePending(row);
+      try { sessionStorage.setItem("hc-contact-consent", "1"); } catch (e) {}
+      var next = new URLSearchParams(location.search);
+      next.set("crawl", row.crawl);
+      next.set("signup_name", row.name);
+      next.set("signup_email", row.email);
+      next.set("signup_phone", row.phone);
+      next.set("contact", "1");
+      next.set("photo", "1");
+      if (row.area) next.set("area", "1");
+      else next.delete("area");
+      if (row.paper) {
+        next.set("play", "paper");
+        next.set("card_name", row.name);
+        next.set("terms", "1");
+      } else {
+        next.delete("play");
+        next.delete("card_name");
+        next.delete("terms");
+      }
+      if (row.shop) next.set("shop", row.shop);
+      else next.delete("shop");
+      history.replaceState(null, "", location.pathname + "?" + next.toString());
+      if (demoOn()) {
+        if (row.paper) showSuccess("Demo preview. No email was sent and no account was changed.");
+        else { msg.textContent = "Demo preview. No email was sent and no account was changed."; show(msg, true); reveal(msg); }
+        return;
+      }
+      startedSend = true;
+      setSending(button, true);
       var session = await HCCrawl.getSession();
       var same = session && session.user && !session.user.is_anonymous && session.user.email &&
         session.user.email.toLowerCase() === row.email.toLowerCase();
       if (same) {
+        if (window.HCGuestEmail && typeof HCGuestEmail.remember === "function") HCGuestEmail.remember(row.email);
         await finish();
         if (!row.paper) { msg.textContent = "You're signed in."; show(msg, true); reveal(msg); }
         return;
       }
       await HCCrawl.magicLink(row.email);
+      if (window.HCGuestEmail && typeof HCGuestEmail.remember === "function") HCGuestEmail.remember(row.email);
       if (row.paper) showSuccess("Check your email for the sign-in link. Open it, then choose how to get the card.");
       else { msg.textContent = "Check your email for the magic link."; show(msg, true); reveal(msg); }
     } catch (e) {
@@ -263,7 +272,7 @@
       reveal(err);
     } finally {
       magicBusy = false;
-      setSending(button, false);
+      if (startedSend) setSending(button, false);
     }
   }
 

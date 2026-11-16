@@ -526,6 +526,43 @@ textarea.input { min-height: 100px; resize: vertical; }
 }
 .form-error.show { display: block; }
 
+.relay-email-note {
+  margin: 0.15rem 0 0.95rem;
+  padding: 0.9rem 1rem;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+  border-left: 4px solid var(--green);
+  border-radius: var(--radius-sm);
+  scroll-margin: calc(var(--header-h) + 12px) 0 1rem;
+}
+.relay-email-note p {
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.relay-email-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+.relay-email-actions .btn { white-space: normal; text-align: center; }
+
+.last-email-suggestion {
+  display: inline-block;
+  margin: -0.2rem 0 0.85rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--green);
+  font-weight: 600;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+.last-email-suggestion:hover { color: var(--green-deep); }
+
 /* FAQ */
 .faq details {
   background: var(--paper);
