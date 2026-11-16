@@ -558,7 +558,7 @@ test("stamp fix page, rewrite, and organizer tab are wired to one crawl", () => 
   const vercel = read("vercel.json");
   assert.match(page, /<h1>Request a stamp fix<\/h1>/);
   assert.match(page, /canonical" href="https:\/\/www\.hometowncrawls\.com\/stamp-fix"/);
-  assert.match(page, /\/assets\/stamp-fix\.js\?v=stamp-fix-3/);
+  assert.match(page, /\/assets\/stamp-fix\.js\?v=stamp-fix-4/);
   assert.doesNotMatch(page, /puy-coffee|arl-coffee/);
   assert.match(read("assets/stamp-fix.js"), /HCCrawl\.magicLink\(\(email && email\.value \|\| ""\)\.trim\(\), crawlId\)/);
   assert.match(read("assets/stamp-fix.js"), /HCCrawl\.watchSession/);

@@ -214,19 +214,30 @@
     var form = document.getElementById("stamp-fix-form");
     var send = document.getElementById("stamp-fix-send");
     if (send) {
+      var authBusy = false;
       send.addEventListener("click", async function () {
+        if (authBusy) return;
         setText("stamp-fix-err", "");
         setText("stamp-fix-msg", "");
         var email = document.getElementById("stamp-fix-email");
         var crawlId = crawlFromLocation();
-        send.disabled = true;
+        authBusy = true;
         try {
+          if (window.HCGuestEmail && typeof HCGuestEmail.confirm === "function") {
+            var allowed = await HCGuestEmail.confirm(email);
+            if (!allowed) return;
+          }
+          send.disabled = true;
           if (HCCrawl.rememberStampFixReturn) HCCrawl.rememberStampFixReturn(crawlId);
           await HCCrawl.magicLink((email && email.value || "").trim(), crawlId);
+          if (window.HCGuestEmail && typeof HCGuestEmail.remember === "function") {
+            HCGuestEmail.remember((email && email.value || "").trim());
+          }
           setText("stamp-fix-msg", "Check your email for the sign-in link. It brings you back to this page.");
         } catch (error) {
           setText("stamp-fix-err", (error && error.message) || "Could not send the sign-in link.");
         } finally {
+          authBusy = false;
           send.disabled = false;
         }
       });
