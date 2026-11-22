@@ -643,6 +643,7 @@ textarea.input { min-height: 100px; resize: vertical; }
   border-radius: 50%;
   border: 2px dashed #cfc4ad;
   display: grid;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
   place-items: center;
   font-size: 0.65rem;
   text-align: center;
@@ -670,9 +671,11 @@ textarea.input { min-height: 100px; resize: vertical; }
   color: #4e4338;
 }
 .stamp img.stamp-art {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  /* Keep square artwork inside the circle, even during the ink animation. */
+  width: 62.5%;
+  height: 62.5%;
+  object-fit: contain;
+  object-position: center;
   filter: grayscale(1);
   opacity: 0.4;
 }
