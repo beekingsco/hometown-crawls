@@ -392,6 +392,16 @@
     return (match[1] || "") + "/storage/v1/render/image/public/shop-images/" + match[3] + "?" + query;
   }
 
+  function passportArtUrl(url) {
+    const raw = String(url || "").trim();
+    const match = raw.match(/^(https?:\/\/[^/?#]+)?\/storage\/v1\/(?:object|render\/image)\/public\/shop-images\/([^?#]+)/i);
+    if (!match) return raw;
+    // Width-only transforms can crop the source into a vertical strip.
+    // Downsize proportionally here; let the browser center the circle crop.
+    return (match[1] || "") + "/storage/v1/render/image/public/shop-images/" + match[2]
+      + "?width=400&height=400&resize=contain&quality=70";
+  }
+
   function mapPaidShop(row) {
     const photos = Array.isArray(row.photo_urls) ? row.photo_urls.filter(Boolean).map((url) => shopImageUrl(url, "photo")) : [];
     return {
@@ -761,7 +771,7 @@
         const local = demoStampArt(s.id);
         const stampSrc = (local && local.stamp) || s.stamp_image_url || "";
         const logoSrc = (local && local.logo) || s.logo_url || "";
-        const art = stampSrc ? shopImageUrl(stampSrc, "stamp") : shopImageUrl(logoSrc, "logo");
+        const art = passportArtUrl(stampSrc || logoSrc);
         const inner = art
           ? `<img class="stamp-art" src="${escapeHtml(art)}" alt="" loading="lazy" decoding="async">`
           : `<span class="stamp-label">${escapeHtml(label)}</span>`;

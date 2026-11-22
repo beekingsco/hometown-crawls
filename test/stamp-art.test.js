@@ -17,6 +17,7 @@ test("passport art is grey until stamped, then full color", () => {
   assert.match(css, /\.stamp img\.stamp-art\s*\{[^}]*opacity:\s*0\.4/);
   assert.match(css, /\.stamp\.got img\.stamp-art\s*\{[^}]*filter:\s*none/);
   assert.match(css, /\.stamp\.got img\.stamp-art\s*\{[^}]*opacity:\s*1/);
+  assert.match(css, /\.stamp img\.stamp-art\s*\{[^}]*width:\s*100%[^}]*height:\s*100%[^}]*object-fit:\s*cover[^}]*object-position:\s*center/);
   assert.match(css, /@keyframes stamp-pop/);
   assert.match(css, /@keyframes stamp-ink/);
 });
@@ -95,6 +96,19 @@ test("render falls back from stamp image to logo to a text label", () => {
     { id: "anthem", name: "Anthem Coffee", stamp_image_url: "https://cdn.example/live-stamp.png", logo_url: "https://cdn.example/live-logo.png" }
   ], [], "");
   assert.match(live.innerHTML, /live-stamp\.png/);
+  const storage = "https://example.com/storage/v1/";
+  const fixed = { innerHTML: "" };
+  sandbox.window.HCCrawl.renderStamps(fixed, [
+    { id: "tall", name: "Tall transformed art", stamp_image_url: storage + "render/image/public/shop-images/stamps/tall.png?width=400&quality=70" },
+    { id: "logo", name: "Logo fallback", logo_url: storage + "object/public/shop-images/logos/wide.png" },
+  ], [], "");
+  for (const stem of ["stamps/tall.png", "logos/wide.png"]) {
+    assert.ok(fixed.innerHTML.includes(storage + "render/image/public/shop-images/" + stem
+      + "?width=400&amp;height=400&amp;resize=contain&amp;quality=70"));
+  }
+  // This is a passport-only change: existing listing image URLs stay unchanged.
+  assert.equal(sandbox.window.HCCrawl.shopImageUrl(storage + "object/public/shop-images/logos/wide.png", "logo"),
+    storage + "render/image/public/shop-images/logos/wide.png?width=400&quality=70");
   assert.doesNotMatch(live.innerHTML, /class="stamp got/);
   assert.doesNotMatch(live.innerHTML, /cdn\.example\/stamp\.png"/);
 });
